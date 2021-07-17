@@ -1,1 +1,3 @@
-API_KEYS
+env.rb
+*.json
+*.yaml
