@@ -21,4 +21,23 @@ def update_from_airtable(year, month)
   end
 end
 
+def populate_night_manager_table()
+  events = AlexEvents.events_for_month(2021, 9)
+  event_record_ids = events.collect do |e|
+    e.record_id
+  end
+  #events.each do |e|
+    #puts("#{e.record_id}, #{e}")
+  #end
+  night_manager_record_ids = NightManagerTable.all_event_record_ids()
+  events.each do |e|
+    if !night_manager_record_ids.include?(e.record_id)
+      puts("Creating record for #{e.event_title}")
+      NightManagerTable.create("Alex Events" => [e.record_id], "Gig Code" => e.gig_code)
+    end
+  end
+
+end
+
+#populate_night_manager_table()
 update_from_airtable(2021, 8)
