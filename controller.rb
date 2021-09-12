@@ -40,4 +40,4 @@ def populate_night_manager_table()
 end
 
 #populate_night_manager_table()
-update_from_airtable(2021, 8)
+update_from_airtable(2021, 11)
