@@ -1,30 +1,21 @@
 require_relative '../env'
+require_relative './fields'
 require 'airrecord'
 Airrecord.api_key = AIRTABLE_API_KEY 
 
-class EventRecord
-  attr_reader :event_date, :event_title, :record_id, :gig_code
-  def initialize(record_id, gig_code, event_date, event_title)
-    @record_id = record_id
-    @gig_code = gig_code
-    @event_date = event_date
-    @event_title = event_title
+class ExtendedTable < Airrecord::Table
+  def self.fields()
+    raise "Implement the fields method"
   end
-
-  def self.from_record(record)
-    record_id = record.id
-    gig_code = record[GIG_CODE]
-    event_date = Date.parse(record[EVENT_DATE])
-    event_title = record[EVENT_TITLE]
-    EventRecord.new(record_id, gig_code, event_date, event_title)
-  end
-
-  def to_s()
-    "#{@gig_code}, #{@event_title}, #{@event_date}"
+  def self.all_records(filter_text = nil)
+    self.all(
+      fields: self.fields,
+      filter: filter_text
+    )
   end
 end
 
-class EventRecords
+class AlexEventRecords
   attr_reader :events
   def initialize(events)
     @events = events
@@ -40,47 +31,25 @@ class EventRecords
 end
 
 
-class OriginalContract
-  attr_reader :performance_date, :event_title
-
-  def initialize(record_id, performance_date, event_title)
-    @performance_date = performance_date
-    @event_title = event_title
-  end
-
-  def self.from_record(record)
-    record_id = record.id
-    performance_date = Date.parse(record[PERFORMANCE_DATES])
-    event_title = record[EVENT_TITLE]
-    OriginalContract.new(record_id, performance_date, event_title)
-  end
-
-  def to_s()
-    "#{@event_title}, #{@performance_date}"
-  end
-end
-
-class OriginalContractsTable < Airrecord::Table
+class OriginalContracts < ExtendedTable
   self.base_key = VORTEX_DATABASE_ID
-  self.table_name = CONTRACTS_TABLE
+  self.table_name = ORIGINAL_CONTRACTS_TABLE
 
-  def self.all_contracts()
-    all_records = OriginalContractsTable.all(
-      fields: [EVENT_TITLE, PERFORMANCE_DATES],
-    ).filter do |rec|
+  def self.fields()
+    [ORIGINAL_EVENT_TITLE, ORIGINAL_PERFORMANCE_DATES]
+  end
+
+  def self.all_records(filter_text = nil)
+    super.filter do |r|
       begin
-        Date.parse(rec[PERFORMANCE_DATES])
+        Date.parse(r[ORIGINAL_PERFORMANCE_DATES])
         true
       rescue
         false
       end
     end
-
-    
-    all_records.collect do |record|
-      OriginalContract.from_record(record)
-    end
   end
+
 end
 
 class AlexEvent
@@ -95,7 +64,7 @@ class AlexEvent
     record_id = record.id
     event_date = Date.parse(record[ALEX_EVENT_DATE])
     event_title = record[ALEX_EVENT_TITLE]
-    OriginalContract.new(record_id, event_date, event_title)
+    AlexEvent.new(record_id, event_date, event_title)
   end
 
   def to_s()
@@ -103,7 +72,8 @@ class AlexEvent
   end
 end
 
-class AlexEvents < Airrecord::Table
+class AlexEvents < ExtendedTable
+   
   self.base_key = ALEX_VORTEX_DB_ID
   self.table_name = ALEX_EVENTS_TABLE
 
@@ -116,12 +86,33 @@ class AlexEvents < Airrecord::Table
     end
   end
 
-  def self.events_for_date_range(first_date, last_date)
+  def self.filter_text(first_date, last_date)
     first_date_formatted = first_date.strftime("%Y-%m-%d")
     last_date_formatted = last_date.strftime("%Y-%m-%d")
+    "AND({#{ALEX_EVENT_DATE}} >= '#{first_date_formatted}',{#{ALEX_EVENT_DATE}} <= '#{last_date_formatted}')"
+  end
+
+  def self.populate_for_date_range(first_date, last_date)
+    original_contracts = OriginalContracts.all_records().filter do |c| 
+      performance_date = Date.parse(c[ORIGINAL_PERFORMANCE_DATES])
+      performance_date >= first_date && performance_date <= last_date
+    end
+    original_contracts.each do |c|
+      AlexEvents.create(
+        {
+          ALEX_EVENT_DATE => Date.parse(c[ORIGINAL_PERFORMANCE_DATES]),
+          ALEX_EVENT_TITLE => c[ORIGINAL_EVENT_TITLE],
+          ALEX_EVENT_TYPE => ALEX_STANDARD_EVENING_GIG,
+        }
+      )
+    end
+
+  end
+
+  def self.events_for_date_range(first_date, last_date)
     all_records = AlexEvents.all(
       fields: [ALEX_EVENT_DATE, ALEX_EVENT_TITLE],
-      filter: "AND({#{ALEX_EVENT_DATE}} >= '#{first_date_formatted}',{#{ALEX_EVENT_DATE}} <= '#{last_date_formatted}')"
+      filter: filter_text(first_date, last_date)
     )
     all_records.collect do |record|
       AlexEvent.from_record(record)
