@@ -1,4 +1,4 @@
-class SheetMediator
+class TabController
   @@light_green = {
       red: 0.9,
       green: 1.0,
@@ -16,17 +16,6 @@ class SheetMediator
     @sheet_id = sheet_id
   end
 
-  #def set_data(range, data)
-    #raise "Dimension mismatch, range rows #{range.num_rows}, data #{data.size}" if range.num_rows != data.size
-    #raise "Dimension mismatch, range cols #{range.num_cols}, data #{data[0].size}" if range.num_cols != data[0].size
-
-    #value_range = range.as_value_range()
-    #value_range_object = Google::Apis::SheetsV4::ValueRange.new(range: value_range, values: data)
-    #result = @service.update_spreadsheet_value(@workbook_id,
-                                              #value_range,
-                                              #value_range_object,
-                                              #value_input_option: "USER_ENTERED")
-  #end
 
   def set_background_color_request(range, color_json)
     {

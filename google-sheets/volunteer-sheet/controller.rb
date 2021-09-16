@@ -1,10 +1,10 @@
 require_relative '../sheets-service'
 require_relative '../sheet-range'
-require_relative '../sheet-mediator'
+require_relative '../tab-controller'
 require_relative 'model'
 require_relative '../../mediator/mediator'
 
-class VolunteerMonthSheetMediator < SheetMediator
+class VolunteerMonthTabController < TabController
   @@header = ["Gigs", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
 
   def initialize(year_no, month_no, wb_controller, sheet_name, sheet_id)
@@ -57,7 +57,7 @@ class VolunteerMonthSheetMediator < SheetMediator
     @wb_controller.apply_requests(requests)
   end
 
-  def read_events_from_sheet()
+  def read_events()
     max_events = 50
     event_range = sheet_range(1, 1 + 2 * max_events)
     values = @wb_controller.get_spreadsheet_values(event_range)

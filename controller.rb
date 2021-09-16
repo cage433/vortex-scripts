@@ -24,7 +24,7 @@ def populate_vol_sheet(year, month)
     wb.add_sheet(airtable_events.tab_name)
   end
   sheet_id = wb.tab_ids_by_name()[tab_name]
-  tab_mediator =  VolunteerMonthSheetMediator.new(year, month, wb, airtable_events.tab_name, sheet_id)
+  tab_mediator =  VolunteerMonthTabController.new(year, month, wb, airtable_events.tab_name, sheet_id)
   sheet_events = tab_mediator.read_events_from_sheet()
   merged_events = sheet_events.merge(airtable_events)
   if merged_events.num_events > sheet_events.num_events
