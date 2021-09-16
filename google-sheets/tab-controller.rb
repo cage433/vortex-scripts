@@ -10,10 +10,10 @@ class TabController
       blue: 0.0,
   }
 
-  def initialize(wb_controller, sheet_name, sheet_id)
+  def initialize(wb_controller, tab_name)
     @wb_controller = wb_controller
-    @sheet_name = sheet_name
-    @sheet_id = sheet_id
+    @tab_name = tab_name
+    @sheet_id = @wb_controller.tab_ids_by_name()[tab_name]
   end
 
 

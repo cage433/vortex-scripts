@@ -7,8 +7,8 @@ require_relative '../../mediator/mediator'
 class VolunteerMonthTabController < TabController
   @@header = ["Gigs", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
 
-  def initialize(year_no, month_no, wb_controller, sheet_name, sheet_id)
-    super(wb_controller, sheet_name, sheet_id)
+  def initialize(year_no, month_no, wb_controller, tab_name)
+    super(wb_controller, tab_name)
     @year_no = year_no
     @month_no = month_no
   end
@@ -19,7 +19,7 @@ class VolunteerMonthTabController < TabController
     start_column_index = 0, 
     end_column_index = @@header.size
   )
-    SheetRange.new(start_row_index, end_row_index, start_column_index, end_column_index, @sheet_id, @sheet_name)
+    SheetRange.new(start_row_index, end_row_index, start_column_index, end_column_index, @sheet_id, @tab_name)
 
   end
 

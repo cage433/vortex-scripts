@@ -1,4 +1,3 @@
-#require_relative 'google-sheets/volunteer-sheets'
 require_relative 'google-sheets/workbook_controller.rb'
 require_relative 'google-sheets/volunteer-sheet/controller.rb'
 require_relative 'env'
@@ -22,8 +21,7 @@ def populate_vol_sheet(year, month)
   if !wb.has_tab_with_name?(tab_name)
     wb.add_sheet(airtable_events.tab_name)
   end
-  sheet_id = wb.tab_ids_by_name()[tab_name]
-  tab_mediator =  VolunteerMonthTabController.new(year, month, wb, airtable_events.tab_name, sheet_id)
+  tab_mediator =  VolunteerMonthTabController.new(year, month, wb, airtable_events.tab_name)
   sheet_events = tab_mediator.read_events()
   merged_events = sheet_events.merge(airtable_events)
   if merged_events.num_events > sheet_events.num_events
