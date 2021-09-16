@@ -30,3 +30,13 @@ class GigPersonnel
   end
 
 end
+
+class EventDetails
+  attr_reader :event_date, :event_title, :personnel
+  def initialize(event_date, event_title, personnel)
+    @event_date = event_date
+    @event_title = event_title
+    @personnel = personnel
+  end
+
+end

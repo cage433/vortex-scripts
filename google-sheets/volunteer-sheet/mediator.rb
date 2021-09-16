@@ -2,6 +2,7 @@ require_relative '../sheets-service'
 require_relative '../sheet-range'
 require_relative '../sheet-mediator'
 require_relative 'model'
+require_relative '../../mediator/mediator'
 
 class VolunteerMonthSheetMediator < SheetMediator
   @@header = ["Gigs", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
@@ -34,7 +35,7 @@ class VolunteerMonthSheetMediator < SheetMediator
     events_range = sheet_range(1, 1 + num_events * 2)
     data = []
     month_events.sorted().each do |details_for_event|
-      data += details_for_event.to_excel_data() 
+      data += EventDetailsMediator.to_excel_data(details_for_event) 
     end
     set_data(events_range, data)
     requests = (0...num_events).collect do |i_event|
@@ -70,7 +71,7 @@ class VolunteerMonthSheetMediator < SheetMediator
           # Pad with blanks in case there is no volunteer/engineer data
           row + [""] * (@@header.size - row.size)
         end
-        VolunteerSheetDetailsForEvent.from_excel(rows_for_event)
+        EventDetailsMediator.from_excel(rows_for_event)
       end
       VolunteerSheetDetailsForMonth.new(details)
     end

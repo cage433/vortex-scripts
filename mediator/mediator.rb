@@ -1,3 +1,6 @@
+require_relative '../model/model'
+
+require 'date'
 
 class SetPersonnelMediator
   def self.to_excel_data(personnel)
@@ -28,6 +31,37 @@ class GigPersonnelMediator
       first_set_volunteer_data: first_set_volunteers, 
       second_set_volunteer_data: second_set_volunteers,
       sound_engineer: sound_engineer
+    )
+  end
+end
+
+class EventDetailsMediator
+  def self.to_excel_data(event)
+    [
+      [event.event_title, event.event_date, event.event_date, 1, "19:00"] + 
+        SetPersonnelMediator.to_excel_data(event.personnel.first_set_volunteer_data) + 
+        [event.personnel.sound_engineer],
+      ["", "", "", 2, "21:00"] + 
+      SetPersonnelMediator.to_excel_data(event.personnel.second_set_volunteer_data) + [""]
+    ]
+  end
+
+  def self.from_airtable_record(record)
+    EventDetails.new(record.event_date, record.event_title, GigPersonnel.empty)
+  end
+
+  def self.from_excel(rows)
+    assert_dimension_2d(rows, 2, 9)
+    event_date = Date.parse(rows[0][1])
+    event_title = rows[0][0]
+    personnel = GigPersonnelMediator.from_excel(
+      [
+        rows[0].slice(5, 4),
+        rows[1].slice(5, 4)
+      ]
+    )
+    EventDetails.new(
+      event_date, event_title, personnel
     )
   end
 end
