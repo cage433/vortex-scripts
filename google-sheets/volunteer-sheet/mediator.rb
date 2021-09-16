@@ -51,30 +51,6 @@ class VolunteerMonthSheetMediator < SheetMediator
 
     apply_requests(requests)
   end
-  #def write_events(events)
-    #num_events = events.size
-    #events_range = sheet_range(1, 1 + num_events * 2)
-    #data = []
-    #events.sorted().each do |event|
-      #details_for_event = VolunteerSheetDetailsForEvent.from_airtable_record(event)
-      #data += details_for_event.to_excel_data() 
-
-    #end
-    #set_data(events_range, data)
-    #requests = (0...num_events).collect do |i_event|
-      #event_range = sheet_range(1 + i_event * 2, 1 + (i_event + 1) * 2)
-      #set_outside_border_request(event_range)
-    #end
-
-    #event_date_range = sheet_range(1, 1 + num_events * 2, 1, 2)
-    #event_day_range = sheet_range(1, 1 + num_events * 2, 2, 3)
-    #requests += [
-      #set_number_format_request(event_date_range, "mmm d"),
-      #set_number_format_request(event_day_range, "ddd"),
-    #]
-
-    #apply_requests(requests)
-  #end
 
   def read_events_from_sheet()
     max_events = 50

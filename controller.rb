@@ -4,7 +4,7 @@ require_relative 'env'
 require_relative 'airtable/events-table'
 require 'date'
 
-def update_from_airtable(year, month)
+def populate_vol_sheet(year, month)
   airtable_events = AlexEventRecords.new(AlexEvents.events_for_month(year, month))
   rota_mediator = VolunteerSpreadsheetMediator.new(VOL_ROTA_SPREADSHEET_ID)
   if !rota_mediator.has_sheet_for_month?(year, month)
@@ -21,14 +21,12 @@ def update_from_airtable(year, month)
   end
 end
 
-def populate_night_manager_table()
+def populate_night_manager_table(year, month)
+  airtable_events = AlexEventRecords.new(AlexEvents.events_for_month(year, month))
   events = AlexEvents.events_for_month(2021, 9)
-  event_record_ids = events.collect do |e|
+  event_record_ids = airtable_events.collect do |e|
     e.record_id
   end
-  #events.each do |e|
-    #puts("#{e.record_id}, #{e}")
-  #end
   night_manager_record_ids = NightManagerTable.all_event_record_ids()
   events.each do |e|
     if !night_manager_record_ids.include?(e.record_id)
@@ -39,5 +37,5 @@ def populate_night_manager_table()
 
 end
 
-#populate_night_manager_table()
-update_from_airtable(2021, 10)
+#populate_night_manager_table(2021, 10)
+populate_vol_sheet(2021, 10)

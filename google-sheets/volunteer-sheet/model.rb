@@ -27,6 +27,7 @@ end
 
 class GigPersonnel
   attr_reader :first_set_volunteer_data, :second_set_volunteer_data, :sound_engineer
+
   def initialize(first_set_volunteer_data:, second_set_volunteer_data:, sound_engineer:)
     @first_set_volunteer_data = first_set_volunteer_data
     @second_set_volunteer_data = second_set_volunteer_data
@@ -106,6 +107,7 @@ class VolunteerSheetDetailsForMonth
   def num_events
     @event_details.size
   end
+
   def sorted()
     @event_details.sort_by { |a| a.event_date}
   end
