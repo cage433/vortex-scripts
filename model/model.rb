@@ -66,4 +66,8 @@ class EventsForMonth
     end
     EventsForMonth.new(@year, @month, merged_events)
   end
+
+  def tab_name()
+    return Date.new(year, month, 1).strftime("%B %y")
+  end
 end

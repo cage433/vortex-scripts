@@ -10,24 +10,23 @@ class SheetMediator
       blue: 0.0,
   }
 
-  def initialize(service, spreadsheet_id, sheet_name, sheet_id)
-    @service = service
+  def initialize(wb_controller, sheet_name, sheet_id)
+    @wb_controller = wb_controller
     @sheet_name = sheet_name
-    @spreadsheet_id = spreadsheet_id
     @sheet_id = sheet_id
   end
 
-  def set_data(range, data)
-    raise "Dimension mismatch, range rows #{range.num_rows}, data #{data.size}" if range.num_rows != data.size
-    raise "Dimension mismatch, range cols #{range.num_cols}, data #{data[0].size}" if range.num_cols != data[0].size
+  #def set_data(range, data)
+    #raise "Dimension mismatch, range rows #{range.num_rows}, data #{data.size}" if range.num_rows != data.size
+    #raise "Dimension mismatch, range cols #{range.num_cols}, data #{data[0].size}" if range.num_cols != data[0].size
 
-    value_range = range.as_value_range()
-    value_range_object = Google::Apis::SheetsV4::ValueRange.new(range: value_range, values: data)
-    result = @service.update_spreadsheet_value(@spreadsheet_id,
-                                              value_range,
-                                              value_range_object,
-                                              value_input_option: "USER_ENTERED")
-  end
+    #value_range = range.as_value_range()
+    #value_range_object = Google::Apis::SheetsV4::ValueRange.new(range: value_range, values: data)
+    #result = @service.update_spreadsheet_value(@workbook_id,
+                                              #value_range,
+                                              #value_range_object,
+                                              #value_input_option: "USER_ENTERED")
+  #end
 
   def set_background_color_request(range, color_json)
     {
@@ -95,15 +94,6 @@ class SheetMediator
     }
   end
 
-  def apply_requests(requests)
-		result = @service.batch_update_spreadsheet(
-		  @spreadsheet_id, 
-		  {requests: requests},
-		  fields: nil,
-		  quota_user: nil,
-		  options: nil
-		)
-  end
 
   def update_all_cells_request(fields)
     {
@@ -117,7 +107,7 @@ class SheetMediator
   end
 
   def clear_values()
-    apply_requests(
+    @wb_controller.apply_requests(
       [
         update_all_cells_request("userEnteredValue"),
         update_all_cells_request("userEnteredFormat")

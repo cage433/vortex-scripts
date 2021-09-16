@@ -1,4 +1,5 @@
 require_relative 'google-sheets/volunteer-sheets'
+require_relative 'google-sheets/workbook_controller.rb'
 require_relative 'google-sheets/volunteer-sheet/mediator.rb'
 require_relative 'env'
 require_relative 'airtable/events-table'
@@ -15,19 +16,22 @@ end
 
 def populate_vol_sheet(year, month)
   controller = Controller.new()
+  wb = WorkbookController.new(VOL_ROTA_SPREADSHEET_ID)
   airtable_events = controller.events_for_month(year, month)
-  rota_mediator = VolunteerSpreadsheetMediator.new(VOL_ROTA_SPREADSHEET_ID)
-  if !rota_mediator.has_sheet_for_month?(year, month)
-    rota_mediator.add_sheet_for_month(year, month)
+  #rota_mediator = VolunteerSpreadsheetMediator.new(VOL_ROTA_SPREADSHEET_ID)
+  tab_name = airtable_events.tab_name
+  if !wb.has_tab_with_name?(tab_name)
+    wb.add_sheet(airtable_events.tab_name)
   end
-  month_mediator = rota_mediator.month_sheet_medtiator(year, month)
-  sheet_events = month_mediator.read_events_from_sheet()
+  sheet_id = wb.tab_ids_by_name()[tab_name]
+  tab_mediator =  VolunteerMonthSheetMediator.new(year, month, wb, airtable_events.tab_name, sheet_id)
+  sheet_events = tab_mediator.read_events_from_sheet()
   merged_events = sheet_events.merge(airtable_events)
   if merged_events.num_events > sheet_events.num_events
     puts("Adding missing events")
-    month_mediator.clear_values()
-    month_mediator.write_header()
-    month_mediator.write_events(merged_events)
+    tab_mediator.clear_values()
+    tab_mediator.write_header()
+    tab_mediator.write_events(merged_events)
   end
 end
 

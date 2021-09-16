@@ -7,8 +7,8 @@ require_relative '../../mediator/mediator'
 class VolunteerMonthSheetMediator < SheetMediator
   @@header = ["Gigs", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
 
-  def initialize(year_no, month_no, service, spreadsheet_id, sheet_name, sheet_id)
-    super(service, spreadsheet_id, sheet_name, sheet_id)
+  def initialize(year_no, month_no, wb_controller, sheet_name, sheet_id)
+    super(wb_controller, sheet_name, sheet_id)
     @year_no = year_no
     @month_no = month_no
   end
@@ -24,11 +24,10 @@ class VolunteerMonthSheetMediator < SheetMediator
   end
 
 
-
   def write_header()
     header_range = sheet_range(0, 1)
-    set_data(header_range, [@@header])
-    apply_requests([
+    @wb_controller.set_data(header_range, [@@header])
+    @wb_controller.apply_requests([
       set_background_color_request(header_range, @@light_green),
       set_outside_border_request(header_range),
       set_column_width_request(0, 300)
@@ -42,7 +41,7 @@ class VolunteerMonthSheetMediator < SheetMediator
     month_events.sorted_events().each do |details_for_event|
       data += EventMediator.to_excel_data(details_for_event) 
     end
-    set_data(events_range, data)
+    @wb_controller.set_data(events_range, data)
     requests = (0...num_events).collect do |i_event|
       event_range = sheet_range(1 + i_event * 2, 1 + (i_event + 1) * 2)
       set_outside_border_request(event_range)
@@ -55,13 +54,13 @@ class VolunteerMonthSheetMediator < SheetMediator
       set_number_format_request(event_day_range, "ddd"),
     ]
 
-    apply_requests(requests)
+    @wb_controller.apply_requests(requests)
   end
 
   def read_events_from_sheet()
     max_events = 50
     event_range = sheet_range(1, 1 + 2 * max_events)
-    values = @service.get_spreadsheet_values(@spreadsheet_id, event_range.as_value_range()).values
+    values = @wb_controller.get_spreadsheet_values(event_range)
     if values.nil?
       EventsForMonth.new(@year_no, @month_no, [])
     else
@@ -83,80 +82,3 @@ class VolunteerMonthSheetMediator < SheetMediator
   end
 
 end
-
-class VolunteerSpreadsheetMediator
-  attr_reader :spreadsheet_id, :service
-
-
-  def initialize(spreadsheet_id)
-    @service = get_sheets_service()
-    @spreadsheet_id = spreadsheet_id
-  end
-
-  def self.sheet_name_for_month(year, month)
-    return Date.new(year, month, 1).strftime("%B %y")
-  end
-
-  def sheet_ids_by_name()
-    ids_by_name = {}
-    spreadsheet = @service.get_spreadsheet(@spreadsheet_id)
-    spreadsheet.sheets.each_with_index do |sheet, i|
-      ids_by_name[sheet.properties.title] = sheet.properties.sheet_id
-    end
-    ids_by_name
-  end
-
-  def has_sheet_for_month?(year, month)
-    name_for_month = VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)
-    sheet_ids_by_name().has_key?(name_for_month)
-  end
-
-  def sheet_id_for_month(year, month)
-    raise "No sheet called #{name_for_month}" if !has_sheet_for_month?(year, month)
-    sheet_ids_by_name()[VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)]
-  end
-
-  def month_sheet_medtiator(year, month)
-    name_for_month = VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)
-    raise "No sheet called #{name_for_month}" if !has_sheet_for_month?(year, month)
-    sheet_id = sheet_ids_by_name()[VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)]
-    VolunteerMonthSheetMediator.new(year, month, @service, @spreadsheet_id, name_for_month, sheet_id)
-  end
-
-  def apply_request(request)
-		result = @service.batch_update_spreadsheet(
-		  @spreadsheet_id, 
-		  {requests: [request]},
-		  fields: nil, quota_user: nil, options: nil
-      
-		)
-  end
-  def add_sheet_for_month(year, month)
-    name_for_month = VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)
-    raise "Sheet called #{name_for_month} already exists" if has_sheet_for_month?(year, month)
-    request = {
-      add_sheet: {
-        properties: {
-          title: name_for_month,
-          grid_properties: {hide_gridlines: true}
-        }
-      }
-    }
-    apply_request(request)
-    puts("Created sheet for #{name_for_month}")
-  end
-
-  def delete_sheet_for_month(year, month)
-    name_for_month = VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)
-    raise "Sheet called #{name_for_month} doesn't exist" if !has_sheet_for_month?(year, month)
-    request = {
-      delete_sheet: {
-        sheet_id: sheet_id_for_month(year, month)
-      }
-    }
-    apply_request(request)
-    puts("Deleted sheet for #{name_for_month}")
-  end
-
-end
-
