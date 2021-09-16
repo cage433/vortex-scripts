@@ -2,6 +2,13 @@ require_relative '../model/model'
 require_relative '../airtable/fields'
 
 require 'date'
+def assert_dimension_2d(arr, expected_rows, expected_cols)
+  raise "Row dimension mismatch, expected #{expected_rows}, got #{arr.size}" if arr.size != expected_rows
+  arr.each do |row|
+  raise "Col dimension mismatch, expected #{expected_cols}, got #{row.size}" if row.size != expected_cols
+  end
+end
+
 
 class SetPersonnelMediator
   def self.to_excel_data(personnel)
@@ -52,8 +59,6 @@ class EventMediator
     record_id = record.id
     event_date = Date.parse(record[ALEX_EVENT_DATE])
     event_title = record[ALEX_EVENT_TITLE]
-    #AlexEvent.new(record_id, event_date, event_title)
-  #end
     Event.new(event_date, event_title, GigPersonnel.empty)
   end
 

@@ -1,7 +1,6 @@
 require_relative '../sheets-service'
 require_relative '../sheet-range'
 require_relative '../tab-controller'
-require_relative 'model'
 require_relative '../../mediator/mediator'
 
 class VolunteerMonthTabController < TabController
