@@ -15,22 +15,6 @@ class ExtendedTable < Airrecord::Table
   end
 end
 
-class AlexEventRecords
-  attr_reader :events
-  def initialize(events)
-    @events = events
-  end
-
-  def sorted()
-    @events.sort! { |a, b| a.event_date <=> b.event_date }
-  end
-
-  def size
-    @events.size
-  end
-end
-
-
 class OriginalContracts < ExtendedTable
   self.base_key = VORTEX_DATABASE_ID
   self.table_name = ORIGINAL_CONTRACTS_TABLE
@@ -52,39 +36,11 @@ class OriginalContracts < ExtendedTable
 
 end
 
-#class AlexEvent
-  #attr_reader :event_date, :event_title
-
-  #def initialize(record_id, event_date, event_title)
-    #@event_date = event_date
-    #@event_title = event_title
-  #end
-
-  #def self.from_record(record)
-    #record_id = record.id
-    #event_date = Date.parse(record[ALEX_EVENT_DATE])
-    #event_title = record[ALEX_EVENT_TITLE]
-    #AlexEvent.new(record_id, event_date, event_title)
-  #end
-
-  #def to_s()
-    #"#{@event_title}, #{@event_date}"
-  #end
-#end
 
 class AlexEvents < ExtendedTable
    
   self.base_key = ALEX_VORTEX_DB_ID
   self.table_name = ALEX_EVENTS_TABLE
-
-  def self.all_events()
-    all_records = AlexEvents.all(
-      fields: [ALEX_EVENT_DATE, ALEX_EVENT_TITLE],
-    )
-    all_records.collect do |record|
-      AlexEvent.from_record(record)
-    end
-  end
 
   def self.filter_text(first_date, last_date)
     first_date_formatted = first_date.strftime("%Y-%m-%d")
@@ -109,38 +65,25 @@ class AlexEvents < ExtendedTable
 
   end
 
-  def self.events_for_date_range(first_date, last_date)
-    all_records = AlexEvents.all(
+  def self.records_for_date_range(first_date, last_date)
+    AlexEvents.all(
       fields: [ALEX_EVENT_DATE, ALEX_EVENT_TITLE],
       filter: filter_text(first_date, last_date)
     )
-    all_records.collect do |record|
-      EventMediator.from_airtable_record(record)
-    end
+    #end
   end
 
-  def self.events_for_month(year, month_no)
-    events = self.events_for_date_range(
+  def self.records_for_month(year, month_no)
+    self.records_for_date_range(
       Date.new(year, month_no, 1),
       Date.new(year, month_no, -1)
     )
-    EventsForMonth.new(year, month_no, events)
   end
 
-  def self.has_event_for_date?(date)
-    !self.event_for_date(date).nil?
+  def self.has_record_for_date?(date)
+    !self.record_for_date(date).nil?
   end
 
-  def self.event_for_date(date)
-    es = self.events_for_date_range(date, date)
-    if es.empty?
-      nil
-    elsif es.len == 1
-      es[0]
-    else
-      raise "Unexpected events for date #{date}, #{es}"
-    end
-  end
 end
 
 

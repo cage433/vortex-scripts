@@ -4,8 +4,18 @@ require_relative 'env'
 require_relative 'airtable/events-table'
 require 'date'
 
+class Controller
+  def events_for_month(year, month)
+    events = AlexEvents.records_for_month(year, month).collect do |rec|
+      EventMediator.from_airtable_record(rec)
+    end
+    EventsForMonth.new(year, month, events)
+  end
+end
+
 def populate_vol_sheet(year, month)
-  airtable_events = AlexEvents.events_for_month(year, month)
+  controller = Controller.new()
+  airtable_events = controller.events_for_month(year, month)
   rota_mediator = VolunteerSpreadsheetMediator.new(VOL_ROTA_SPREADSHEET_ID)
   if !rota_mediator.has_sheet_for_month?(year, month)
     rota_mediator.add_sheet_for_month(year, month)
