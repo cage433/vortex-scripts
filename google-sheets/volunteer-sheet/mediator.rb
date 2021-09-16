@@ -7,6 +7,11 @@ require_relative '../../mediator/mediator'
 class VolunteerMonthSheetMediator < SheetMediator
   @@header = ["Gigs", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
 
+  def initialize(year_no, month_no, service, spreadsheet_id, sheet_name, sheet_id)
+    super(service, spreadsheet_id, sheet_name, sheet_id)
+    @year_no = year_no
+    @month_no = month_no
+  end
 
   def sheet_range(
     start_row_index, 
@@ -34,8 +39,8 @@ class VolunteerMonthSheetMediator < SheetMediator
     num_events = month_events.num_events
     events_range = sheet_range(1, 1 + num_events * 2)
     data = []
-    month_events.sorted().each do |details_for_event|
-      data += EventDetailsMediator.to_excel_data(details_for_event) 
+    month_events.sorted_events().each do |details_for_event|
+      data += EventMediator.to_excel_data(details_for_event) 
     end
     set_data(events_range, data)
     requests = (0...num_events).collect do |i_event|
@@ -58,7 +63,7 @@ class VolunteerMonthSheetMediator < SheetMediator
     event_range = sheet_range(1, 1 + 2 * max_events)
     values = @service.get_spreadsheet_values(@spreadsheet_id, event_range.as_value_range()).values
     if values.nil?
-      VolunteerSheetDetailsForMonth.new([])
+      EventsForMonth.new(@year_no, @month_no, [])
     else
       if values.size % 2 == 1
       # get_spreadsheet_values only returns non-blank rows, we correct here to force there
@@ -71,9 +76,9 @@ class VolunteerMonthSheetMediator < SheetMediator
           # Pad with blanks in case there is no volunteer/engineer data
           row + [""] * (@@header.size - row.size)
         end
-        EventDetailsMediator.from_excel(rows_for_event)
+        EventMediator.from_excel(rows_for_event)
       end
-      VolunteerSheetDetailsForMonth.new(details)
+      EventsForMonth.new(@year_no, @month_no, details)
     end
   end
 
@@ -115,7 +120,7 @@ class VolunteerSpreadsheetMediator
     name_for_month = VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)
     raise "No sheet called #{name_for_month}" if !has_sheet_for_month?(year, month)
     sheet_id = sheet_ids_by_name()[VolunteerSpreadsheetMediator.sheet_name_for_month(year, month)]
-    VolunteerMonthSheetMediator.new(@service, @spreadsheet_id, name_for_month, sheet_id)
+    VolunteerMonthSheetMediator.new(year, month, @service, @spreadsheet_id, name_for_month, sheet_id)
   end
 
   def apply_request(request)

@@ -52,25 +52,25 @@ class OriginalContracts < ExtendedTable
 
 end
 
-class AlexEvent
-  attr_reader :event_date, :event_title
+#class AlexEvent
+  #attr_reader :event_date, :event_title
 
-  def initialize(record_id, event_date, event_title)
-    @event_date = event_date
-    @event_title = event_title
-  end
+  #def initialize(record_id, event_date, event_title)
+    #@event_date = event_date
+    #@event_title = event_title
+  #end
 
-  def self.from_record(record)
-    record_id = record.id
-    event_date = Date.parse(record[ALEX_EVENT_DATE])
-    event_title = record[ALEX_EVENT_TITLE]
-    AlexEvent.new(record_id, event_date, event_title)
-  end
+  #def self.from_record(record)
+    #record_id = record.id
+    #event_date = Date.parse(record[ALEX_EVENT_DATE])
+    #event_title = record[ALEX_EVENT_TITLE]
+    #AlexEvent.new(record_id, event_date, event_title)
+  #end
 
-  def to_s()
-    "#{@event_title}, #{@event_date}"
-  end
-end
+  #def to_s()
+    #"#{@event_title}, #{@event_date}"
+  #end
+#end
 
 class AlexEvents < ExtendedTable
    
@@ -115,15 +115,16 @@ class AlexEvents < ExtendedTable
       filter: filter_text(first_date, last_date)
     )
     all_records.collect do |record|
-      AlexEvent.from_record(record)
+      EventMediator.from_airtable_record(record)
     end
   end
 
   def self.events_for_month(year, month_no)
-    self.events_for_date_range(
+    events = self.events_for_date_range(
       Date.new(year, month_no, 1),
       Date.new(year, month_no, -1)
     )
+    EventsForMonth.new(year, month_no, events)
   end
 
   def self.has_event_for_date?(date)

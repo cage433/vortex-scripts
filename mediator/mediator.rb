@@ -1,4 +1,5 @@
 require_relative '../model/model'
+require_relative '../airtable/fields'
 
 require 'date'
 
@@ -35,7 +36,7 @@ class GigPersonnelMediator
   end
 end
 
-class EventDetailsMediator
+class EventMediator
   def self.to_excel_data(event)
     [
       [event.event_title, event.event_date, event.event_date, 1, "19:00"] + 
@@ -47,7 +48,13 @@ class EventDetailsMediator
   end
 
   def self.from_airtable_record(record)
-    EventDetails.new(record.event_date, record.event_title, GigPersonnel.empty)
+  #def self.from_record(record)
+    record_id = record.id
+    event_date = Date.parse(record[ALEX_EVENT_DATE])
+    event_title = record[ALEX_EVENT_TITLE]
+    #AlexEvent.new(record_id, event_date, event_title)
+  #end
+    Event.new(event_date, event_title, GigPersonnel.empty)
   end
 
   def self.from_excel(rows)
@@ -60,8 +67,11 @@ class EventDetailsMediator
         rows[1].slice(5, 4)
       ]
     )
-    EventDetails.new(
+    Event.new(
       event_date, event_title, personnel
     )
   end
+end
+
+class EventsForMonthMediator
 end
