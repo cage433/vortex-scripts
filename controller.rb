@@ -12,9 +12,10 @@ class Controller
 
   def airtable_events_for_month(year, month)
     ids = EventTable.ids_for_month(year, month)
-    events = ids.collect { |id| 
-      EventMediator.from_airtable(id) 
-    }
+    events = EventMediator.from_airtable_many(ids)
+    #events = ids.collect { |id| 
+      #EventMediator.from_airtable(id) 
+    #}
     EventsForMonth.new(year, month, events)
   end
 

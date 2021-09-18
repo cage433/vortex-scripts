@@ -11,52 +11,12 @@ def assert_dimension_2d(arr, expected_rows, expected_cols)
   end
 end
 
-
-#class SetPersonnelMediator
-  #def self.to_excel_data(personnel)
-    #[personnel.night_manager, personnel.first_volunteer, personnel.second_volunteer]
-  #end
-
-  #def self.from_excel(row)
-    #raise "Invalid dimension, length #{row.size}, expected 3" if row.size != 3
-    #SetPersonnel.new(row[0], row[1], row[2])
-  #end
-
-  #def self.from_airtable_record(rec)
-    #SetPersonnel.new(
-      #rec[ALEX_NIGHT_MANAGER], rec[ALEX_VOL_1], rec[ALEX_VOL_2]
-    #)
-  #end
-#end
-
-
-#class GigPersonnelMediator
-  #def self.to_excel_data(gig_personnel)
-    #[
-      #gig_personnel.first_set_volunteer_data.to_excel_data() + [gig_personnel.sound_engineer],
-      #gig_personnel.second_set_volunteer_data.to_excel_data() + [""]
-    #]
-  #end
-
-  #def self.from_excel(rows)
-    #assert_dimension_2d(rows, 2, 4)
-    #sound_engineer = rows[0][3]
-    #first_set_volunteers = SetPersonnelMediator.from_excel(rows[0].slice(0, 3))
-    #second_set_volunteers = SetPersonnelMediator.from_excel(rows[1].slice(0, 3))
-    #GigPersonnel.new(
-      #first_set_volunteer_data: first_set_volunteers, 
-      #second_set_volunteer_data: second_set_volunteers,
-      #sound_engineer: sound_engineer
-    #)
-  #end
-
-#end
-
 module VolunteerRotaColumns
   EVENT_ID_COL, GIG_ID_COL, TITLE_COL, DATE_COL, DAY_COL, 
     GIG_NO_COL, DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
     VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL = [*0..10]
 end
+
 class GigMediator
   include GigTableMeta
   include VolunteerRotaColumns
@@ -113,23 +73,31 @@ class EventMediator
     [row1, row2]
   end
 
-  def self.from_airtable(event_id)
+  def self.from_airtable_many(event_ids)
     include EventTableMeta
-    event_record = EventTable.find(event_id)
-    gig_ids = event_record[GIG_IDS]
-    gig1, gig2 = GigTable
+    event_records = EventTable.find_many(event_ids)
+
+    gig_ids = event_records.collect { |rec| rec[GIG_IDS] }.flatten
+    gigs_by_id = Hash[ 
+      GigTable
       .find_many(gig_ids)
-      .collect { |rec| GigMediator.from_airtable_record(rec) }
-      .sort_by { |g| g.gig_no }
-    event_date = Date.parse(event_record[DATE])
-    event_title = event_record[TITLE]
-    Event.new(
-      airtable_id: event_id,
-      event_date: event_date,
-      event_title: event_record[TITLE],
-      gig1: gig1, gig2: gig2,
-      sound_engineer: event_record[SOUND_ENGINEER]
-    )
+      .collect { |rec| 
+        [rec[ID], GigMediator.from_airtable_record(rec)] 
+      } 
+    ]
+    event_records.collect { |event_record|
+      gig1, gig2 = event_record[GIG_IDS].collect { |id| gigs_by_id[id] }.sort_by{ |g| g.gig_no }
+      event_date = Date.parse(event_record[DATE])
+      event_title = event_record[TITLE]
+      Event.new(
+        airtable_id: event_record[ID],
+        event_date: event_date,
+        event_title: event_record[TITLE],
+        gig1: gig1, gig2: gig2,
+        sound_engineer: event_record[SOUND_ENGINEER]
+      )
+    }
+
   end
 
   def self.from_excel(rows)
