@@ -40,5 +40,14 @@ class SheetRange
   def num_rows
     @end_row_index - @start_row_index
   end
+
+  def add_row()
+    SheetRange.new(
+      @start_row_index, @end_row_index + 1, 
+      @start_column_index, @end_column_index, 
+      @sheet_id,
+      @sheet_name
+    )
+  end
 end
 

@@ -73,6 +73,34 @@ class EventMediator
     [row1, row2]
   end
 
+  def self.to_night_manager_xl_data(event, i_event)
+      i_row = 1 + i_event * 3
+      first_row = [
+        event.airtable_id, 
+        event.gig1.airtable_id, 
+        event.event_title, 
+        event.event_date, 
+        event.event_date,
+        1, "19:00",
+        "", "", "", "", 
+        "=Sum(I#{i_row}:J#{i_row})", 
+        "",
+        "", "", "", "", "", "", "", 
+      ] 
+      second_row = [
+        "",
+        event.gig2.airtable_id, 
+        "",
+        event.event_date, 
+        event.event_date,
+        2, "21:00",
+        "", "", "", "", "", "", 
+        "", "", "", "", "", "", "", 
+      ]
+      blank_row = [""] * 20
+      [first_row, second_row, blank_row]
+  end
+
   def self.from_airtable_many(event_ids)
     include EventTableMeta
     event_records = EventTable.find_many(event_ids)

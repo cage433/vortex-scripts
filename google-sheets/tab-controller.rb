@@ -68,6 +68,21 @@ class TabController
     }
   end
 
+  def set_left_right_border_request(range, style: "SOLID", color: @@black)
+    border_style = {
+          style: style,
+          color: color
+    }
+
+    {
+      update_borders: {
+        range: range.as_json_range(),
+        left: border_style,
+        right: border_style
+      }
+    }
+  end
+
   def set_column_width_request(i_col, width)
     {
       update_dimension_properties: {
@@ -98,6 +113,29 @@ class TabController
           hidden_by_user: true
         },
         fields: "hidden_by_user"
+      }
+    }
+  end
+
+  def center_text_request(range)
+      {
+        repeat_cell: {
+          range: range.as_json_range(),
+          cell: {
+            user_entered_format: {
+              horizontal_alignment: "CENTER"
+            }
+          },
+          fields: "user_entered_format.horizontal_alignment"
+        }
+      }
+  end
+
+  def merge_columns_request(range)
+    {
+      merge_cells: {
+        merge_type: 'MERGE_ALL',
+        range: range.as_json_range()
       }
     }
   end
