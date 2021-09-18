@@ -10,6 +10,10 @@ class SetPersonnel
     SetPersonnel.new("", "", "")
   end
 
+  def to_s()
+    "NM: #{@night_manager}, Vol1: #{@first_volunteer}, Vol2: #{@second_volunteer}"
+  end
+
 end
 
 class GigPersonnel
@@ -29,14 +33,37 @@ class GigPersonnel
     )
   end
 
+  def ==(o)
+    o.class == self.class && o.state == self.state
+  end
+  def state
+    [@sound_engineer]
+  end
+
 end
 
-class Event
+class Event < Object
   attr_reader :event_date, :event_title, :personnel
   def initialize(event_date, event_title, personnel)
     @event_date = event_date
     @event_title = event_title
     @personnel = personnel
+  end
+
+  def to_s()
+"#{@event_date}: #{@event_title}
+  Gig1: #{@personnel.first_set_volunteer_data}
+  Gig2: #{@personnel.second_set_volunteer_data}
+  SE: <#{@personnel.sound_engineer}>
+"
+  end
+
+  def ==(o)
+    o.class == self.class && o.state == self.state
+  end
+
+  def state
+    [@event_date, @event_title, @personnel.sound_engineer]
   end
 end
 
@@ -67,7 +94,4 @@ class EventsForMonth
     EventsForMonth.new(@year, @month, merged_events)
   end
 
-  def tab_name()
-    return Date.new(year, month, 1).strftime("%B %y")
-  end
 end

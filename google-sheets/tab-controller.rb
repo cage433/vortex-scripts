@@ -1,3 +1,5 @@
+require 'date'
+
 class TabController
   @@light_green = {
       red: 0.9,
@@ -102,5 +104,9 @@ class TabController
         update_all_cells_request("userEnteredFormat")
       ]
     )
+  end
+
+  def self.tab_name_for_month(year, month)
+    return Date.new(year, month, 1).strftime("%B %y")
   end
 end

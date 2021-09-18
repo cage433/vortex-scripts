@@ -6,8 +6,8 @@ require_relative '../../mediator/mediator'
 class VolunteerMonthTabController < TabController
   @@header = ["Gigs", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
 
-  def initialize(year_no, month_no, wb_controller, tab_name)
-    super(wb_controller, tab_name)
+  def initialize(year_no, month_no, wb_controller)
+    super(wb_controller, TabController.tab_name_for_month(year_no, month_no))
     @year_no = year_no
     @month_no = month_no
   end
@@ -78,6 +78,12 @@ class VolunteerMonthTabController < TabController
       end
       EventsForMonth.new(@year_no, @month_no, details)
     end
+  end
+
+  def replace_events(month_events)
+      clear_values()
+      write_header()
+      write_events(month_events)
   end
 
 end

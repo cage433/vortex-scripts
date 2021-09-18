@@ -20,6 +20,12 @@ class SetPersonnelMediator
     raise "Invalid dimension, length #{row.size}, expected 3" if row.size != 3
     SetPersonnel.new(row[0], row[1], row[2])
   end
+
+  def self.from_airtable_record(rec)
+    SetPersonnel.new(
+      rec[ALEX_NIGHT_MANAGER], rec[ALEX_VOL_1], rec[ALEX_VOL_2]
+    )
+  end
 end
 
 
@@ -42,6 +48,7 @@ class GigPersonnelMediator
       sound_engineer: sound_engineer
     )
   end
+
 end
 
 class EventMediator
@@ -50,16 +57,24 @@ class EventMediator
       [event.event_title, event.event_date, event.event_date, 1, "19:00"] + 
         SetPersonnelMediator.to_excel_data(event.personnel.first_set_volunteer_data) + 
         [event.personnel.sound_engineer],
-      ["", "", "", 2, "21:00"] + 
+        ["", "", "", 2, "21:00"] + 
       SetPersonnelMediator.to_excel_data(event.personnel.second_set_volunteer_data) + [""]
     ]
   end
 
-  def self.from_airtable_record(record)
-    record_id = record.id
-    event_date = Date.parse(record[ALEX_EVENT_DATE])
-    event_title = record[ALEX_EVENT_TITLE]
-    Event.new(event_date, event_title, GigPersonnel.empty)
+  def self.from_airtable_records(event_record, first_gig_record, secong_gig_record)
+    record_id = event_record.id
+    event_date = Date.parse(event_record[ALEX_EVENT_DATE])
+    event_title = event_record[ALEX_EVENT_TITLE]
+    Event.new(
+      event_date, 
+      event_title, 
+      GigPersonnel.new(
+        first_set_volunteer_data: SetPersonnelMediator.from_airtable_record(first_gig_record),
+        second_set_volunteer_data: SetPersonnelMediator.from_airtable_record(secong_gig_record),
+        sound_engineer: event_record[ALEX_SOUND_ENGINEER]
+      )
+    )
   end
 
   def self.from_excel(rows)
@@ -76,5 +91,9 @@ class EventMediator
       event_date, event_title, personnel
     )
   end
+
+
+
 end
+
 

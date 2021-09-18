@@ -62,15 +62,24 @@ class AlexEvents < ExtendedTable
         }
       )
     end
+  end
 
+
+  def self.ids_for_month(year, month_no)
+    AlexEvents.all(
+      fields: [ALEX_ID],
+      filter: filter_text(
+        Date.new(year, month_no, 1),
+        Date.new(year, month_no, -1)
+      )
+    )
   end
 
   def self.records_for_date_range(first_date, last_date)
     AlexEvents.all(
-      fields: [ALEX_EVENT_DATE, ALEX_EVENT_TITLE],
+      fields: [ALEX_EVENT_DATE, ALEX_EVENT_TITLE, ALEX_GIGS],
       filter: filter_text(first_date, last_date)
     )
-    #end
   end
 
   def self.records_for_month(year, month_no)
@@ -87,3 +96,37 @@ class AlexEvents < ExtendedTable
 end
 
 
+class AlexGigs < ExtendedTable
+  self.base_key = ALEX_VORTEX_DB_ID
+  self.table_name = ALEX_GIG_TABLE
+
+  def self.record_for_id(id)
+    AlexGigs.find(id)
+  end
+
+  def self.update_vol_data(event)
+    event_date_formatted = event.event_date.strftime("%Y-%m-%d")
+    #filter_text = "AND({#{ALEX_EVENT_DATE}} >= '#{event_date_formatted}',{#{ALEX_EVENT_DATE}} <= '#{event_date_formatted}')"
+    filter_text = "{#{ALEX_EVENT_DATE}} >= '#{event_date_formatted}'"
+    gig_records = AlexGigs.all(
+      fields: [ALEX_GIG_TIME, ALEX_EVENT_DATE, ALEX_VOL_1, ALEX_VOL_2],
+      filter: filter_text
+
+    )
+    #gig1_record = AlexGigs.find(EventMediator.gig1_airtable_id(event))
+    puts("here #{event_date_formatted}")
+    #puts(gig_records.size)
+    gig_records.each do |rec|
+      rec_date = rec[ALEX_EVENT_DATE]
+      #puts(rec_date)
+      #puts(rec_date.class)
+      #puts(rec_date.size)
+      is_same = rec_date == event_date_formatted
+      vol_1 = rec[ALEX_VOL_1]
+      puts(vol_1.class)
+      puts(vol_1)
+      puts(is_same)
+    end
+
+  end
+end
