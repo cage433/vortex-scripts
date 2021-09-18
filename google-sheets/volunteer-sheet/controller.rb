@@ -53,11 +53,8 @@ class VolunteerMonthTabController < TabController
       set_number_format_request(event_day_range, "ddd"),
     ]
 
-    requests += [0, 1].collect { |col| hide_column_request(col)}
+    requests += [0, 1, 5].collect { |col| hide_column_request(col)}
     @wb_controller.apply_requests(requests)
-  end
-
-  def hide_id_columns()
   end
 
   def read_events()
