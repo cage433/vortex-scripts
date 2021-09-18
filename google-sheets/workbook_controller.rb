@@ -19,7 +19,7 @@ class WorkbookController
 
   def apply_request(request)
 		result = @service.batch_update_spreadsheet(
-		  @spreadsheet_id, 
+		  @workbook_id, 
 		  {requests: [request]},
 		  fields: nil, quota_user: nil, options: nil
       

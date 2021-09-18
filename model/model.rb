@@ -1,69 +1,48 @@
-class SetPersonnel
-  attr_reader :night_manager, :first_volunteer, :second_volunteer
-  def initialize(night_manager, first_volunteer, second_volunteer)
-    @night_manager = night_manager
-    @first_volunteer = first_volunteer
-    @second_volunteer = second_volunteer
-  end
-
-  def self.empty
-    SetPersonnel.new("", "", "")
-  end
-
-  def to_s()
-    "NM: #{@night_manager}, Vol1: #{@first_volunteer}, Vol2: #{@second_volunteer}"
-  end
-
-end
-
-class GigPersonnel
-  attr_reader :first_set_volunteer_data, :second_set_volunteer_data, :sound_engineer
-
-  def initialize(first_set_volunteer_data:, second_set_volunteer_data:, sound_engineer:)
-    @first_set_volunteer_data = first_set_volunteer_data
-    @second_set_volunteer_data = second_set_volunteer_data
-    @sound_engineer = sound_engineer
-  end
-
-  def self.empty
-    GigPersonnel.new(
-      first_set_volunteer_data: SetPersonnel.empty, 
-      second_set_volunteer_data: SetPersonnel.empty, 
-      sound_engineer: ""
-    )
-  end
-
+class SimpleEquals
   def ==(o)
     o.class == self.class && o.state == self.state
   end
-  def state
-    [@sound_engineer]
-  end
-
 end
 
-class Event < Object
-  attr_reader :event_date, :event_title, :personnel
-  def initialize(event_date, event_title, personnel)
+class Gig < SimpleEquals
+  attr_reader :airtable_id, :gig_no, :vol1, :vol2, :night_manager
+
+  def initialize(airtable_id:, gig_no:, vol1:, vol2:, night_manager:)
+    @airtable_id = airtable_id
+    @gig_no = gig_no
+    @vol1 = vol1
+    @vol2 = vol2
+    @night_manager = night_manager
+  end
+
+  def state
+    [@airtable_id, @gig_number, @vol1, @vol2, @night_manager]
+  end
+end
+
+class Event < SimpleEquals
+  attr_reader :airtable_id, :event_date, :event_title, :gig1, :gig2, :sound_engineer
+
+  def initialize(airtable_id:, event_date:, event_title:, gig1:, gig2:, sound_engineer:)
+    @airtable_id = airtable_id
     @event_date = event_date
     @event_title = event_title
-    @personnel = personnel
+    @gig1 = gig1
+    @gig2 = gig2
+    @sound_engineer = sound_engineer
   end
 
   def to_s()
 "#{@event_date}: #{@event_title}
-  Gig1: #{@personnel.first_set_volunteer_data}
-  Gig2: #{@personnel.second_set_volunteer_data}
-  SE: <#{@personnel.sound_engineer}>
+  Gig1: #{gig1}
+  Gig2: #{gig1}
+  SE: <#{@sound_engineer}>
 "
   end
 
-  def ==(o)
-    o.class == self.class && o.state == self.state
-  end
 
   def state
-    [@event_date, @event_title, @personnel.sound_engineer]
+    [@airtable_id, @event_date, @event_title, @gig1, @gig2, @sound_engineer]
   end
 end
 

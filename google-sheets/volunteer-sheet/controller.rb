@@ -4,7 +4,7 @@ require_relative '../tab-controller'
 require_relative '../../mediator/mediator'
 
 class VolunteerMonthTabController < TabController
-  @@header = ["Gigs", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
+  @@header = ["Event ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
 
   def initialize(year_no, month_no, wb_controller)
     super(wb_controller, TabController.tab_name_for_month(year_no, month_no))
@@ -46,8 +46,8 @@ class VolunteerMonthTabController < TabController
       set_outside_border_request(event_range)
     end
 
-    event_date_range = sheet_range(1, 1 + num_events * 2, 1, 2)
-    event_day_range = sheet_range(1, 1 + num_events * 2, 2, 3)
+    event_date_range = sheet_range(1, 1 + num_events * 2, 3, 4)
+    event_day_range = sheet_range(1, 1 + num_events * 2, 4, 5)
     requests += [
       set_number_format_request(event_date_range, "mmm d"),
       set_number_format_request(event_day_range, "ddd"),
