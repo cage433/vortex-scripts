@@ -85,6 +85,22 @@ class TabController
     }
   end
 
+  def hide_column_request(i_col)
+    {
+      update_dimension_properties: {
+        range: {
+          sheet_id: @sheet_id,
+          dimension: "COLUMNS",
+          start_index: i_col,
+          end_index: i_col + 1
+        },
+        properties: {
+          hidden_by_user: true
+        },
+        fields: "hidden_by_user"
+      }
+    }
+  end
 
   def update_all_cells_request(fields)
     {
