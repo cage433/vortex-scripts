@@ -17,7 +17,7 @@ class SheetRange
   end
 
   def as_value_range()
-    columns = "ABCDEFGHIJK"
+    columns = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     start_col_name = columns[@start_column_index] || (raise "Column #{@start_column_index} outside permitted range")
     end_col_name = columns[@end_column_index - 1] || (raise "Column #{@end_column_index} outside permitted range")
     "#{@sheet_name}!#{start_col_name}#{@start_row_index + 1}:#{end_col_name}#{@end_row_index}"
