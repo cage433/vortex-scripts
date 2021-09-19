@@ -90,9 +90,7 @@ class EventMediator
       second_row = [
         "",
         event.gig2.airtable_id, 
-        "",
-        event.event_date, 
-        event.event_date,
+        "", "", "",
         2, "21:00",
         "", "", "", "", "", "", 
         "", "", "", "", "", "", "", 
