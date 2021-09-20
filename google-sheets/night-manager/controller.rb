@@ -105,6 +105,37 @@ class NightManagerMonthTabController < TabController
     @wb_controller.apply_requests(requests)
   end
 
+  def read_events()
+    max_events = 50
+    event_range = sheet_range(HEADER_ROWS, HEADER_ROWS + 3 * max_events)
+    values = @wb_controller.get_spreadsheet_values(event_range)
+    if values.nil?
+      EventsForMonth.new(@year_no, @month_no, [])
+    else
+      if values.size % 3 != 0
+      # get_spreadsheet_values only returns non-blank rows, we correct here to force there
+      # to be two rows for each event
+        n_blank_rows = 3 - values.size % 3
+        values += [[""] * NUM_COLS] * n_blank_rows
+      end
+      num_events = values.size / 3 
+      details = (0...num_events).collect do |i_event|
+        rows_for_event = values.slice(i_event * 3, 2).collect do |row|
+          # Pad with blanks in case there is no volunteer/engineer data
+          row + [""] * (@@header.size - row.size)
+        end
+        gig1 = Gig.new(
+          airtable_id: row[0][GIG_ID_COL],
+          gig_no: 1,
+          vol1: nil,kkll
+
+
+        EventMediator.from_excel(rows_for_event)
+      end
+      EventsForMonth.new(@year_no, @month_no, details)
+    end
+  end
+
   def replace_events(month_events)
       clear_values()
       write_header()

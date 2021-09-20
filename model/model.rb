@@ -20,6 +20,51 @@ class Gig < SimpleEquals
   end
 end
 
+class GigTakings < SimpleEquals
+  attr_reader :airtable_id, :gig_no, 
+    :online_tickets, :ticket_price, 
+    :walk_ins, :walk_in_sales, 
+    :t_shirts, :t_shirt_sales,
+    :mugs, :mugs_sales,
+
+  def initialize(
+    airtable_id:, gig_no:, 
+    online_tickets:, ticket_price:, 
+    walk_ins:, walk_in_sales:, 
+    t_shirts:, t_shirt_sales:,
+    mugs:, mug_sales:
+  )
+    @airtable_id = airtable_id
+    @gig_no = gig_no
+    @online_tickets = online_tickets
+    @ticket_price = ticket_price
+    @walk_in = walk_ins
+    @walk_in_sales = walk_in_sales
+    @t_shirts = t_shirts
+    @t_shirt_sales = t_shirts_sales
+    @mugs = mugs
+    @mug_sales = mug_sales
+  end
+
+  def state
+    [ 
+      @airtable_id, @gig_no, @num_online_tickets, @full_price,
+      @walk_in_num, @walk_in_sales, @mugs_num, @mugs_sales,
+    ]
+  end
+
+end
+
+class NightManagerEvent
+  attr_reader :airtable_id, :gig1_takings, :gig2_takings
+
+  def initialize(airtable_id:, gig1_takings:, gig2_takings:)
+    @airtable_id = airtable_id
+    @gig1_takings = gig1_takings
+    @gig2_takings = gig2_takings
+  end
+end
+
 class Event < SimpleEquals
   attr_reader :airtable_id, :event_date, :event_title, :gig1, :gig2, :sound_engineer
 

@@ -51,6 +51,7 @@ class EventTable < Airrecord::Table
     recs.collect { |rec| rec[ID] }
   end
 
+
   def self.ids_for_month(year, month_no)
     self.ids_for_date_range(
       Date.new(year, month_no, 1),
@@ -58,23 +59,6 @@ class EventTable < Airrecord::Table
     )
   end
 
-  #def self.records_for_date_range(first_date, last_date)
-    #Events.all(
-      #fields: [ID, DATE, TITLE, GIG_IDS, SOUND_ENGINEER],
-      #filter: filter_text(first_date, last_date)
-    #)
-  #end
-
-  #def self.records_for_month(year, month_no)
-    #self.records_for_date_range(
-      #Date.new(year, month_no, 1),
-      #Date.new(year, month_no, -1)
-    #)
-  #end
-
-  #def self.has_record_for_date?(date)
-    #!self.record_for_date(date).nil?
-  #end
 
 end
 

@@ -41,6 +41,53 @@ class GigMediator
   end
 end
 
+class GigTakingsMediator
+  include GigTableMeta
+  def self.from_airtable_record(rec)
+    Gig.new(
+      airtable_id: rec[ID], 
+      gig_no: rec[GIG_NO], 
+      online_tickets: rec[ONLINE_TICKETS],
+      ticket_price: rec[TICKET_PRICE],
+      walk_ins: rec[WALK_INS],
+      walk_in_sales: rec[WALK_IN_SALES],
+      t_shirts: rec[T_SHIRTS],
+      t_shirt_sales: rec[T_SHIRT_SALES],
+      mugs: rec[MUGS],
+      mug_sales: rec[MUG_SALES]
+
+    )
+  end
+end
+
+class NightManagerEventMediator
+
+  def self.from_airtable_many(event_ids)
+    include EventTableMeta
+    event_records = EventTable.find_many(event_ids)
+
+    gig_ids = event_records.collect { |rec| rec[GIG_IDS] }.flatten
+    gigs_by_id = Hash[ 
+      GigTable
+      .find_many(gig_ids)
+      .collect { |rec| 
+        [rec[ID], GigTakingsMediator.from_airtable_record(rec)] 
+      } 
+    ]
+    event_records.collect { |event_record|
+      gig1, gig2 = event_record[GIG_IDS].collect { |id| gigs_by_id[id] }.sort_by{ |g| g.gig_no }
+      event_date = Date.parse(event_record[DATE])
+      event_title = event_record[TITLE]
+      NightManagerEvent.new(
+        airtable_id: event_record[ID],
+        gig1: gig1
+        gig2: gig2
+      )
+    }
+  end
+
+end
+
 class EventMediator
   include VolunteerRotaColumns
   def self.to_excel_data(event)
