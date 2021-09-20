@@ -37,6 +37,10 @@ class Controller
     tab_controller.replace_events(airtable_events_for_month(year, month))
   end
 
+  def update_airtable_with_night_manager_data(event)
+
+  end
+
 end
 
 def populate_vol_sheet(year, month)
@@ -58,5 +62,5 @@ end
 
 #populate_new_event_table(2021, 10)
 
-#populate_vol_sheet(2021, 10)
-populate_night_manager_sheet(2021, 10)
+populate_vol_sheet(2021, 10)
+#populate_night_manager_sheet(2021, 10)

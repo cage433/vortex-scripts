@@ -127,7 +127,8 @@ class NightManagerMonthTabController < TabController
         gig1 = Gig.new(
           airtable_id: row[0][GIG_ID_COL],
           gig_no: 1,
-          vol1: nil,kkll
+          vol1: nil,
+        )
 
 
         EventMediator.from_excel(rows_for_event)

@@ -62,29 +62,29 @@ end
 
 class NightManagerEventMediator
 
-  def self.from_airtable_many(event_ids)
-    include EventTableMeta
-    event_records = EventTable.find_many(event_ids)
+  #def self.from_airtable_many(event_ids)
+    #include EventTableMeta
+    #event_records = EventTable.find_many(event_ids)
 
-    gig_ids = event_records.collect { |rec| rec[GIG_IDS] }.flatten
-    gigs_by_id = Hash[ 
-      GigTable
-      .find_many(gig_ids)
-      .collect { |rec| 
-        [rec[ID], GigTakingsMediator.from_airtable_record(rec)] 
-      } 
-    ]
-    event_records.collect { |event_record|
-      gig1, gig2 = event_record[GIG_IDS].collect { |id| gigs_by_id[id] }.sort_by{ |g| g.gig_no }
-      event_date = Date.parse(event_record[DATE])
-      event_title = event_record[TITLE]
-      NightManagerEvent.new(
-        airtable_id: event_record[ID],
-        gig1: gig1
-        gig2: gig2
-      )
-    }
-  end
+    #gig_ids = event_records.collect { |rec| rec[GIG_IDS] }.flatten
+    #gigs_by_id = Hash[ 
+      #GigTable
+      #.find_many(gig_ids)
+      #.collect { |rec| 
+        #[rec[ID], GigTakingsMediator.from_airtable_record(rec)] 
+      #} 
+    #]
+    #event_records.collect { |event_record|
+      #gig1, gig2 = event_record[GIG_IDS].collect { |id| gigs_by_id[id] }.sort_by{ |g| g.gig_no }
+      #event_date = Date.parse(event_record[DATE])
+      #event_title = event_record[TITLE]
+      #NightManagerEvent.new(
+        #airtable_id: event_record[ID],
+        #gig1: gig1
+        #gig2: gig2
+      #)
+    #}
+  #end
 
 end
 
