@@ -13,16 +13,14 @@ class Controller
     @night_manager_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
   end
 
-  #def airtable_events_for_month(year, month)
-    #ids = EventTable.ids_for_month(year, month)
-    #events = EventMediator.from_airtable_many(ids)
-    #EventsForMonth.new(year, month, events)
-  #end
-
-  def populate_vol_sheet(year, month)
+  def vol_tab_controller(year, month)
     tab_name = TabController.tab_name_for_month(year, month)
     @vol_rota_controller.add_tab(tab_name) if !@vol_rota_controller.has_tab_with_name?(tab_name)
-    tab_controller = VolunteerMonthTabController.new(year, month, @vol_rota_controller)
+    VolunteerMonthTabController.new(year, month, @vol_rota_controller)
+  end
+
+  def populate_vol_sheet(year, month)
+    tab_controller = vol_tab_controller(year, month)
     sheet_events = tab_controller.read_events()
     airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
     merged_events = sheet_events.merge(airtable_events)
@@ -32,6 +30,15 @@ class Controller
     end
   end
 
+  def update_airtable_personnel_data(year, month)
+    sheet_events = vol_tab_controller(year, month).read_events()
+    airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
+    modified_events = sheet_events.changed_events(airtable_events)
+    modified_events.each { |e| puts(e) }
+    VolunteerAirtableController.update_events(modified_events)
+
+  end
+
   def populate_night_manager_sheet(year, month)
     tab_name = TabController.tab_name_for_month(year, month)
     @night_manager_controller.add_tab(tab_name) if !@night_manager_controller.has_tab_with_name?(tab_name)
@@ -39,15 +46,13 @@ class Controller
     tab_controller.replace_events(airtable_events_for_month(year, month))
   end
 
-  def update_airtable_with_night_manager_data(event)
-
-  end
 
 end
 
-def populate_vol_sheet(year, month)
+def sync_personnel_data(year, month)
   controller = Controller.new()
   controller.populate_vol_sheet(year, month)
+  controller.update_airtable_personnel_data(year, month)
 end
 
 def populate_new_event_table(year, month)
@@ -64,5 +69,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-populate_vol_sheet(2021, 10)
+sync_personnel_data(2021, 10)
+
 #populate_night_manager_sheet(2021, 10)

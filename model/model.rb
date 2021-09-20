@@ -1,6 +1,9 @@
 class SimpleEquals
   def ==(o)
-    o.class == self.class && o.state == self.state
+    # Where the DB returns nils, excel will return blanks
+    self.state.zip(o.state).all? { |a, b|
+      (a || '') == (b || '')
+    }
   end
 end
 
@@ -17,6 +20,10 @@ class Gig < SimpleEquals
 
   def state
     [@airtable_id, @gig_number, @vol1, @vol2, @night_manager]
+  end
+
+  def to_s()
+    "  Gig Personnel: #{@airtable_id}, #{@gig_no}, #{@vol1}, #{@vol2}, #{@night_manager}"
   end
 end
 
@@ -92,7 +99,7 @@ class Event < SimpleEquals
 end
 
 class EventsForMonth
-  attr_reader :year, :month, :events, :num_events
+  attr_reader :year, :month, :events, :num_events, :events_by_date
 
   def initialize(year, month, events)
     @year = year
@@ -100,6 +107,10 @@ class EventsForMonth
     @events = events
     @events_by_date = Hash[ *events.collect { |e| [e.event_date, e ] }.flatten ]
     @num_events = events.size
+
+    events.each { |e|
+      raise "Invalid event" unless e.class == Event
+    }
 
   end
 
@@ -116,6 +127,20 @@ class EventsForMonth
       end
     end
     EventsForMonth.new(@year, @month, merged_events)
+  end
+
+  def changed_events(rhs)
+    dates = @events_by_date.keys.sort
+    r_dates = rhs.events_by_date.keys.sort
+    raise "Event date mismatch, #{dates}, #{r_dates}" unless dates == r_dates
+
+    dates.filter { |d| 
+      l = @events_by_date[d]
+      r = rhs.events_by_date[d]
+      @events_by_date[d] != rhs.events_by_date[d]
+    }.collect { |d|
+      @events_by_date[d]
+    }
   end
 
 end

@@ -46,4 +46,21 @@ class VolunteerAirtableController
       self.read_events(EventTable.ids_for_month(year, month))
     )
   end
+
+  def self.update_events(events)
+    events.each do |event| 
+      puts("Updating record for #{event.event_date}, #{event.event_title}, #{event.airtable_id}")
+      airtable_record = EventTable.find(event.airtable_id)
+      airtable_record[SOUND_ENGINEER] = event.sound_engineer
+      airtable_record.save()
+
+      [event.gig1, event.gig2].each do |gig|
+        gig_record = GigTable.find(gig.airtable_id)
+        gig_record[NIGHT_MANAGER] = gig.night_manager
+        gig_record[VOL_1] = gig.vol1
+        gig_record[VOL_2] = gig.vol2
+        gig_record.save
+      end
+    end
+  end
 end
