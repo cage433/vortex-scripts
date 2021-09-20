@@ -3,6 +3,7 @@ require_relative 'google-sheets/volunteer-sheet/controller.rb'
 require_relative 'google-sheets/night-manager/controller.rb'
 require_relative 'env'
 require_relative 'airtable/event_table'
+require_relative 'airtable/volunteer_controller'
 require 'date'
 
 class Controller
@@ -12,18 +13,19 @@ class Controller
     @night_manager_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
   end
 
-  def airtable_events_for_month(year, month)
-    ids = EventTable.ids_for_month(year, month)
-    events = EventMediator.from_airtable_many(ids)
-    EventsForMonth.new(year, month, events)
-  end
+  #def airtable_events_for_month(year, month)
+    #ids = EventTable.ids_for_month(year, month)
+    #events = EventMediator.from_airtable_many(ids)
+    #EventsForMonth.new(year, month, events)
+  #end
 
   def populate_vol_sheet(year, month)
     tab_name = TabController.tab_name_for_month(year, month)
     @vol_rota_controller.add_tab(tab_name) if !@vol_rota_controller.has_tab_with_name?(tab_name)
     tab_controller = VolunteerMonthTabController.new(year, month, @vol_rota_controller)
     sheet_events = tab_controller.read_events()
-    merged_events = sheet_events.merge(airtable_events_for_month(year, month))
+    airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
+    merged_events = sheet_events.merge(airtable_events)
     if merged_events.num_events > sheet_events.num_events
       puts("Adding missing events")
       tab_controller.replace_events(merged_events)
