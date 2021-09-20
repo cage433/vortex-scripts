@@ -4,6 +4,7 @@ require_relative 'google-sheets/night-manager/controller.rb'
 require_relative 'env'
 require_relative 'airtable/event_table'
 require_relative 'airtable/volunteer_controller'
+require_relative 'airtable/night_manager_controller'
 require 'date'
 
 class Controller
@@ -17,6 +18,12 @@ class Controller
     tab_name = TabController.tab_name_for_month(year, month)
     @vol_rota_controller.add_tab(tab_name) if !@vol_rota_controller.has_tab_with_name?(tab_name)
     VolunteerMonthTabController.new(year, month, @vol_rota_controller)
+  end
+
+  def night_manager_tab_controller(year, month)
+    tab_name = TabController.tab_name_for_month(year, month)
+    @night_manager_controller.add_tab(tab_name) if !@night_manager_controller.has_tab_with_name?(tab_name)
+    NightManagerMonthTabController.new(year, month, @night_manager_controller)
   end
 
   def populate_vol_sheet(year, month)
@@ -40,12 +47,23 @@ class Controller
   end
 
   def populate_night_manager_sheet(year, month)
-    tab_name = TabController.tab_name_for_month(year, month)
-    @night_manager_controller.add_tab(tab_name) if !@night_manager_controller.has_tab_with_name?(tab_name)
-    tab_controller = NightManagerMonthTabController.new(year, month, @night_manager_controller)
-    tab_controller.replace_events(airtable_events_for_month(year, month))
+    tab_controller = night_manager_tab_controller(year, month)
+    tab_events = tab_controller.read_events()
+    airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
+    if airtable_events.num_events > tab_events.num_events
+      puts("Adding missing events")
+      tab_controller.replace_events(airtable_events)
+    end
   end
 
+  def update_airtable_night_manager_data(year, month)
+    tab_controller = night_manager_tab_controller(year, month)
+    tab_events = tab_controller.read_events()
+    airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
+    modified_events = tab_events.changed_events(airtable_events)
+    NightManagerAirtableController.update_events(modified_events)
+
+  end
 
 end
 
@@ -65,10 +83,11 @@ end
 def populate_night_manager_sheet(year, month)
   controller = Controller.new()
   controller.populate_night_manager_sheet(year, month)
+  controller.update_airtable_night_manager_data(year, month)
 end
 
 #populate_new_event_table(2021, 10)
 
-sync_personnel_data(2021, 10)
+#sync_personnel_data(2021, 10)
 
-#populate_night_manager_sheet(2021, 10)
+populate_night_manager_sheet(2021, 10)

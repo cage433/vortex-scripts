@@ -18,6 +18,10 @@ class TabController
     @sheet_id = @wb_controller.tab_ids_by_name()[tab_name]
   end
 
+  def single_column_range(col)
+    SheetRange.new(nil, nil, col, col + 1, @sheet_id, @tab_name)
+  end
+
 
   def set_background_color_request(range, color_json)
     {
@@ -131,6 +135,15 @@ class TabController
       }
   end
 
+  def unmerge_all_request()
+    {
+      unmerge_cells: {
+        range: {
+          sheet_id: @sheet_id
+        }
+      }
+    }
+  end
   def merge_columns_request(range)
     {
       merge_cells: {

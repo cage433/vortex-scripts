@@ -32,10 +32,6 @@ class VolunteerMonthTabController < TabController
   end
 
 
-  def single_column_range(col)
-    SheetRange.new(nil, nil, col, col + 1, @sheet_id, @tab_name)
-  end
-
 
   def write_header()
     header_range = sheet_range(0, 1)

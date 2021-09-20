@@ -13,6 +13,8 @@ module GigTableMeta
   TICKET_PRICE = "Ticket Price"
   WALK_INS = "Walk Ins"
   WALK_IN_SALES = "Walk In Sales"
+  GUESTS_OR_CHEAP = "Guests Or Cheap"
+  GUEST_OR_CHEAP_SALES = "Guest Or Cheap Sales"
   T_SHIRTS = "T Shirts"
   T_SHIRT_SALES = "T Shirt Sales"
   MUGS = "Mugs"

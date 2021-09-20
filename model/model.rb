@@ -27,48 +27,89 @@ class Gig < SimpleEquals
   end
 end
 
+
 class GigTakings < SimpleEquals
   attr_reader :airtable_id, :gig_no, 
     :online_tickets, :ticket_price, 
     :walk_ins, :walk_in_sales, 
+    :guests_or_cheap, :guest_or_cheap_sales, 
     :t_shirts, :t_shirt_sales,
-    :mugs, :mugs_sales,
+    :mugs, :mug_sales
 
   def initialize(
-    airtable_id:, gig_no:, 
-    online_tickets:, ticket_price:, 
+    airtable_id:, gig_no:, online_tickets:, ticket_price:, 
     walk_ins:, walk_in_sales:, 
-    t_shirts:, t_shirt_sales:,
+    guests_or_cheap:, guest_or_cheap_sales:, 
+    t_shirts:, t_shirt_sales:, 
     mugs:, mug_sales:
   )
     @airtable_id = airtable_id
     @gig_no = gig_no
     @online_tickets = online_tickets
     @ticket_price = ticket_price
-    @walk_in = walk_ins
+    @walk_ins = walk_ins
     @walk_in_sales = walk_in_sales
+    @guests_or_cheap = guests_or_cheap
+    @guest_or_cheap_sales = guest_or_cheap_sales
     @t_shirts = t_shirts
-    @t_shirt_sales = t_shirts_sales
+    @t_shirt_sales = t_shirt_sales
     @mugs = mugs
     @mug_sales = mug_sales
   end
 
   def state
     [ 
-      @airtable_id, @gig_no, @num_online_tickets, @full_price,
-      @walk_in_num, @walk_in_sales, @mugs_num, @mugs_sales,
+      @airtable_id, @gig_no, 
+      @online_tickets, @ticket_price,
+      @walk_ins, @walk_in_sales, 
+      @guests_or_cheap, @guest_or_cheap_sales,
+      @t_shirts, @t_shirt_sales,
+      @mugs, @mug_sales,
     ]
   end
 
+  def to_s_table(indent)
+    [
+      "Online:          #{@online_tickets} @ #{@ticket_price}",
+      "Walk-ins:        #{@walk_ins}, £#{@walk_in_sales}",
+      "Guests/cheap:    #{@guests_or_cheap}, £#{@guest_or_cheap_sales}",
+      "T-shirts:        #{@t_shirts}, £#{@t_shirt_sales}",
+      "Mugs:            #{@mugs}, £#{@mug_sales}"
+    ].collect { |t| "#{indent}#{t}" }
+  end
+
+  def to_s()
+    to_s_table("").join("\n")
+  end
 end
 
-class NightManagerEvent
-  attr_reader :airtable_id, :gig1_takings, :gig2_takings
+class NightManagerEvent < SimpleEquals
+  attr_reader :airtable_id, :event_date, :event_title, :gig1_takings, :gig2_takings
 
-  def initialize(airtable_id:, gig1_takings:, gig2_takings:)
+  def initialize(airtable_id:, event_date:, event_title:, gig1_takings:, gig2_takings:)
     @airtable_id = airtable_id
+    @event_date = event_date
+    @event_title = event_title
     @gig1_takings = gig1_takings
     @gig2_takings = gig2_takings
+  end
+
+  def to_s_table(indent)
+    table = [
+      "Date:     #{@event_date}",
+      "Title:    #{@event_title}",
+      "Gig 1",
+    ] + @gig1_takings.to_s_table(indent + "    ") +
+    ["Gig 2"] + @gig2_takings.to_s_table(indent + "    ")
+    table.collect { |t| "#{indent}#{t}" }
+  end
+
+  def to_s()
+    to_s_table("  ").join("\n")
+  end
+
+  def state
+    [@airtable_id, @event_date, @event_title, @gig1_takings, @gig2_takings]
   end
 end
 
@@ -109,7 +150,7 @@ class EventsForMonth
     @num_events = events.size
 
     events.each { |e|
-      raise "Invalid event" unless e.class == Event
+      raise "Invalid event" unless e.class == Event || e.class == NightManagerEvent
     }
 
   end
