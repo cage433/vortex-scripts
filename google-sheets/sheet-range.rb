@@ -24,13 +24,27 @@ class SheetRange
   end
 
   def as_json_range()
-    {
-        start_row_index: @start_row_index,
-        end_row_index: @end_row_index,
-        start_column_index: @start_column_index,
-        end_column_index: @end_column_index,
-        sheet_id: @sheet_id
-    }
+    if @start_row_index.nil? && @end_row_index.nil?
+      {
+          start_column_index: @start_column_index,
+          end_column_index: @end_column_index,
+          sheet_id: @sheet_id
+      }
+    elsif @start_column_index.nil? && @end_column_index.nil?
+      {
+          start_row_index: @start_row_index,
+          end_row_index: @end_row_index,
+          sheet_id: @sheet_id
+      }
+    else
+      {
+          start_row_index: @start_row_index,
+          end_row_index: @end_row_index,
+          start_column_index: @start_column_index,
+          end_column_index: @end_column_index,
+          sheet_id: @sheet_id
+      }
+    end
   end
 
   def num_cols 

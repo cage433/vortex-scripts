@@ -1,10 +1,16 @@
 require_relative '../sheets-service'
 require_relative '../sheet-range'
 require_relative '../tab-controller'
-require_relative '../../mediator/mediator'
+
+module VolunteerRotaColumns
+  EVENT_ID_COL, GIG_ID_COL, TITLE_COL, DATE_COL, DAY_COL, 
+    GIG_NO_COL, DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
+    VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL = [*0..10]
+end
 
 class VolunteerMonthTabController < TabController
   @@header = ["Event ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
+  include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
     super(wb_controller, TabController.tab_name_for_month(year_no, month_no))
@@ -19,7 +25,15 @@ class VolunteerMonthTabController < TabController
     end_column_index = @@header.size
   )
     SheetRange.new(start_row_index, end_row_index, start_column_index, end_column_index, @sheet_id, @tab_name)
+  end
 
+  def event_range(i_event)
+    sheet_range(1 + i_event * 2, 1 + (i_event + 1) * 2)
+  end
+
+
+  def single_column_range(col)
+    SheetRange.new(nil, nil, col, col + 1, @sheet_id, @tab_name)
   end
 
 
@@ -33,49 +47,97 @@ class VolunteerMonthTabController < TabController
     ])
   end
 
+  def format_columns()
+    requests = [
+      set_number_format_request(single_column_range(DATE_COL), "mmm d"),
+      set_number_format_request(single_column_range(DAY_COL), "ddd"),
+    ]
+
+    requests += [EVENT_ID_COL, GIG_ID_COL, GIG_NO_COL].collect { |col| hide_column_request(col)}
+    @wb_controller.apply_requests(requests)
+  end
+
   def write_events(month_events)
     num_events = month_events.num_events
     events_range = sheet_range(1, 1 + num_events * 2)
     data = []
-    month_events.sorted_events().each do |details_for_event|
-      data += EventMediator.to_excel_data(details_for_event) 
+    month_events.sorted_events().each do |event|
+      row1 = [
+        event.airtable_id, 
+        event.gig1.airtable_id, 
+        event.event_title, 
+        event.event_date, 
+        event.event_date, 
+        1, 
+        "19:00", 
+        event.gig1.night_manager, 
+        event.gig1.vol1, 
+        event.gig1.vol2, 
+        event.sound_engineer
+      ]
+      row2 = [
+        "",
+        event.gig2.airtable_id,
+        "",
+        "",
+        "",
+        2,
+        "21:00",
+        "",
+        event.gig2.vol1, 
+        event.gig2.vol2, 
+        ""
+      ]
+      data += [row1, row2]
     end
     @wb_controller.set_data(events_range, data)
     requests = (0...num_events).collect do |i_event|
-      event_range = sheet_range(1 + i_event * 2, 1 + (i_event + 1) * 2)
-      set_outside_border_request(event_range)
+      set_outside_border_request(event_range(i_event))
     end
 
-    event_date_range = sheet_range(1, 1 + num_events * 2, 3, 4)
-    event_day_range = sheet_range(1, 1 + num_events * 2, 4, 5)
-    requests += [
-      set_number_format_request(event_date_range, "mmm d"),
-      set_number_format_request(event_day_range, "ddd"),
-    ]
-
-    requests += [0, 1, 5].collect { |col| hide_column_request(col)}
     @wb_controller.apply_requests(requests)
   end
 
+
+
   def read_events()
+
+    def event_from_rows(rows)
+      # get_spreadsheet_values only returns non-blank rows, we correct here to 
+      # force there to be two rows for each event
+      
+      rows.append([[""] * @@header.size]) if rows.size < 2
+
+      def gig_from_row(row)
+        row.append([""] * (@@header.size - row.size)) if row.size < @@header.size
+        Gig.new(
+          airtable_id: row[GIG_ID_COL],
+          gig_no: row[GIG_NO_COL],
+          vol1: row[VOL_1_COL],
+          vol2: row[VOL_2_COL],
+          night_manager: row[NIGHT_MANAGER_COL]
+        )
+      end
+
+      Event.new(
+        airtable_id: rows[0][EVENT_ID_COL],
+        event_date: Date.parse(rows[0][DATE_COL]),
+        event_title: rows[0][TITLE_COL],
+        gig1: gig_from_row(rows[0]), 
+        gig2: gig_from_row(rows[1]),
+        sound_engineer: rows[0][SOUND_ENGINEER_COL]
+      )
+    end
     max_events = 50
-    event_range = sheet_range(1, 1 + 2 * max_events)
-    values = @wb_controller.get_spreadsheet_values(event_range)
+    values = @wb_controller.get_spreadsheet_values(
+      sheet_range(1, 1 + 2 * max_events)
+    )
     if values.nil?
       EventsForMonth.new(@year_no, @month_no, [])
     else
-      if values.size % 2 == 1
-      # get_spreadsheet_values only returns non-blank rows, we correct here to force there
-      # to be two rows for each event
-        values += [[""] * @@header.size]
-      end
-      num_events = values.size / 2 
+      num_events = (values.size / 2.0).ceil   # round up to ensure a blank row doesn't exclude an event
       details = (0...num_events).collect do |i_event|
-        rows_for_event = values.slice(i_event * 2, 2).collect do |row|
-          # Pad with blanks in case there is no volunteer/engineer data
-          row + [""] * (@@header.size - row.size)
-        end
-        EventMediator.from_excel(rows_for_event)
+        event_from_rows(values.slice(i_event * 2, 2))
       end
       EventsForMonth.new(@year_no, @month_no, details)
     end
@@ -84,6 +146,7 @@ class VolunteerMonthTabController < TabController
   def replace_events(month_events)
       clear_values()
       write_header()
+      format_columns()
       write_events(month_events)
   end
 
