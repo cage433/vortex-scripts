@@ -1,6 +1,6 @@
-require_relative '../sheets-service'
-require_relative '../sheet-range'
-require_relative '../tab-controller'
+require_relative './sheets-service'
+require_relative './sheet-range'
+require_relative './tab-controller'
 
 module NightManagerColumns
 

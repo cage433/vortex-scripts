@@ -1,6 +1,6 @@
 require_relative 'google-sheets/workbook_controller.rb'
-require_relative 'google-sheets/volunteer-sheet/controller.rb'
-require_relative 'google-sheets/night-manager/controller.rb'
+require_relative 'google-sheets/volunteer_tab_controller.rb'
+require_relative 'google-sheets/night_manager_tab_controller.rb'
 require_relative 'env'
 require_relative 'airtable/event_table'
 require_relative 'airtable/volunteer_controller'
