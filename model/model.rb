@@ -1,9 +1,23 @@
+def transform(x)
+  # Where the DB returns nils, excel will return blanks
+  # ditto for float/ints
+  if x.nil?
+    ''
+  elsif x.class == Integer
+    x.to_f
+  else
+    x
+  end
+end
 class SimpleEquals
   def ==(o)
-    # Where the DB returns nils, excel will return blanks
-    self.state.zip(o.state).all? { |a, b|
-      (a || '') == (b || '')
-    }
+    if self.state.size != o.state.size
+      false
+    else
+      self.state.zip(o.state).all? { |a, b|
+        transform(a) == transform(b)
+      }
+    end
   end
 end
 
@@ -87,24 +101,47 @@ class GigTakings < SimpleEquals
   end
 end
 
+class FeeDetails < SimpleEquals
+  attr_reader :fee_notes, :flat_fee, :minimum_fee, :fee_percentage
+  def initialize(
+    fee_notes:, flat_fee:, minimum_fee:, fee_percentage:
+  )
+    @fee_notes = fee_notes
+    @flat_fee = flat_fee
+    @minimum_fee = minimum_fee
+    @fee_percentage = fee_percentage
+  end
+
+  def to_s_table(indent)
+    table = [
+      "Fee Notes: #{@fee_notes}",
+      "Flat Fee: #{@flat_fee}",
+      "Min Fee: #{@minimum_fee}",
+      "Fee %age: #{@fee_percentage}",
+    ]
+    table.collect { |t| "#{indent}#{t}" }
+  end
+
+  def state
+    [@fee_notes, @flat_fee, @minimum_fee, @fee_percentage]
+  end
+end
+
 class NightManagerEvent < SimpleEquals
   attr_reader :airtable_id, :event_date, :event_title, 
-    :fee_notes, :flat_fee, :minimum_fee, :fee_percentage,
+    :fee_details,
     :gig1_takings, :gig2_takings
 
   def initialize(
     airtable_id:, 
     event_date:, event_title:, 
-    fee_notes:, flat_fee:, minimum_fee:, fee_percentage:,
+    fee_details:,
     gig1_takings:, gig2_takings:
   )
     @airtable_id = airtable_id
     @event_date = event_date
     @event_title = event_title
-    @fee_notes = fee_notes
-    @flat_fee = flat_fee
-    @minimum_fee = minimum_fee
-    @fee_percentage = fee_percentage
+    @fee_details = fee_details
     @gig1_takings = gig1_takings
     @gig2_takings = gig2_takings
   end
@@ -113,13 +150,13 @@ class NightManagerEvent < SimpleEquals
     table = [
       "Date:     #{@event_date}",
       "Title:    #{@event_title}",
-      "Fee Notes: #{@fee_notes}",
-      "Flat Fee: #{@flat_fee}",
-      "Minimum Fee: #{@minimum_fee}",
-      "Fee %age: #{@fee_percentage}",
-      "Gig 1",
-    ] + @gig1_takings.to_s_table(indent + "    ") +
-    ["Gig 2"] + @gig2_takings.to_s_table(indent + "    ")
+      "Fee Details:"
+    ] +
+      @fee_details.to_s_table(indent + "    ") +
+    ["Gig 1"] + 
+      @gig1_takings.to_s_table(indent + "    ") +
+    ["Gig 2"] + 
+      @gig2_takings.to_s_table(indent + "    ")
     table.collect { |t| "#{indent}#{t}" }
   end
 
@@ -128,8 +165,7 @@ class NightManagerEvent < SimpleEquals
   end
 
   def state
-    [@airtable_id, @event_date, @event_title, @fee_notes, @flat_fee, @minimum_fee, @fee_percentage, 
-     @gig1_takings, @gig2_takings]
+    [@airtable_id, @event_date, @event_title, @fee_details, @gig1_takings, @gig2_takings]
   end
 
   def update_gig1_ticket_price(price)
@@ -140,6 +176,9 @@ class NightManagerEvent < SimpleEquals
     @gig2_takings.update_ticket_price(price)
   end
 
+  def update_fee_details(new_fee_details)
+    @fee_details = new_fee_details
+  end
 end
 
 class Event < SimpleEquals
@@ -169,12 +208,13 @@ class Event < SimpleEquals
 end
 
 class EventsCollection < SimpleEquals
-  attr_reader :events, :num_events, :events_by_date
+  attr_reader :events, :num_events, :events_by_date, :event_dates
 
   def initialize(events)
-    @events = events
+    @events = events.sort_by { |e| e.event_date }
     @events_by_date = Hash[ *events.collect { |e| [e.event_date, e ] }.flatten ]
     @num_events = events.size
+    @event_dates = @events_by_date.keys.sort
 
     events.each { |e|
       raise "Invalid event" unless e.class == Event || e.class == NightManagerEvent
@@ -213,14 +253,10 @@ class EventsCollection < SimpleEquals
   end
 
   def changed_events(rhs)
-    dates = @events_by_date.keys.sort
-    r_dates = rhs.events_by_date.keys.sort
-    raise "Event date mismatch, #{dates}, #{r_dates}" unless dates == r_dates
+    raise "Event date mismatch, #{@event_dates}, #{rhs.event_dates}" unless @event_dates == rhs.event_dates
 
     EventsCollection.new(
-      dates.filter { |d| 
-        l = @events_by_date[d]
-        r = rhs.events_by_date[d]
+      @event_dates.filter { |d| 
         @events_by_date[d] != rhs.events_by_date[d]
       }.collect { |d|
         @events_by_date[d]
@@ -237,7 +273,7 @@ class EventsCollection < SimpleEquals
   end
 
   def state
-    [@events]
+    @events
   end
 
 end

@@ -95,15 +95,21 @@ class NightManagerEventRange
     )
   end
 
+  def fee_details(row)
+    FeeDetails.new(
+      fee_notes: @rows[2][FEE_NOTES_COL],
+      flat_fee: @rows[2][FLAT_FEE_COL].to_f,
+      minimum_fee: @rows[2][MINIMUM_FEE_COL].to_f,
+      fee_percentage: @rows[2][FEE_PERCENTAGE_COL].to_i,
+    )
+  end
+
   def as_event()
     NightManagerEvent.new(
       airtable_id: @rows[0][EVENT_ID_COL],
       event_date: Date.parse(@rows[0][DATE_COL]),
       event_title: @rows[0][TITLE_COL],
-      fee_notes: @rows[2][FEE_NOTES_COL],
-      flat_fee: @rows[2][FLAT_FEE_COL],
-      minimum_fee: @rows[2][MINIMUM_FEE_COL],
-      fee_percentage: @rows[2][FEE_PERCENTAGE_COL],
+      fee_details: fee_details(@rows[2]),
       gig1_takings: _gig_takings(@rows[0]),
       gig2_takings: _gig_takings(@rows[1]),
     )
@@ -194,7 +200,7 @@ class NightManagerMonthTabController < TabController
           event.gig2_takings.mugs, event.gig2_takings.mug_sales,
           ""
         ]
-        totals_row = [""] * 15 + [ event.fee_notes, event.flat_fee, event.minimum_fee, event.fee_percentage, ""] + [""] * 5
+        totals_row = [""] * 15 + [ event.fee_details.fee_notes, event.fee_details.flat_fee, event.fee_details.minimum_fee, event.fee_details.fee_percentage, ""] + [""] * 5
         [first_row, second_row, totals_row]
     end
     month_events.sorted_events().each_with_index do |event, i_event|

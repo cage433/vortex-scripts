@@ -36,10 +36,12 @@ class NightManagerAirtableController
         airtable_id: event_record[ID],
         event_date: event_date,
         event_title: event_record[TITLE],
-        fee_notes: event_record[FEE_NOTES],
-        flat_fee: event_record[FLAT_FEE],
-        minimum_fee: event_record[MIN_FEE],
-        fee_percentage: event_record[FEE_PERCENTAGE],
+        fee_details: FeeDetails.new(
+          fee_notes: event_record[FEE_NOTES],
+          flat_fee: event_record[FLAT_FEE],
+          minimum_fee: event_record[MIN_FEE],
+          fee_percentage: event_record[FEE_PERCENTAGE]
+        ),
         gig1_takings: gig1, gig2_takings: gig2,
       )
     }

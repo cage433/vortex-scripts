@@ -57,11 +57,12 @@ class Controller
       e = events.event_for_date(a.event_date)
       e.update_gig1_ticket_price(a.gig1_takings.ticket_price)
       e.update_gig2_ticket_price(a.gig2_takings.ticket_price)
+      e.update_fee_details(a.fee_details)
     }
 
-    #if events != original_events
-      puts("Updating NM tab")
+    if events != original_events
       tab_controller.replace_events(events)
+    end
 
   end
 
@@ -98,6 +99,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-sync_personnel_data(2021, 10)
+#sync_personnel_data(2021, 10)
 
 sync_night_manager_data(2021, 10)
