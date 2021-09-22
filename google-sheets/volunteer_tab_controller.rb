@@ -121,13 +121,13 @@ class VolunteerMonthTabController < TabController
       sheet_range(1, 1 + 2 * max_events)
     )
     if values.nil?
-      EventsForMonth.new(@year_no, @month_no, [])
+      EventsCollection.new([])
     else
       num_events = (values.size / 2.0).ceil   # round up to ensure a blank row doesn't exclude an event
       details = (0...num_events).collect do |i_event|
         event_from_rows(values.slice(i_event * 2, 2))
       end
-      EventsForMonth.new(@year_no, @month_no, details)
+      EventsCollection.new(details)
     end
   end
 

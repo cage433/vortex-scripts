@@ -214,14 +214,14 @@ class NightManagerMonthTabController < TabController
     event_range = sheet_range(HEADER_ROWS, HEADER_ROWS + 3 * max_events)
     values = @wb_controller.get_spreadsheet_values(event_range)
     if values.nil?
-      EventsForMonth.new(@year_no, @month_no, [])
+      EventsCollection.new([])
     else
       num_events = (values.size / 3.0).ceil
       events = (0...num_events).collect do |i_event|
         rows_for_event = values.slice(i_event * 3, 3)
         NightManagerEventRange.new(rows_for_event).as_event()
       end
-      EventsForMonth.new(@year_no, @month_no, events)
+      EventsCollection.new(events)
     end
   end
 

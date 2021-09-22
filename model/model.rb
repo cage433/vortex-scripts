@@ -168,12 +168,10 @@ class Event < SimpleEquals
   end
 end
 
-class EventsForMonth < SimpleEquals
-  attr_reader :year, :month, :events, :num_events, :events_by_date
+class EventsCollection < SimpleEquals
+  attr_reader :events, :num_events, :events_by_date
 
-  def initialize(year, month, events)
-    @year = year
-    @month = month
+  def initialize(events)
     @events = events
     @events_by_date = Hash[ *events.collect { |e| [e.event_date, e ] }.flatten ]
     @num_events = events.size
@@ -196,7 +194,7 @@ class EventsForMonth < SimpleEquals
         merged_events.push(event)
       end
     end
-    EventsForMonth.new(@year, @month, merged_events)
+    EventsCollection.new(merged_events)
   end
 
   def has_event_for_date?(date)
@@ -211,7 +209,7 @@ class EventsForMonth < SimpleEquals
     @events_by_date.keys.each { |d|
       raise "Both sides contain date #{d}" if rhs.has_event_for_date?(d)
     }
-    EventsForMonth.new(@year, @month, events + rhs.events)
+    EventsCollection.new(events + rhs.events)
   end
 
   def changed_events(rhs)
@@ -219,8 +217,7 @@ class EventsForMonth < SimpleEquals
     r_dates = rhs.events_by_date.keys.sort
     raise "Event date mismatch, #{dates}, #{r_dates}" unless dates == r_dates
 
-    EventsForMonth.new(
-      @year, @month,
+    EventsCollection.new(
       dates.filter { |d| 
         l = @events_by_date[d]
         r = rhs.events_by_date[d]
@@ -232,8 +229,7 @@ class EventsForMonth < SimpleEquals
   end
 
   def diff_by_event_date(rhs)
-    EventsForMonth.new(
-      @year, @month,
+    EventsCollection.new(
       @events.filter{ |e| 
         !rhs.events_by_date.include?(e.event_date)
       }
@@ -241,7 +237,7 @@ class EventsForMonth < SimpleEquals
   end
 
   def state
-    [@year, @month, @events]
+    [@events]
   end
 
 end

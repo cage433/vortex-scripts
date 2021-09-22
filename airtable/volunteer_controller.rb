@@ -41,8 +41,7 @@ class VolunteerAirtableController
   end
 
   def self.read_events_for_month(year, month)
-    EventsForMonth.new(
-      year, month,
+    EventsCollection.new(
       self.read_events(ContractTable.ids_for_month(year, month))
     )
   end
