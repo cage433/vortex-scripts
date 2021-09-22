@@ -1,6 +1,8 @@
 require_relative '../model/model'
 require_relative 'gig_table.rb'
+
 class NightManagerAirtableController
+
   def self.read_events(event_ids)
     include EventTableMeta
     include GigTableMeta
@@ -34,6 +36,10 @@ class NightManagerAirtableController
         airtable_id: event_record[ID],
         event_date: event_date,
         event_title: event_record[TITLE],
+        fee_notes: event_record[FEE_NOTES],
+        flat_fee: event_record[FLAT_FEE],
+        minimum_fee: event_record[MIN_FEE],
+        fee_percentage: event_record[FEE_PERCENTAGE],
         gig1_takings: gig1, gig2_takings: gig2,
       )
     }
@@ -52,11 +58,11 @@ class NightManagerAirtableController
       puts("Updating record for #{event.event_date}, #{event.event_title}, #{event.airtable_id}")
 
       [event.gig1_takings, event.gig2_takings].each do |gig|
+        # Note that we don't update ticket price, as airtable is the source of truth for that
 
         gig_record = GigTable.find(gig.airtable_id)
 
         gig_record[ONLINE_TICKETS] = gig.online_tickets
-        gig_record[TICKET_PRICE] = gig.ticket_price
         gig_record[WALK_INS] = gig.walk_ins
         gig_record[WALK_IN_SALES] = gig.walk_in_sales
         gig_record[GUESTS_OR_CHEAP] = gig.guests_or_cheap

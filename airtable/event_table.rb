@@ -12,6 +12,10 @@ module EventTableMeta
   EVENT_TYPE = "Event Type"
   GIG_IDS = "Gig Ids"
   SOUND_ENGINEER = "Sound Engineer"
+  FEE_NOTES = "Fee Notes"
+  FLAT_FEE = "Flat Fee"
+  MIN_FEE = "Min Fee"
+  FEE_PERCENTAGE = "Fee %age"
 end
 
 class EventTable < Airrecord::Table

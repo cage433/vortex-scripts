@@ -12,7 +12,7 @@ module NightManagerColumns
       "Walk Ins", "",
       "Guests/Cheap", "",
       "", "", 
-      "Band Fee", "",
+      "Band Fee (£)", "", "", "", "",
       "T-shirts Sold", "",
       "Mugs Sold", "",
       ""
@@ -23,7 +23,7 @@ module NightManagerColumns
       "Num", "Sales (£)",
       "Num", "Sales (£)",
       "Total Sales (£)", "PRS (£)",
-      "If 65% (£)", "Other Deal (£)", 
+      "Notes", "Flat", "Minimum", "Rate", "Fee",
       "Num", "Sales (£)", 
       "Num", "Sales (£)", 
       "Notes"
@@ -38,10 +38,38 @@ module NightManagerColumns
     GUESTS_OR_CHEAP_COL, GUEST_OR_CHEAP_SALES_COL,
     TOTAL_SALES_COL,
     PRS_COL,
-    FEE_IF_65_COL, FEE_IF_OTHER_COL,
+    FEE_NOTES_COL, FLAT_FEE_COL, MINIMUM_FEE_COL, FEE_PERCENTAGE_COL, CALCULATED_FEE_COL,
     T_SHIRTS_COL, T_SHIRT_SALES_COL,
     MUGS_COL, MUG_SALES_COL,
     NOTES_COL = [*0..NUM_COLS]
+
+  DEFAULT_COL_WIDTH = 60
+  WIDTHS = {
+    EVENT_ID_COL => 300,
+    DATE_COL => 60,
+    DAY_COL => 60,
+    DOORS_OPEN_COL => 80,
+    ONLINE_TICKETS_COL => DEFAULT_COL_WIDTH,
+    PRICE_COL => DEFAULT_COL_WIDTH,
+    PRS_COL => DEFAULT_COL_WIDTH,
+    WALK_INS_COL => DEFAULT_COL_WIDTH,
+    WALK_IN_SALES_COL => DEFAULT_COL_WIDTH,
+    GUESTS_OR_CHEAP_COL => DEFAULT_COL_WIDTH,
+    GUEST_OR_CHEAP_SALES_COL => DEFAULT_COL_WIDTH,
+    TOTAL_SALES_COL => 100,
+    PRS_COL => DEFAULT_COL_WIDTH,
+    FEE_NOTES_COL => 200, 
+    FLAT_FEE_COL => DEFAULT_COL_WIDTH,
+    MINIMUM_FEE_COL => DEFAULT_COL_WIDTH,
+    FEE_PERCENTAGE_COL => DEFAULT_COL_WIDTH,
+    CALCULATED_FEE_COL => DEFAULT_COL_WIDTH,
+    T_SHIRTS_COL => DEFAULT_COL_WIDTH,
+    T_SHIRT_SALES_COL => DEFAULT_COL_WIDTH,
+    MUGS_COL => DEFAULT_COL_WIDTH,
+    MUG_SALES_COL => DEFAULT_COL_WIDTH,
+    NOTES_COL => 300
+  }
+
 end
 
 class NightManagerEventRange
@@ -72,6 +100,10 @@ class NightManagerEventRange
       airtable_id: @rows[0][EVENT_ID_COL],
       event_date: Date.parse(@rows[0][DATE_COL]),
       event_title: @rows[0][TITLE_COL],
+      fee_notes: @rows[2][FEE_NOTES_COL],
+      flat_fee: @rows[2][FLAT_FEE_COL],
+      minimum_fee: @rows[2][MINIMUM_FEE_COL],
+      fee_percentage: @rows[2][FEE_PERCENTAGE_COL],
       gig1_takings: _gig_takings(@rows[0]),
       gig2_takings: _gig_takings(@rows[1]),
     )
@@ -107,14 +139,17 @@ class NightManagerMonthTabController < TabController
       unmerge_all_request(),
       set_background_color_request(header_range, @@light_green),
       set_outside_border_request(header_range),
-      set_column_width_request(TITLE_COL, 300),
-      set_column_width_request(TOTAL_SALES_COL, 200),
       center_text_request(header_range),
     ]
-    [ONLINE_TICKETS_COL, WALK_INS_COL, GUESTS_OR_CHEAP_COL, FEE_IF_65_COL, T_SHIRTS_COL, MUGS_COL].each do |i_col|
+    WIDTHS.each { |i_col, width|
+      requests.append(set_column_width_request(i_col, width))
+    }
+    [ONLINE_TICKETS_COL, WALK_INS_COL, GUESTS_OR_CHEAP_COL, T_SHIRTS_COL, MUGS_COL].each do |i_col|
       requests.append(merge_columns_request(sheet_range(0, 1, i_col, i_col + 2)))
       requests.append(set_left_right_border_request(sheet_range(0, 2, i_col, i_col + 2)))
     end
+    requests.append(merge_columns_request(sheet_range(0, 1, FEE_NOTES_COL, FEE_NOTES_COL + 5)))
+      requests.append(set_left_right_border_request(sheet_range(0, 2, FEE_NOTES_COL, FEE_NOTES_COL + 5)))
     requests.append(set_left_right_border_request(sheet_range(0, 2, TOTAL_SALES_COL, TOTAL_SALES_COL + 1)))
 
     @wb_controller.apply_requests(requests)
@@ -137,7 +172,8 @@ class NightManagerMonthTabController < TabController
           event.gig1_takings.walk_ins, event.gig1_takings.walk_in_sales,
           event.gig1_takings.guests_or_cheap, event.gig1_takings.guest_or_cheap_sales,
           "=H#{i_row} * I#{i_row} + K#{i_row} + M#{i_row}", 
-          "", "", "",
+          "", 
+          "", "", "", "", "", 
           event.gig1_takings.t_shirts, event.gig1_takings.t_shirt_sales,
           event.gig1_takings.mugs, event.gig1_takings.mug_sales,
           ""
@@ -152,13 +188,15 @@ class NightManagerMonthTabController < TabController
           event.gig2_takings.walk_ins, event.gig2_takings.walk_in_sales,
           event.gig2_takings.guests_or_cheap, event.gig2_takings.guest_or_cheap_sales,
           "=H#{i_row} * I#{i_row} + K#{i_row} + M#{i_row}", 
-          "", "", "",
+          "", 
+          "", "", "", "", "", 
           event.gig2_takings.t_shirts, event.gig2_takings.t_shirt_sales,
           event.gig2_takings.mugs, event.gig2_takings.mug_sales,
           ""
         ]
-        blank_row = [""] * 20
-        [first_row, second_row, blank_row]
+        totals_row = [""] * 15 + [ event.fee_notes, event.flat_fee, event.minimum_fee, event.fee_percentage, ""] + [""] * 5
+        puts(totals_row.join(", "))
+        [first_row, second_row, totals_row]
     end
     month_events.sorted_events().each_with_index do |event, i_event|
       data += to_night_manager_xl_data(event, i_event)

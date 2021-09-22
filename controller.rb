@@ -46,25 +46,37 @@ class Controller
 
   end
 
-  def populate_night_manager_sheet(year, month)
+  def update_nm_tab_from_airtable(year, month)
+    # Add new events and update any modified prices
     tab_controller = night_manager_tab_controller(year, month)
-    tab_events = tab_controller.read_events()
+    original_events = tab_controller.read_events()
+
+    events = tab_controller.read_events()
     airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
-    if airtable_events.num_events > tab_events.num_events
-      puts("Adding missing events")
-      tab_controller.replace_events(airtable_events)
-    end
+    events = airtable_events.diff_by_event_date(events) + events
+
+    airtable_events.events.each { |a|
+      e = events.event_for_date(a.event_date)
+      e.update_gig1_ticket_price(a.gig1_takings.ticket_price)
+      e.update_gig2_ticket_price(a.gig2_takings.ticket_price)
+    }
+
+    #if events != original_events
+      puts("Updating NM tab")
+      tab_controller.replace_events(events)
+
   end
 
-  def update_airtable_night_manager_data(year, month)
+  def update_airtable_from_nm_tab(year, month)
     tab_controller = night_manager_tab_controller(year, month)
     tab_events = tab_controller.read_events()
     airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
     modified_events = tab_events.changed_events(airtable_events)
-    NightManagerAirtableController.update_events(modified_events)
-
+    if modified_events.num_events > 0
+      puts("Updating airtable")
+      NightManagerAirtableController.update_events(modified_events.events)
+    end
   end
-
 end
 
 def sync_personnel_data(year, month)
@@ -80,14 +92,14 @@ def populate_new_event_table(year, month)
   )
 end
 
-def populate_night_manager_sheet(year, month)
+def sync_night_manager_data(year, month)
   controller = Controller.new()
-  controller.populate_night_manager_sheet(year, month)
-  controller.update_airtable_night_manager_data(year, month)
+  controller.update_nm_tab_from_airtable(year, month)
+  controller.update_airtable_from_nm_tab(year, month)
 end
 
 #populate_new_event_table(2021, 10)
 
-sync_personnel_data(2021, 10)
+#sync_personnel_data(2021, 10)
 
-populate_night_manager_sheet(2021, 10)
+sync_night_manager_data(2021, 10)

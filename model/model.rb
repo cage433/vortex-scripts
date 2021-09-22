@@ -30,7 +30,7 @@ end
 
 class GigTakings < SimpleEquals
   attr_reader :airtable_id, :gig_no, 
-    :online_tickets, :ticket_price, 
+    :online_tickets, :ticket_price,
     :walk_ins, :walk_in_sales, 
     :guests_or_cheap, :guest_or_cheap_sales, 
     :t_shirts, :t_shirt_sales,
@@ -81,15 +81,30 @@ class GigTakings < SimpleEquals
   def to_s()
     to_s_table("").join("\n")
   end
+
+  def update_ticket_price(price)
+    @ticket_price = price
+  end
 end
 
 class NightManagerEvent < SimpleEquals
-  attr_reader :airtable_id, :event_date, :event_title, :gig1_takings, :gig2_takings
+  attr_reader :airtable_id, :event_date, :event_title, 
+    :fee_notes, :flat_fee, :minimum_fee, :fee_percentage,
+    :gig1_takings, :gig2_takings
 
-  def initialize(airtable_id:, event_date:, event_title:, gig1_takings:, gig2_takings:)
+  def initialize(
+    airtable_id:, 
+    event_date:, event_title:, 
+    fee_notes:, flat_fee:, minimum_fee:, fee_percentage:,
+    gig1_takings:, gig2_takings:
+  )
     @airtable_id = airtable_id
     @event_date = event_date
     @event_title = event_title
+    @fee_notes = fee_notes
+    @flat_fee = flat_fee
+    @minimum_fee = minimum_fee
+    @fee_percentage = fee_percentage
     @gig1_takings = gig1_takings
     @gig2_takings = gig2_takings
   end
@@ -98,6 +113,10 @@ class NightManagerEvent < SimpleEquals
     table = [
       "Date:     #{@event_date}",
       "Title:    #{@event_title}",
+      "Fee Notes: #{@fee_notes}",
+      "Flat Fee: #{@flat_fee}",
+      "Minimum Fee: #{@minimum_fee}",
+      "Fee %age: #{@fee_percentage}",
       "Gig 1",
     ] + @gig1_takings.to_s_table(indent + "    ") +
     ["Gig 2"] + @gig2_takings.to_s_table(indent + "    ")
@@ -109,8 +128,18 @@ class NightManagerEvent < SimpleEquals
   end
 
   def state
-    [@airtable_id, @event_date, @event_title, @gig1_takings, @gig2_takings]
+    [@airtable_id, @event_date, @event_title, @fee_notes, @flat_fee, @minimum_fee, @fee_percentage, 
+     @gig1_takings, @gig2_takings]
   end
+
+  def update_gig1_ticket_price(price)
+    @gig1_takings.update_ticket_price(price)
+  end
+
+  def update_gig2_ticket_price(price)
+    @gig2_takings.update_ticket_price(price)
+  end
+
 end
 
 class Event < SimpleEquals
@@ -139,7 +168,7 @@ class Event < SimpleEquals
   end
 end
 
-class EventsForMonth
+class EventsForMonth < SimpleEquals
   attr_reader :year, :month, :events, :num_events, :events_by_date
 
   def initialize(year, month, events)
@@ -170,18 +199,49 @@ class EventsForMonth
     EventsForMonth.new(@year, @month, merged_events)
   end
 
+  def has_event_for_date?(date)
+    @events_by_date.include?(date)
+  end
+
+  def event_for_date(date)
+    @events_by_date[date]
+  end
+
+  def +(rhs)
+    @events_by_date.keys.each { |d|
+      raise "Both sides contain date #{d}" if rhs.has_event_for_date?(d)
+    }
+    EventsForMonth.new(@year, @month, events + rhs.events)
+  end
+
   def changed_events(rhs)
     dates = @events_by_date.keys.sort
     r_dates = rhs.events_by_date.keys.sort
     raise "Event date mismatch, #{dates}, #{r_dates}" unless dates == r_dates
 
-    dates.filter { |d| 
-      l = @events_by_date[d]
-      r = rhs.events_by_date[d]
-      @events_by_date[d] != rhs.events_by_date[d]
-    }.collect { |d|
-      @events_by_date[d]
-    }
+    EventsForMonth.new(
+      @year, @month,
+      dates.filter { |d| 
+        l = @events_by_date[d]
+        r = rhs.events_by_date[d]
+        @events_by_date[d] != rhs.events_by_date[d]
+      }.collect { |d|
+        @events_by_date[d]
+      }
+    )
+  end
+
+  def diff_by_event_date(rhs)
+    EventsForMonth.new(
+      @year, @month,
+      @events.filter{ |e| 
+        !rhs.events_by_date.include?(e.event_date)
+      }
+    )
+  end
+
+  def state
+    [@year, @month, @events]
   end
 
 end
