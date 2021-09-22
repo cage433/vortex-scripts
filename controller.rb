@@ -2,7 +2,6 @@ require_relative 'google-sheets/workbook_controller.rb'
 require_relative 'google-sheets/volunteer_tab_controller.rb'
 require_relative 'google-sheets/night_manager_tab_controller.rb'
 require_relative 'env'
-require_relative 'airtable/event_table'
 require_relative 'airtable/volunteer_controller'
 require_relative 'airtable/night_manager_controller'
 require 'date'
@@ -41,8 +40,7 @@ class Controller
     sheet_events = vol_tab_controller(year, month).read_events()
     airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
     modified_events = sheet_events.changed_events(airtable_events)
-    modified_events.each { |e| puts(e) }
-    VolunteerAirtableController.update_events(modified_events)
+    VolunteerAirtableController.update_events(modified_events.events)
 
   end
 
@@ -100,6 +98,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-#sync_personnel_data(2021, 10)
+sync_personnel_data(2021, 10)
 
 sync_night_manager_data(2021, 10)

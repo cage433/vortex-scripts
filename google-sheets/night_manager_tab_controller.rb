@@ -195,7 +195,6 @@ class NightManagerMonthTabController < TabController
           ""
         ]
         totals_row = [""] * 15 + [ event.fee_notes, event.flat_fee, event.minimum_fee, event.fee_percentage, ""] + [""] * 5
-        puts(totals_row.join(", "))
         [first_row, second_row, totals_row]
     end
     month_events.sorted_events().each_with_index do |event, i_event|
