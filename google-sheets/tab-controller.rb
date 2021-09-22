@@ -22,6 +22,15 @@ class TabController
     SheetRange.new(nil, nil, col, col + 1, @sheet_id, @tab_name)
   end
 
+  def sheet_range(
+    start_row_index, 
+    end_row_index, 
+    start_column_index = 0, 
+    end_column_index = @width
+  )
+    SheetRange.new(start_row_index, end_row_index, start_column_index, end_column_index, @sheet_id, @tab_name)
+  end
+
 
   def set_background_color_request(range, color_json)
     {

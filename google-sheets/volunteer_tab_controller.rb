@@ -9,22 +9,14 @@ module VolunteerRotaColumns
 end
 
 class VolunteerMonthTabController < TabController
-  @@header = ["Event ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
+  HEADER = ["Event ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
   include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
     super(wb_controller, TabController.tab_name_for_month(year_no, month_no))
     @year_no = year_no
     @month_no = month_no
-  end
-
-  def sheet_range(
-    start_row_index, 
-    end_row_index, 
-    start_column_index = 0, 
-    end_column_index = @@header.size
-  )
-    SheetRange.new(start_row_index, end_row_index, start_column_index, end_column_index, @sheet_id, @tab_name)
+    @width = HEADER.size
   end
 
   def event_range(i_event)
@@ -35,7 +27,7 @@ class VolunteerMonthTabController < TabController
 
   def write_header()
     header_range = sheet_range(0, 1)
-    @wb_controller.set_data(header_range, [@@header])
+    @wb_controller.set_data(header_range, [HEADER])
     @wb_controller.apply_requests([
       set_background_color_request(header_range, @@light_green),
       set_outside_border_request(header_range),
@@ -102,10 +94,10 @@ class VolunteerMonthTabController < TabController
       # get_spreadsheet_values only returns non-blank rows, we correct here to 
       # force there to be two rows for each event
       
-      rows.append([[""] * @@header.size]) if rows.size < 2
+      rows.append([[""] * HEADER.size]) if rows.size < 2
 
       def gig_from_row(row)
-        row += [""] * (@@header.size - row.size) if row.size < @@header.size
+        row += [""] * (HEADER.size - row.size) if row.size < HEADER.size
         Gig.new(
           airtable_id: row[GIG_ID_COL],
           gig_no: row[GIG_NO_COL],

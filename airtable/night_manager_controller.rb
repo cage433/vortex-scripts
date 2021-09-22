@@ -52,7 +52,9 @@ class NightManagerAirtableController
       puts("Updating record for #{event.event_date}, #{event.event_title}, #{event.airtable_id}")
 
       [event.gig1_takings, event.gig2_takings].each do |gig|
+
         gig_record = GigTable.find(gig.airtable_id)
+
         gig_record[ONLINE_TICKETS] = gig.online_tickets
         gig_record[TICKET_PRICE] = gig.ticket_price
         gig_record[WALK_INS] = gig.walk_ins
@@ -63,6 +65,7 @@ class NightManagerAirtableController
         gig_record[T_SHIRT_SALES] = gig.t_shirt_sales
         gig_record[MUGS] = gig.mugs
         gig_record[MUG_SALES] = gig.mug_sales
+
         gig_record.save
       end
     end

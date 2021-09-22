@@ -86,16 +86,9 @@ class NightManagerMonthTabController < TabController
     super(wb_controller, TabController.tab_name_for_month(year_no, month_no))
     @year_no = year_no
     @month_no = month_no
+    @width = NUM_COLS
   end
 
-  def sheet_range(
-    start_row_index, 
-    end_row_index, 
-    start_column_index = 0, 
-    end_column_index = NUM_COLS
-  )
-    SheetRange.new(start_row_index, end_row_index, start_column_index, end_column_index, @sheet_id, @tab_name)
-  end
 
   def format_columns()
     requests = [

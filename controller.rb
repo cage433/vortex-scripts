@@ -88,6 +88,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-#sync_personnel_data(2021, 10)
+sync_personnel_data(2021, 10)
 
 populate_night_manager_sheet(2021, 10)
