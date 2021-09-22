@@ -60,9 +60,9 @@ class Controller
       e.update_fee_details(a.fee_details)
     }
 
-    if events != original_events
+    #if events != original_events
       tab_controller.replace_events(events)
-    end
+    #end
 
   end
 

@@ -11,6 +11,11 @@ class TabController
       green: 0.0,
       blue: 0.0,
   }
+  @@light_yellow = {
+      red: 1.0,
+      green: 1.0,
+      blue: 0.9,
+  }
 
   def initialize(wb_controller, tab_name)
     @wb_controller = wb_controller

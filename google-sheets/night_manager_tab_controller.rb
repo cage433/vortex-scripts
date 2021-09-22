@@ -200,16 +200,26 @@ class NightManagerMonthTabController < TabController
           event.gig2_takings.mugs, event.gig2_takings.mug_sales,
           ""
         ]
-        totals_row = [""] * 15 + [ event.fee_details.fee_notes, event.fee_details.flat_fee, event.fee_details.minimum_fee, event.fee_details.fee_percentage, ""] + [""] * 5
+        i_row += 1
+        totals_row = [""] * 13 + 
+          ["=N#{i_row - 2} + N#{i_row - 1}", "=0.04 * N#{i_row}"] +
+          [ event.fee_details.fee_notes, event.fee_details.flat_fee, event.fee_details.minimum_fee, event.fee_details.fee_percentage] +
+          ["=Max(R#{i_row}, Q#{i_row} + S#{i_row} / 100.0 * N#{i_row})"] + 
+          [""] * 5 
         [first_row, second_row, totals_row]
     end
     month_events.sorted_events().each_with_index do |event, i_event|
       data += to_night_manager_xl_data(event, i_event)
     end
     @wb_controller.set_data(events_range, data)
-    requests = (0...num_events).collect do |i_event|
+    requests = []  
+    (0...num_events).each do |i_event|
       event_range = sheet_range(HEADER_ROWS + i_event * 3, HEADER_ROWS + (i_event + 1) * 3)
-      set_outside_border_request(event_range)
+
+      if i_event % 2 == 0
+        requests.append(set_background_color_request(event_range, @@light_yellow))
+      end
+      requests.append(set_outside_border_request(event_range, style: "SOLID_THICK"))
     end
 
     @wb_controller.apply_requests(requests)
