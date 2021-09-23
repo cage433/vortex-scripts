@@ -42,7 +42,7 @@ class Controller
       VolunteerAirtableController.update_events(sheet_events.data)
     else
       airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
-      modified_events = sheet_events.changed_events(airtable_events)
+      modified_events = sheet_events.changed_data(airtable_events)
       VolunteerAirtableController.update_events(modified_events.data)
     end
 
@@ -77,11 +77,8 @@ class Controller
       NightManagerAirtableController.update_events(tab_events.data)
     else
       airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
-      modified_events = tab_events.changed_events(airtable_events)
-      if modified_events.size > 0
-        puts("Updating airtable")
-        NightManagerAirtableController.update_events(modified_events.data)
-      end
+      modified_events = tab_events.changed_data(airtable_events)
+      NightManagerAirtableController.update_events(modified_events.data)
     end
   end
 end
@@ -107,6 +104,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-sync_personnel_data(2021, 10, force=true)
+sync_personnel_data(2021, 10, force=false)
 
-sync_night_manager_data(2021, 10, force=true)
+#sync_night_manager_data(2021, 10, force=false)

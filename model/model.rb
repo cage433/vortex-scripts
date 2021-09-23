@@ -1,5 +1,13 @@
-class SimpleEquals
-  def transform(x)
+module SimpleEqualityMixin
+  # Used to compare DB and spreadsheet versions of objects
+  #
+  # Classes which use this mixin provide a `state` method which is
+  # used to compare objects. 
+  # 
+  # Ignores differences due to nulls/empty strings and floats/int representations
+  # of the same number
+
+  def _transform(x)
     # Where the DB returns nils, excel will return blanks
     # ditto for float/ints
     if x.nil?
@@ -15,13 +23,31 @@ class SimpleEquals
       false
     else
       self.state.zip(o.state).all? { |a, b|
-        transform(a) == transform(b)
+        _transform(a) == _transform(b)
       }
     end
   end
+
+  def compare(rhs)
+    # Utility for when DB/sheet unexpectedly mismatch
+    raise "Mismatching state size" unless state.size == rhs.state.size
+    state.zip(rhs.state).each do |l, r|
+      if l.class == SimpleEqualityMixin
+        puts("#{l.class}, #{r.class}, #{transform(l) == transform(r)}")
+        l.compare(r)
+      else
+        puts("#{l}, #{r}, #{l.class}, #{r.class}, #{transform(l) == transform(r)}")
+      end
+    end
+  end
+
+  def state
+    raise "Mixed-in class must provide its own implementation of `state`" 
+  end
 end
 
-class GigPersonnel < SimpleEquals
+class GigPersonnel 
+  include SimpleEqualityMixin
   attr_reader :airtable_id, :gig_no, :vol1, :vol2, :night_manager
 
   def initialize(airtable_id:, gig_no:, vol1:, vol2:, night_manager:)
@@ -42,7 +68,9 @@ class GigPersonnel < SimpleEquals
 end
 
 
-class GigTakings < SimpleEquals
+class GigTakings 
+  include SimpleEqualityMixin
+  attr_reader :airtable_id, :gig_no, :vol1, :vol2, :night_manager
   attr_reader :airtable_id, :gig_no, 
     :online_tickets, :ticket_price,
     :walk_ins, :walk_in_sales, 
@@ -101,7 +129,8 @@ class GigTakings < SimpleEquals
   end
 end
 
-class FeeDetails < SimpleEquals
+class FeeDetails 
+  include SimpleEqualityMixin
   attr_reader :fee_notes, :flat_fee, :minimum_fee, :fee_percentage
   def initialize(
     fee_notes:, flat_fee:, minimum_fee:, fee_percentage:
@@ -127,7 +156,8 @@ class FeeDetails < SimpleEquals
   end
 end
 
-class NightManagerEvent < SimpleEquals
+class NightManagerEvent 
+  include SimpleEqualityMixin
   attr_reader :airtable_id, :date, :title, 
     :fee_details,
     :gig1_takings, :gig2_takings
@@ -181,7 +211,8 @@ class NightManagerEvent < SimpleEquals
   end
 end
 
-class Event < SimpleEquals
+class Event 
+  include SimpleEqualityMixin
   attr_reader :airtable_id, :date, :title, :gig1, :gig2, :sound_engineer
 
   def initialize(airtable_id:, date:, title:, gig1:, gig2:, sound_engineer:)
@@ -207,7 +238,8 @@ class Event < SimpleEquals
   end
 end
 
-class DatedCollection < SimpleEquals
+class DatedCollection 
+  include SimpleEqualityMixin
   attr_reader :data, :size, :data_by_date, :dates
 
   def initialize(data)

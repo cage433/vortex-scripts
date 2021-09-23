@@ -2,3 +2,4 @@ env.rb
 *.json
 *.yaml
 tags
+*scratch.rb
