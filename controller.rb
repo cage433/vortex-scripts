@@ -58,7 +58,7 @@ class Controller
     events = airtable_events.diff_by_date(events) + events
 
     airtable_events.data.each { |a|
-      e = events.data_for_date(a.date)
+      e = events[a.date]
       e.update_gig1_ticket_price(a.gig1_takings.ticket_price)
       e.update_gig2_ticket_price(a.gig2_takings.ticket_price)
       e.update_fee_details(a.fee_details)

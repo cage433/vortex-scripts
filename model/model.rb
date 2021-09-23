@@ -236,7 +236,7 @@ class DatedCollection < SimpleEquals
     @data_by_date.include?(date)
   end
 
-  def data_for_date(date)
+  def [](date)
     @data_by_date[date]
   end
 
