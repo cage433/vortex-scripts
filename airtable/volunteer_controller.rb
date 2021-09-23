@@ -7,7 +7,7 @@ class VolunteerAirtableController
     include GigTableMeta
 
     def self.gig_from_record(rec)
-      Gig.new(
+      GigPersonnel.new(
         airtable_id: rec[ID], 
         gig_no: rec[GIG_NO], 
         vol1: rec[VOL_1],

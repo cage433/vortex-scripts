@@ -98,7 +98,7 @@ class VolunteerMonthTabController < TabController
 
       def gig_from_row(row)
         row += [""] * (HEADER.size - row.size) if row.size < HEADER.size
-        Gig.new(
+        GigPersonnel.new(
           airtable_id: row[GIG_ID_COL],
           gig_no: row[GIG_NO_COL],
           vol1: row[VOL_1_COL],

@@ -1,15 +1,15 @@
-def transform(x)
-  # Where the DB returns nils, excel will return blanks
-  # ditto for float/ints
-  if x.nil?
-    ''
-  elsif x.class == Integer
-    x.to_f
-  else
-    x
-  end
-end
 class SimpleEquals
+  def transform(x)
+    # Where the DB returns nils, excel will return blanks
+    # ditto for float/ints
+    if x.nil?
+      ''
+    elsif x.class == Integer
+      x.to_f
+    else
+      x
+    end
+  end
   def ==(o)
     if self.state.size != o.state.size
       false
@@ -21,7 +21,7 @@ class SimpleEquals
   end
 end
 
-class Gig < SimpleEquals
+class GigPersonnel < SimpleEquals
   attr_reader :airtable_id, :gig_no, :vol1, :vol2, :night_manager
 
   def initialize(airtable_id:, gig_no:, vol1:, vol2:, night_manager:)

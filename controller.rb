@@ -25,22 +25,26 @@ class Controller
     NightManagerMonthTabController.new(year, month, @night_manager_controller)
   end
 
-  def populate_vol_sheet(year, month)
+  def populate_vol_sheet(year, month, force)
     tab_controller = vol_tab_controller(year, month)
     sheet_events = tab_controller.read_events()
     airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
     merged_events = sheet_events.merge(airtable_events)
-    #if merged_events.num_events > sheet_events.num_events
+    if merged_events.num_events > sheet_events.num_events || force
       puts("Adding missing events")
       tab_controller.replace_events(merged_events)
-    #end
+    end
   end
 
-  def update_airtable_personnel_data(year, month)
+  def update_airtable_personnel_data(year, month, force)
     sheet_events = vol_tab_controller(year, month).read_events()
-    airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
-    modified_events = sheet_events.changed_events(airtable_events)
-    VolunteerAirtableController.update_events(modified_events.events)
+    if force
+      VolunteerAirtableController.update_events(sheet_events.events)
+    else
+      airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
+      modified_events = sheet_events.changed_events(airtable_events)
+      VolunteerAirtableController.update_events(modified_events.events)
+    end
 
   end
 
@@ -60,9 +64,9 @@ class Controller
       e.update_fee_details(a.fee_details)
     }
 
-    #if events != original_events
+    if events != original_events
       tab_controller.replace_events(events)
-    #end
+    end
 
   end
 
@@ -78,14 +82,14 @@ class Controller
   end
 end
 
-def sync_personnel_data(year, month)
+def sync_personnel_data(year, month, force = false)
   controller = Controller.new()
-  controller.populate_vol_sheet(year, month)
-  controller.update_airtable_personnel_data(year, month)
+  controller.populate_vol_sheet(year, month, force)
+  controller.update_airtable_personnel_data(year, month, force)
 end
 
-def populate_new_event_table(year, month)
-  EventTable.populate_for_date_range(
+def populate_new_contract_table(year, month)
+  ContractTable.populate_for_date_range(
     Date.new(year, month, 1),
     Date.new(year, month, -1)
   )
@@ -97,8 +101,8 @@ def sync_night_manager_data(year, month)
   controller.update_airtable_from_nm_tab(year, month)
 end
 
-#populate_new_event_table(2021, 10)
+#populate_new_contract_table(2021, 10)
 
-sync_personnel_data(2021, 10)
+sync_personnel_data(2021, 10, force=true)
 
 #sync_night_manager_data(2021, 10)
