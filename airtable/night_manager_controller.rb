@@ -49,7 +49,7 @@ class NightManagerAirtableController
   end
 
   def self.read_events_for_month(year, month)
-    EventsCollection.new(
+    DatedCollection.new(
       self.read_events(ContractTable.ids_for_month(year, month))
     )
   end

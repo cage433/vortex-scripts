@@ -162,9 +162,9 @@ class NightManagerMonthTabController < TabController
   end
 
   def write_events(month_events)
-    num_events = month_events.num_events
+    num_events = month_events.size
     events_range = sheet_range(HEADER_ROWS, HEADER_ROWS + num_events * 3)
-    data = []
+    rows = []
     def to_night_manager_xl_data(event, i_event)
         i_row = 3 + i_event * 3
         first_row = [
@@ -208,10 +208,10 @@ class NightManagerMonthTabController < TabController
           [""] * 5 
         [first_row, second_row, totals_row]
     end
-    month_events.sorted_events().each_with_index do |event, i_event|
-      data += to_night_manager_xl_data(event, i_event)
+    month_events.data.each_with_index do |event, i_event|
+      rows += to_night_manager_xl_data(event, i_event)
     end
-    @wb_controller.set_data(events_range, data)
+    @wb_controller.set_data(events_range, rows)
     requests = []  
     (0...num_events).each do |i_event|
       event_range = sheet_range(HEADER_ROWS + i_event * 3, HEADER_ROWS + (i_event + 1) * 3)
@@ -230,14 +230,14 @@ class NightManagerMonthTabController < TabController
     event_range = sheet_range(HEADER_ROWS, HEADER_ROWS + 3 * max_events)
     values = @wb_controller.get_spreadsheet_values(event_range)
     if values.nil?
-      EventsCollection.new([])
+      DatedCollection.new([])
     else
       num_events = (values.size / 3.0).ceil
       events = (0...num_events).collect do |i_event|
         rows_for_event = values.slice(i_event * 3, 3)
         NightManagerEventRange.new(rows_for_event).as_event()
       end
-      EventsCollection.new(events)
+      DatedCollection.new(events)
     end
   end
 

@@ -46,10 +46,10 @@ class VolunteerMonthTabController < TabController
   end
 
   def write_events(month_events)
-    num_events = month_events.num_events
+    num_events = month_events.size
     events_range = sheet_range(1, 1 + num_events * 2)
     data = []
-    month_events.sorted_events().each do |event|
+    month_events.data.each do |event|
       row1 = [
         event.airtable_id, 
         event.gig1.airtable_id, 
@@ -121,13 +121,13 @@ class VolunteerMonthTabController < TabController
       sheet_range(1, 1 + 2 * max_events)
     )
     if values.nil?
-      EventsCollection.new([])
+      DatedCollection.new([])
     else
       num_events = (values.size / 2.0).ceil   # round up to ensure a blank row doesn't exclude an event
       details = (0...num_events).collect do |i_event|
         event_from_rows(values.slice(i_event * 2, 2))
       end
-      EventsCollection.new(details)
+      DatedCollection.new(details)
     end
   end
 

@@ -207,73 +207,68 @@ class Event < SimpleEquals
   end
 end
 
-class EventsCollection < SimpleEquals
-  attr_reader :events, :num_events, :events_by_date, :dates
+class DatedCollection < SimpleEquals
+  attr_reader :data, :size, :data_by_date, :dates
 
-  def initialize(events)
-    @events = events.sort_by { |e| e.date }
-    @events_by_date = Hash[ *events.collect { |e| [e.date, e ] }.flatten ]
-    @num_events = events.size
-    @dates = @events_by_date.keys.sort
+  def initialize(data)
+    @data = data.sort_by { |e| e.date }
+    @data_by_date = Hash[ *data.collect { |e| [e.date, e ] }.flatten ]
+    @size = data.size
+    @dates = @data_by_date.keys.sort
 
-    events.each { |e|
-      raise "Invalid event" unless e.class == Event || e.class == NightManagerEvent
+    data.each { |e|
+      raise "Invalid data" unless e.class == Event || e.class == NightManagerEvent
     }
 
   end
 
-  def sorted_events()
-    @events.sort_by { |a| a.date}
-  end
-
-
   def merge(rhs)
-    merged_events = [*@events]
-    rhs.events.each do |event|
-      if !@events_by_date.has_key?(event.date)
-        merged_events.push(event)
+    merged_data = [*@data]
+    rhs.data.each do |data|
+      if !include?(data.date)
+        merged_data.push(data)
       end
     end
-    EventsCollection.new(merged_events)
+    DatedCollection.new(merged_data)
   end
 
-  def has_event_for_date?(date)
-    @events_by_date.include?(date)
+  def include?(date)
+    @data_by_date.include?(date)
   end
 
-  def event_for_date(date)
-    @events_by_date[date]
+  def data_for_date(date)
+    @data_by_date[date]
   end
 
   def +(rhs)
-    @events_by_date.keys.each { |d|
-      raise "Both sides contain date #{d}" if rhs.has_event_for_date?(d)
+    @data_by_date.keys.each { |d|
+      raise "Both sides contain date #{d}" if rhs.include?(d)
     }
-    EventsCollection.new(events + rhs.events)
+    DatedCollection.new(data + rhs.data)
   end
 
-  def changed_events(rhs)
+  def changed_data(rhs)
     raise "Event date mismatch, #{@dates}, #{rhs.dates}" unless @dates == rhs.dates
 
-    EventsCollection.new(
+    DatedCollection.new(
       @dates.filter { |d| 
-        @events_by_date[d] != rhs.events_by_date[d]
+        @data_by_date[d] != rhs.data_by_date[d]
       }.collect { |d|
-        @events_by_date[d]
+        @data_by_date[d]
       }
     )
   end
 
   def diff_by_date(rhs)
-    EventsCollection.new(
-      @events.filter{ |e| 
-        !rhs.events_by_date.include?(e.date)
+    DatedCollection.new(
+      @data.filter{ |e| 
+        !rhs.data_by_date.include?(e.date)
       }
     )
   end
 
   def state
-    @events
+    @data
   end
 
 end

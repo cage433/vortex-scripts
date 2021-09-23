@@ -30,7 +30,7 @@ class Controller
     sheet_events = tab_controller.read_events()
     airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
     merged_events = sheet_events.merge(airtable_events)
-    if merged_events.num_events > sheet_events.num_events || force
+    if merged_events.size > sheet_events.size || force
       puts("Adding missing events")
       tab_controller.replace_events(merged_events)
     end
@@ -39,16 +39,16 @@ class Controller
   def update_airtable_personnel_data(year, month, force)
     sheet_events = vol_tab_controller(year, month).read_events()
     if force
-      VolunteerAirtableController.update_events(sheet_events.events)
+      VolunteerAirtableController.update_events(sheet_events.data)
     else
       airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
       modified_events = sheet_events.changed_events(airtable_events)
-      VolunteerAirtableController.update_events(modified_events.events)
+      VolunteerAirtableController.update_events(modified_events.data)
     end
 
   end
 
-  def update_nm_tab_from_airtable(year, month)
+  def update_nm_tab_from_airtable(year, month, force)
     # Add new events and update any modified prices
     tab_controller = night_manager_tab_controller(year, month)
     original_events = tab_controller.read_events()
@@ -57,27 +57,31 @@ class Controller
     airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
     events = airtable_events.diff_by_date(events) + events
 
-    airtable_events.events.each { |a|
-      e = events.event_for_date(a.date)
+    airtable_events.data.each { |a|
+      e = events.data_for_date(a.date)
       e.update_gig1_ticket_price(a.gig1_takings.ticket_price)
       e.update_gig2_ticket_price(a.gig2_takings.ticket_price)
       e.update_fee_details(a.fee_details)
     }
 
-    if events != original_events
+    if events != original_events || force
       tab_controller.replace_events(events)
     end
 
   end
 
-  def update_airtable_from_nm_tab(year, month)
+  def update_airtable_from_nm_tab(year, month, force)
     tab_controller = night_manager_tab_controller(year, month)
     tab_events = tab_controller.read_events()
-    airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
-    modified_events = tab_events.changed_events(airtable_events)
-    if modified_events.num_events > 0
-      puts("Updating airtable")
-      NightManagerAirtableController.update_events(modified_events.events)
+    if force
+      NightManagerAirtableController.update_events(tab_events.data)
+    else
+      airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
+      modified_events = tab_events.changed_events(airtable_events)
+      if modified_events.size > 0
+        puts("Updating airtable")
+        NightManagerAirtableController.update_events(modified_events.data)
+      end
     end
   end
 end
@@ -95,14 +99,14 @@ def populate_new_contract_table(year, month)
   )
 end
 
-def sync_night_manager_data(year, month)
+def sync_night_manager_data(year, month, force = false)
   controller = Controller.new()
-  controller.update_nm_tab_from_airtable(year, month)
-  controller.update_airtable_from_nm_tab(year, month)
+  controller.update_nm_tab_from_airtable(year, month, force)
+  controller.update_airtable_from_nm_tab(year, month, force)
 end
 
 #populate_new_contract_table(2021, 10)
 
-sync_personnel_data(2021, 10, force=true)
+#sync_personnel_data(2021, 10, force=true)
 
-#sync_night_manager_data(2021, 10)
+sync_night_manager_data(2021, 10, force=true)
