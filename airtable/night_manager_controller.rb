@@ -30,12 +30,12 @@ class NightManagerAirtableController
     ]
     event_records.collect { |event_record|
       gig1, gig2 = event_record[GIG_IDS].collect { |id| gigs_by_id[id] }.sort_by{ |g| g.gig_no }
-      event_date = Date.parse(event_record[DATE])
-      event_title = event_record[TITLE]
+      date = Date.parse(event_record[DATE])
+      title = event_record[TITLE]
       NightManagerEvent.new(
         airtable_id: event_record[ID],
-        event_date: event_date,
-        event_title: event_record[TITLE],
+        date: date,
+        title: event_record[TITLE],
         fee_details: FeeDetails.new(
           fee_notes: event_record[FEE_NOTES],
           flat_fee: event_record[FLAT_FEE],
@@ -56,7 +56,7 @@ class NightManagerAirtableController
 
   def self.update_events(events)
     events.each do |event| 
-      puts("Updating record for #{event.event_date}, #{event.event_title}, #{event.airtable_id}")
+      puts("Updating record for #{event.date}, #{event.title}, #{event.airtable_id}")
 
       [event.gig1_takings, event.gig2_takings].each do |gig|
         # Note that we don't update ticket price, as airtable is the source of truth for that

@@ -3,13 +3,13 @@ require_relative './sheet-range'
 require_relative './tab-controller'
 
 module VolunteerRotaColumns
-  EVENT_ID_COL, GIG_ID_COL, TITLE_COL, DATE_COL, DAY_COL, 
+  CONTRACT_ID_COL, GIG_ID_COL, TITLE_COL, DATE_COL, DAY_COL, 
     GIG_NO_COL, DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
     VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL = [*0..10]
 end
 
 class VolunteerMonthTabController < TabController
-  HEADER = ["Event ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
+  HEADER = ["Contract ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
   include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
@@ -41,7 +41,7 @@ class VolunteerMonthTabController < TabController
       set_number_format_request(single_column_range(DAY_COL), "ddd"),
     ]
 
-    requests += [EVENT_ID_COL, GIG_ID_COL, GIG_NO_COL].collect { |col| hide_column_request(col)}
+    requests += [CONTRACT_ID_COL, GIG_ID_COL, GIG_NO_COL].collect { |col| hide_column_request(col)}
     @wb_controller.apply_requests(requests)
   end
 
@@ -53,9 +53,9 @@ class VolunteerMonthTabController < TabController
       row1 = [
         event.airtable_id, 
         event.gig1.airtable_id, 
-        event.event_title, 
-        event.event_date, 
-        event.event_date, 
+        event.title, 
+        event.date, 
+        event.date, 
         1, 
         "19:00", 
         event.gig1.night_manager, 
@@ -108,9 +108,9 @@ class VolunteerMonthTabController < TabController
       end
 
       Event.new(
-        airtable_id: rows[0][EVENT_ID_COL],
-        event_date: Date.parse(rows[0][DATE_COL]),
-        event_title: rows[0][TITLE_COL],
+        airtable_id: rows[0][CONTRACT_ID_COL],
+        date: Date.parse(rows[0][DATE_COL]),
+        title: rows[0][TITLE_COL],
         gig1: gig_from_row(rows[0]), 
         gig2: gig_from_row(rows[1]),
         sound_engineer: rows[0][SOUND_ENGINEER_COL]

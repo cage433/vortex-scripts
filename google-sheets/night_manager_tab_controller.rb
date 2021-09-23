@@ -18,7 +18,7 @@ module NightManagerColumns
       ""
     ],
     [
-      "Event ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open",
+      "Contract ID", "Gig ID", "Title", "Date", "Day", "Set No", "Doors Open",
       "Num", "Price (£)", 
       "Num", "Sales (£)",
       "Num", "Sales (£)",
@@ -32,7 +32,7 @@ module NightManagerColumns
   NUM_COLS = HEADER[0].size
   HEADER_ROWS = HEADER.size
 
-  EVENT_ID_COL, GIG_ID_COL, TITLE_COL, DATE_COL, DAY_COL, GIG_NO_COL, DOORS_OPEN_COL,
+  CONTRACT_ID_COL, GIG_ID_COL, TITLE_COL, DATE_COL, DAY_COL, GIG_NO_COL, DOORS_OPEN_COL,
     ONLINE_TICKETS_COL, PRICE_COL,
     WALK_INS_COL, WALK_IN_SALES_COL,
     GUESTS_OR_CHEAP_COL, GUEST_OR_CHEAP_SALES_COL,
@@ -45,7 +45,7 @@ module NightManagerColumns
 
   DEFAULT_COL_WIDTH = 60
   WIDTHS = {
-    EVENT_ID_COL => 300,
+    CONTRACT_ID_COL => 300,
     DATE_COL => 60,
     DAY_COL => 60,
     DOORS_OPEN_COL => 80,
@@ -106,9 +106,9 @@ class NightManagerEventRange
 
   def as_event()
     NightManagerEvent.new(
-      airtable_id: @rows[0][EVENT_ID_COL],
-      event_date: Date.parse(@rows[0][DATE_COL]),
-      event_title: @rows[0][TITLE_COL],
+      airtable_id: @rows[0][CONTRACT_ID_COL],
+      date: Date.parse(@rows[0][DATE_COL]),
+      title: @rows[0][TITLE_COL],
       fee_details: fee_details(@rows[2]),
       gig1_takings: _gig_takings(@rows[0]),
       gig2_takings: _gig_takings(@rows[1]),
@@ -134,7 +134,7 @@ class NightManagerMonthTabController < TabController
       set_number_format_request(single_column_range(DAY_COL), "ddd"),
     ]
 
-    requests += [EVENT_ID_COL, GIG_ID_COL, GIG_NO_COL].collect { |col| hide_column_request(col)}
+    requests += [CONTRACT_ID_COL, GIG_ID_COL, GIG_NO_COL].collect { |col| hide_column_request(col)}
     @wb_controller.apply_requests(requests)
   end
 
@@ -170,9 +170,9 @@ class NightManagerMonthTabController < TabController
         first_row = [
           event.airtable_id, 
           event.gig1_takings.airtable_id, 
-          event.event_title, 
-          event.event_date, 
-          event.event_date,
+          event.title, 
+          event.date, 
+          event.date,
           1, "19:00",
           event.gig1_takings.online_tickets, event.gig1_takings.ticket_price,
           event.gig1_takings.walk_ins, event.gig1_takings.walk_in_sales,

@@ -128,19 +128,19 @@ class FeeDetails < SimpleEquals
 end
 
 class NightManagerEvent < SimpleEquals
-  attr_reader :airtable_id, :event_date, :event_title, 
+  attr_reader :airtable_id, :date, :title, 
     :fee_details,
     :gig1_takings, :gig2_takings
 
   def initialize(
     airtable_id:, 
-    event_date:, event_title:, 
+    date:, title:, 
     fee_details:,
     gig1_takings:, gig2_takings:
   )
     @airtable_id = airtable_id
-    @event_date = event_date
-    @event_title = event_title
+    @date = date
+    @title = title
     @fee_details = fee_details
     @gig1_takings = gig1_takings
     @gig2_takings = gig2_takings
@@ -148,8 +148,8 @@ class NightManagerEvent < SimpleEquals
 
   def to_s_table(indent)
     table = [
-      "Date:     #{@event_date}",
-      "Title:    #{@event_title}",
+      "Date:     #{@date}",
+      "Title:    #{@title}",
       "Fee Details:"
     ] +
       @fee_details.to_s_table(indent + "    ") +
@@ -165,7 +165,7 @@ class NightManagerEvent < SimpleEquals
   end
 
   def state
-    [@airtable_id, @event_date, @event_title, @fee_details, @gig1_takings, @gig2_takings]
+    [@airtable_id, @date, @title, @fee_details, @gig1_takings, @gig2_takings]
   end
 
   def update_gig1_ticket_price(price)
@@ -182,19 +182,19 @@ class NightManagerEvent < SimpleEquals
 end
 
 class Event < SimpleEquals
-  attr_reader :airtable_id, :event_date, :event_title, :gig1, :gig2, :sound_engineer
+  attr_reader :airtable_id, :date, :title, :gig1, :gig2, :sound_engineer
 
-  def initialize(airtable_id:, event_date:, event_title:, gig1:, gig2:, sound_engineer:)
+  def initialize(airtable_id:, date:, title:, gig1:, gig2:, sound_engineer:)
     @airtable_id = airtable_id
-    @event_date = event_date
-    @event_title = event_title
+    @date = date
+    @title = title
     @gig1 = gig1
     @gig2 = gig2
     @sound_engineer = sound_engineer
   end
 
   def to_s()
-"#{@event_date}: #{@event_title}
+"#{@date}: #{@title}
   Gig1: #{gig1}
   Gig2: #{gig1}
   SE: <#{@sound_engineer}>
@@ -203,18 +203,18 @@ class Event < SimpleEquals
 
 
   def state
-    [@airtable_id, @event_date, @event_title, @gig1, @gig2, @sound_engineer]
+    [@airtable_id, @date, @title, @gig1, @gig2, @sound_engineer]
   end
 end
 
 class EventsCollection < SimpleEquals
-  attr_reader :events, :num_events, :events_by_date, :event_dates
+  attr_reader :events, :num_events, :events_by_date, :dates
 
   def initialize(events)
-    @events = events.sort_by { |e| e.event_date }
-    @events_by_date = Hash[ *events.collect { |e| [e.event_date, e ] }.flatten ]
+    @events = events.sort_by { |e| e.date }
+    @events_by_date = Hash[ *events.collect { |e| [e.date, e ] }.flatten ]
     @num_events = events.size
-    @event_dates = @events_by_date.keys.sort
+    @dates = @events_by_date.keys.sort
 
     events.each { |e|
       raise "Invalid event" unless e.class == Event || e.class == NightManagerEvent
@@ -223,14 +223,14 @@ class EventsCollection < SimpleEquals
   end
 
   def sorted_events()
-    @events.sort_by { |a| a.event_date}
+    @events.sort_by { |a| a.date}
   end
 
 
   def merge(rhs)
     merged_events = [*@events]
     rhs.events.each do |event|
-      if !@events_by_date.has_key?(event.event_date)
+      if !@events_by_date.has_key?(event.date)
         merged_events.push(event)
       end
     end
@@ -253,10 +253,10 @@ class EventsCollection < SimpleEquals
   end
 
   def changed_events(rhs)
-    raise "Event date mismatch, #{@event_dates}, #{rhs.event_dates}" unless @event_dates == rhs.event_dates
+    raise "Event date mismatch, #{@dates}, #{rhs.dates}" unless @dates == rhs.dates
 
     EventsCollection.new(
-      @event_dates.filter { |d| 
+      @dates.filter { |d| 
         @events_by_date[d] != rhs.events_by_date[d]
       }.collect { |d|
         @events_by_date[d]
@@ -264,10 +264,10 @@ class EventsCollection < SimpleEquals
     )
   end
 
-  def diff_by_event_date(rhs)
+  def diff_by_date(rhs)
     EventsCollection.new(
       @events.filter{ |e| 
-        !rhs.events_by_date.include?(e.event_date)
+        !rhs.events_by_date.include?(e.date)
       }
     )
   end

@@ -30,10 +30,10 @@ class Controller
     sheet_events = tab_controller.read_events()
     airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
     merged_events = sheet_events.merge(airtable_events)
-    if merged_events.num_events > sheet_events.num_events
+    #if merged_events.num_events > sheet_events.num_events
       puts("Adding missing events")
       tab_controller.replace_events(merged_events)
-    end
+    #end
   end
 
   def update_airtable_personnel_data(year, month)
@@ -51,10 +51,10 @@ class Controller
 
     events = tab_controller.read_events()
     airtable_events = NightManagerAirtableController.read_events_for_month(year, month)
-    events = airtable_events.diff_by_event_date(events) + events
+    events = airtable_events.diff_by_date(events) + events
 
     airtable_events.events.each { |a|
-      e = events.event_for_date(a.event_date)
+      e = events.event_for_date(a.date)
       e.update_gig1_ticket_price(a.gig1_takings.ticket_price)
       e.update_gig2_ticket_price(a.gig2_takings.ticket_price)
       e.update_fee_details(a.fee_details)
@@ -99,6 +99,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-#sync_personnel_data(2021, 10)
+sync_personnel_data(2021, 10)
 
-sync_night_manager_data(2021, 10)
+#sync_night_manager_data(2021, 10)

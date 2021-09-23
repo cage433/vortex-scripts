@@ -27,12 +27,12 @@ class VolunteerAirtableController
     ]
     event_records.collect { |event_record|
       gig1, gig2 = event_record[GIG_IDS].collect { |id| gigs_by_id[id] }.sort_by{ |g| g.gig_no }
-      event_date = Date.parse(event_record[DATE])
-      event_title = event_record[TITLE]
+      date = Date.parse(event_record[DATE])
+      title = event_record[TITLE]
       Event.new(
         airtable_id: event_record[ID],
-        event_date: event_date,
-        event_title: event_record[TITLE],
+        date: date,
+        title: event_record[TITLE],
         gig1: gig1, gig2: gig2,
         sound_engineer: event_record[SOUND_ENGINEER]
       )
@@ -48,7 +48,7 @@ class VolunteerAirtableController
 
   def self.update_events(events)
     events.each do |event| 
-      puts("Updating record for #{event.event_date}, #{event.event_title}, #{event.airtable_id}")
+      puts("Updating record for #{event.date}, #{event.title}, #{event.airtable_id}")
       airtable_record = ContractTable.find(event.airtable_id)
       airtable_record[SOUND_ENGINEER] = event.sound_engineer
       airtable_record.save()
