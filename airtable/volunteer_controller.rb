@@ -3,7 +3,7 @@ require_relative 'contract_table'
 class VolunteerAirtableController
 
   def self.read_events(event_ids)
-    include ContractTableMeta
+    include EventTableMeta
     include GigTableMeta
 
     def self.gig_from_record(rec)
@@ -15,7 +15,7 @@ class VolunteerAirtableController
         night_manager: rec[NIGHT_MANAGER]
       )
     end
-    event_records = ContractTable.find_many(event_ids)
+    event_records = EventTable.find_many(event_ids)
 
     gig_ids = event_records.collect { |rec| rec[GIG_IDS] }.flatten
     gigs_by_id = Hash[ 
@@ -42,14 +42,14 @@ class VolunteerAirtableController
 
   def self.read_events_for_month(year, month)
     DatedCollection.new(
-      self.read_events(ContractTable.ids_for_month(year, month))
+      self.read_events(EventTable.ids_for_month(year, month))
     )
   end
 
   def self.update_events(events)
     events.each do |event| 
       puts("Updating record for #{event.date}, #{event.title}, #{event.airtable_id}")
-      airtable_record = ContractTable.find(event.airtable_id)
+      airtable_record = EventTable.find(event.airtable_id)
       airtable_record[SOUND_ENGINEER] = event.sound_engineer
       airtable_record.save()
 

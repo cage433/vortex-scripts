@@ -4,7 +4,7 @@ require_relative 'gig_table.rb'
 class NightManagerAirtableController
 
   def self.read_events(event_ids)
-    include ContractTableMeta
+    include EventTableMeta
     include GigTableMeta
 
     def self.gig_takings_from_record(rec)
@@ -18,7 +18,7 @@ class NightManagerAirtableController
         mugs: rec[MUGS], mug_sales: rec[MUG_SALES]
       )
     end
-    event_records = ContractTable.find_many(event_ids)
+    event_records = EventTable.find_many(event_ids)
 
     gig_ids = event_records.collect { |rec| rec[GIG_IDS] }.flatten
     gigs_by_id = Hash[ 
@@ -50,7 +50,7 @@ class NightManagerAirtableController
 
   def self.read_events_for_month(year, month)
     DatedCollection.new(
-      self.read_events(ContractTable.ids_for_month(year, month))
+      self.read_events(EventTable.ids_for_month(year, month))
     )
   end
 

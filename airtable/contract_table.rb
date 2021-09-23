@@ -3,13 +3,12 @@ require_relative 'original_contracts_table'
 require 'airrecord'
 Airrecord.api_key = AIRTABLE_API_KEY 
 
-module ContractTableMeta
-  TABLE = "Contract"
+module EventTableMeta
+  TABLE = "Event"
 
   ID = "id"
   TITLE = "Title"
   DATE = "Date"
-  EVENT_TYPE = "Contract Type"
   GIG_IDS = "Gig Ids"
   SOUND_ENGINEER = "Sound Engineer"
   FEE_NOTES = "Fee Notes"
@@ -18,9 +17,9 @@ module ContractTableMeta
   FEE_PERCENTAGE = "Fee %age"
 end
 
-class ContractTable < Airrecord::Table
+class EventTable < Airrecord::Table
 
-  include ContractTableMeta
+  include EventTableMeta
    
   self.base_key = ALEX_VORTEX_DB_ID
   self.table_name = TABLE
@@ -37,7 +36,7 @@ class ContractTable < Airrecord::Table
       performance_date >= first_date && performance_date <= last_date
     end
     original_contracts.each do |c|
-      ContractTable.create(
+      EventTable.create(
         {
           DATE => Date.parse(c[OriginalContractsTableMeta::PERFORMANCE_DATES]),
           TITLE => c[OriginalContractsTableMeta::EVENT_TITLE],
@@ -48,7 +47,7 @@ class ContractTable < Airrecord::Table
   end
 
   def self.ids_for_date_range(first_date, last_date)
-    recs = ContractTable.all(
+    recs = EventTable.all(
       fields: [ID],
       filter: filter_text(first_date, last_date)
     )

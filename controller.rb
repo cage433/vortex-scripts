@@ -92,8 +92,8 @@ def sync_personnel_data(year, month, force = false)
   controller.update_airtable_personnel_data(year, month, force)
 end
 
-def populate_new_contract_table(year, month)
-  ContractTable.populate_for_date_range(
+def populate_new_event_table(year, month)
+  EventTable.populate_for_date_range(
     Date.new(year, month, 1),
     Date.new(year, month, -1)
   )
@@ -105,8 +105,8 @@ def sync_night_manager_data(year, month, force = false)
   controller.update_airtable_from_nm_tab(year, month, force)
 end
 
-#populate_new_contract_table(2021, 10)
+#populate_new_event_table(2021, 10)
 
-#sync_personnel_data(2021, 10, force=true)
+sync_personnel_data(2021, 10, force=true)
 
 sync_night_manager_data(2021, 10, force=true)
