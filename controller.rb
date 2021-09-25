@@ -106,4 +106,4 @@ end
 
 sync_personnel_data(2021, 10, force=false)
 
-#sync_night_manager_data(2021, 10, force=false)
+sync_night_manager_data(2021, 10, force=false)

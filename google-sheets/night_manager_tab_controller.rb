@@ -242,7 +242,7 @@ class NightManagerMonthTabController < TabController
   end
 
   def replace_events(month_events)
-      clear_values()
+      clear_values_and_formats()
       write_header()
       format_columns()
       write_events(month_events)

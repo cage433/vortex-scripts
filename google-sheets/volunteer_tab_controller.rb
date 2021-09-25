@@ -3,13 +3,13 @@ require_relative './sheet-range'
 require_relative './tab-controller'
 
 module VolunteerRotaColumns
-  CONTRACT_ID_COL, GIG_ID_COL, TITLE_COL, DATE_COL, DAY_COL, 
-    GIG_NO_COL, DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
+  EVENT_ID_COL, GIG_ID_COL, GIG_NO_COL, TITLE_COL, DATE_COL, DAY_COL, 
+    DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
     VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL = [*0..10]
 end
 
 class VolunteerMonthTabController < TabController
-  HEADER = ["Contract ID", "Gig ID", "Event", "Date", "Day", "Set No", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
+  HEADER = ["Contract ID", "Gig ID", "Gig No", "Event", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
   include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
@@ -41,7 +41,7 @@ class VolunteerMonthTabController < TabController
       set_number_format_request(single_column_range(DAY_COL), "ddd"),
     ]
 
-    requests += [CONTRACT_ID_COL, GIG_ID_COL, GIG_NO_COL].collect { |col| hide_column_request(col)}
+    requests.append(hide_column_request(EVENT_ID_COL, GIG_NO_COL + 1))
     @wb_controller.apply_requests(requests)
   end
 
@@ -53,10 +53,10 @@ class VolunteerMonthTabController < TabController
       row1 = [
         event.airtable_id, 
         event.gig1.airtable_id, 
+        1, 
         event.title, 
         event.date, 
         event.date, 
-        1, 
         "19:00", 
         event.gig1.night_manager, 
         event.gig1.vol1, 
@@ -66,10 +66,10 @@ class VolunteerMonthTabController < TabController
       row2 = [
         "",
         event.gig2.airtable_id,
-        "",
-        "",
-        "",
         2,
+        "",
+        "",
+        "",
         "21:00",
         "",
         event.gig2.vol1, 
@@ -79,8 +79,13 @@ class VolunteerMonthTabController < TabController
       data += [row1, row2]
     end
     @wb_controller.set_data(events_range, data)
-    requests = (0...num_events).collect do |i_event|
-      set_outside_border_request(event_range(i_event))
+    requests = []
+    (0...num_events).each do |i_event|
+      range = event_range(i_event)
+      requests.append(set_outside_border_request(range))
+      if i_event % 2 == 0
+        requests.append(set_background_color_request(range, @@light_yellow))
+      end
     end
 
     @wb_controller.apply_requests(requests)
@@ -108,7 +113,7 @@ class VolunteerMonthTabController < TabController
       end
 
       Event.new(
-        airtable_id: rows[0][CONTRACT_ID_COL],
+        airtable_id: rows[0][EVENT_ID_COL],
         date: Date.parse(rows[0][DATE_COL]),
         title: rows[0][TITLE_COL],
         gig1: gig_from_row(rows[0]), 
@@ -132,7 +137,7 @@ class VolunteerMonthTabController < TabController
   end
 
   def replace_events(month_events)
-      clear_values()
+      clear_values_and_formats()
       write_header()
       format_columns()
       write_events(month_events)

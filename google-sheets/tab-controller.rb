@@ -118,14 +118,14 @@ class TabController
     }
   end
 
-  def hide_column_request(i_col)
+  def hide_column_request(i_col, i_end_col = nil)
     {
       update_dimension_properties: {
         range: {
           sheet_id: @sheet_id,
           dimension: "COLUMNS",
           start_index: i_col,
-          end_index: i_col + 1
+          end_index: i_end_col || i_col + 1
         },
         properties: {
           hidden_by_user: true
@@ -178,7 +178,7 @@ class TabController
     }
   end
 
-  def clear_values()
+  def clear_values_and_formats()
     @wb_controller.apply_requests(
       [
         update_all_cells_request("userEnteredValue"),
