@@ -1,50 +1,51 @@
 require_relative 'contract_table'
+require 'time'
 
 class VolunteerAirtableController
 
-  def self.read_events(event_ids)
-    include EventTableMeta
-    include GigTableMeta
-
-    def self.gig_from_record(rec)
-      GigPersonnel.new(
-        airtable_id: rec[ID], 
-        gig_no: rec[GIG_NO], 
-        vol1: rec[VOL_1],
-        vol2: rec[VOL_2],
-        night_manager: rec[NIGHT_MANAGER]
-      )
+  def self.door_time(rec)
+    if rec[DOORS_TIME].nil?
+      ""
+    else
+      Time.parse(rec[DOORS_TIME]).strftime("%H:%M")
     end
+  end
+
+  def self._event_title(rec)
+    title = rec[SHEETS_EVENT_TITLE]
+    if title.class == Array
+      raise "Invalid title array #{title.join(", ")}" unless title.size == 1
+      title = title[0]
+    end
+    if title.nil?
+      title = ""
+    end
+    title
+  end
+  def self.read_personnels_by_date(year, month)
+    include EventTableMeta
+    event_ids = EventTable.ids_for_month(year, month)
     event_records = EventTable.find_many(event_ids)
-
-    gig_ids = event_records.collect { |rec| rec[GIG_IDS] }.flatten
-    gigs_by_id = Hash[ 
-      GigTable
-      .find_many(gig_ids)
-      .collect { |rec| 
-        [rec[ID], gig_from_record(rec)] 
-      } 
-    ]
-    event_records.collect { |event_record|
-      gig1, gig2 = event_record[GIG_IDS].collect { |id| gigs_by_id[id] }.sort_by{ |g| g.gig_no }
-      date = Date.parse(event_record[DATE])
-      title = event_record[TITLE]
-      Event.new(
-        airtable_id: event_record[ID],
-        date: date,
-        title: event_record[TITLE],
-        gig1: gig1, gig2: gig2,
-        sound_engineer: event_record[SOUND_ENGINEER]
-      )
+    personnels_by_date = event_records.group_by { |rec| rec[EVENT_DATE] }.collect { |date, records_for_date|
+      events_personnel = records_for_date.collect { |rec|
+        EventPersonnel.new(
+          airtable_id: rec[ID], 
+          title: self._event_title(rec),
+          date: rec[EVENT_DATE],
+          doors_open: self.door_time(rec),
+          vol1: rec[VOL_1],
+          vol2: rec[VOL_2],
+          night_manager: rec[NIGHT_MANAGER],
+          sound_engineer: rec[SOUND_ENGINEER],
+        )
+      }
+      PersonnelForDate.new(events_personnel: events_personnel)
     }
+    DatedCollection.new(personnels_by_date)
+    
 
   end
 
-  def self.read_events_for_month(year, month)
-    DatedCollection.new(
-      self.read_events(EventTable.ids_for_month(year, month))
-    )
-  end
 
   def self.update_events(events)
     events.each do |event| 

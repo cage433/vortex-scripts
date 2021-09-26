@@ -1,3 +1,5 @@
+require_relative '../utils/utils'
+
 module SimpleEqualityMixin
   # Used to compare DB and spreadsheet versions of objects
   #
@@ -46,24 +48,61 @@ module SimpleEqualityMixin
   end
 end
 
-class GigPersonnel 
+class EventPersonnel 
   include SimpleEqualityMixin
-  attr_reader :airtable_id, :gig_no, :vol1, :vol2, :night_manager
+  attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :night_manager, :sound_engineer
 
-  def initialize(airtable_id:, gig_no:, vol1:, vol2:, night_manager:)
+  def initialize(airtable_id:, title:, date:, doors_open:, vol1:, vol2:, night_manager:, sound_engineer:)
     @airtable_id = airtable_id
-    @gig_no = gig_no
+    @title = title
+    @date = date
+    @doors_open = doors_open
     @vol1 = vol1
     @vol2 = vol2
     @night_manager = night_manager
+    @sound_engineer = sound_engineer
   end
 
   def state
-    [@airtable_id, @gig_number, @vol1, @vol2, @night_manager]
+    [@airtable_id, @title, @date, @doors_open, @vol1, @vol2, @night_manager, @sound_engineer]
+  end
+
+  def to_s_table(indent)
+    [
+      "Title:           #{@title}",
+      "Date:            #{@date}",
+      "Doors:           #{@doors_open}",
+      "Vol1:            #{@vol1}",
+      "Vol2:            #{@vol2}",
+      "NM:              #{@night_manager}",
+      "SE:              #{@sound_engineer}",
+    ].collect { |t| "#{indent}#{t}" }
   end
 
   def to_s()
-    "  Gig Personnel: #{@airtable_id}, #{@gig_no}, #{@vol1}, #{@vol2}, #{@night_manager}"
+    to_s_table("")
+  end
+end
+
+class PersonnelForDate
+  include SimpleEqualityMixin
+  attr_reader :events_personnel, :date
+
+  def initialize(events_personnel:)
+    assert_collection_type(events_personnel, EventPersonnel)
+    @events_personnel = events_personnel.sort_by { |e| e.doors_open }
+    @date = @events_personnel[0].date
+    @events_personnel.each do |e|
+      raise "Date mismatch #{e}" unless e.date == @date
+    end
+  end
+
+  def state
+    @events_personnel
+  end
+
+  def to_s_table(indent)
+    pre
   end
 end
 
@@ -211,33 +250,6 @@ class NightManagerEvent
   end
 end
 
-class Event 
-  include SimpleEqualityMixin
-  attr_reader :airtable_id, :date, :title, :gig1, :gig2, :sound_engineer
-
-  def initialize(airtable_id:, date:, title:, gig1:, gig2:, sound_engineer:)
-    @airtable_id = airtable_id
-    @date = date
-    @title = title
-    @gig1 = gig1
-    @gig2 = gig2
-    @sound_engineer = sound_engineer
-  end
-
-  def to_s()
-"#{@date}: #{@title}
-  Gig1: #{gig1}
-  Gig2: #{gig1}
-  SE: <#{@sound_engineer}>
-"
-  end
-
-
-  def state
-    [@airtable_id, @date, @title, @gig1, @gig2, @sound_engineer]
-  end
-end
-
 class DatedCollection 
   include SimpleEqualityMixin
   attr_reader :data, :size, :data_by_date, :dates
@@ -249,7 +261,7 @@ class DatedCollection
     @dates = @data_by_date.keys.sort
 
     data.each { |e|
-      raise "Invalid data" unless e.class == Event || e.class == NightManagerEvent
+      raise "Invalid data, #{e.class}" unless e.class == PersonnelForDate || e.class == NightManagerEvent
     }
 
   end

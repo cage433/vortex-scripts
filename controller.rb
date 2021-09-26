@@ -27,8 +27,9 @@ class Controller
 
   def populate_vol_sheet(year, month, force)
     tab_controller = vol_tab_controller(year, month)
-    sheet_events = tab_controller.read_events()
-    airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
+    sheet_events = DatedCollection.new([])
+    #sheet_events = tab_controller.read_events()
+    airtable_events = VolunteerAirtableController.read_personnels_by_date(year, month)
     merged_events = sheet_events.merge(airtable_events)
     if merged_events.size > sheet_events.size || force
       puts("Adding missing events")
@@ -86,7 +87,7 @@ end
 def sync_personnel_data(year, month, force = false)
   controller = Controller.new()
   controller.populate_vol_sheet(year, month, force)
-  controller.update_airtable_personnel_data(year, month, force)
+  #controller.update_airtable_personnel_data(year, month, force)
 end
 
 def populate_new_event_table(year, month)
@@ -104,6 +105,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-sync_personnel_data(2021, 10, force=false)
+sync_personnel_data(2021, 10, force=true)
 
-sync_night_manager_data(2021, 10, force=false)
+#sync_night_manager_data(2021, 10, force=false)
