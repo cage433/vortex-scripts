@@ -11,9 +11,11 @@ module EventTableMeta
   EVENT_DATE = "Event Date"
   DOORS_TIME = "Doors Time"
   SOUND_ENGINEER = "Sound Engineer"
-  NIGHT_MANAGER = "Night Manager"
+  NIGHT_MANAGER_NAME = "Night Manager Name"
   VOL_1 = "Vol 1 Name"
   VOL_2 = "Vol 2 Name"
+  PRIMARY_EVENT_TYPE = "Primary Event Type"
+  STATUS = "Status"
   #FEE_NOTES = "Fee Notes"
   #FLAT_FEE = "Flat Fee"
   #MIN_FEE = "Min Fee"
@@ -30,7 +32,7 @@ class EventTable < Airrecord::Table
   def self.filter_text(first_date, last_date)
     first_date_formatted = first_date.strftime("%Y-%m-%d")
     last_date_formatted = last_date.strftime("%Y-%m-%d")
-    "AND({#{EVENT_DATE}} >= '#{first_date_formatted}',{#{EVENT_DATE}} <= '#{last_date_formatted}')"
+    "AND({#{EVENT_DATE}} >= '#{first_date_formatted}',{#{EVENT_DATE}} <= '#{last_date_formatted}', {#{STATUS}} = 'Confirmed')"
   end
 
   #def self.populate_for_date_range(first_date, last_date)

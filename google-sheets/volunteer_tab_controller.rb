@@ -3,13 +3,14 @@ require_relative './sheet-range'
 require_relative './tab-controller'
 
 module VolunteerRotaColumns
-  EVENT_ID_COL, DATE_COL, TITLE_COL, DISPLAY_TITLE_COL, DISPLAY_DATE_COL, DAY_COL, 
-    DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
-    VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL = [*0..11]
+  EVENT_ID_COL, DATE_COL, TITLE_COL, DOORS_OPEN_COL, 
+    DISPLAY_TITLE_COL, DISPLAY_DATE_COL, DAY_COL, 
+    DISPLAY_DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
+    VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL = [*0..12]
 end
 
 class VolunteerMonthTabController < TabController
-  HEADER = ["Event ID", "Date", "Title", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
+  HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
   include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
@@ -31,7 +32,7 @@ class VolunteerMonthTabController < TabController
     @wb_controller.apply_requests([
       set_background_color_request(header_range, @@light_green),
       set_outside_border_request(header_range),
-      set_column_width_request(TITLE_COL, 300)
+      set_column_width_request(DISPLAY_TITLE_COL, 300)
     ])
   end
 
@@ -41,23 +42,28 @@ class VolunteerMonthTabController < TabController
       set_number_format_request(single_column_range(DAY_COL), "ddd"),
     ]
 
-    requests.append(hide_column_request(EVENT_ID_COL, TITLE_COL + 1))
+    requests.append(hide_column_request(EVENT_ID_COL, DOORS_OPEN_COL + 1))
     @wb_controller.apply_requests(requests)
   end
 
   def rows_for_date(personnel_for_date)
-    assert_type(personnel_for_date, PersonnelForDate)
-    first_title = personnel_for_date.events_personnel[0].title
-    personnel_for_date.events_personnel.each_with_index.collect { |personnel, i|
+    assert_collection_type(personnel_for_date, EventPersonnel)
+    sorted_personnel = personnel_for_date.sort{ |l, r| 
+      compare_with_nils(l.doors_open, r.doors_open) 
+    }
+    first_title = sorted_personnel[0].title
+    sorted_personnel.each_with_index.collect { |personnel, i|
       display_title = if personnel.title == first_title && i > 0 then "" else personnel.title end
+      display_doors_open = if is_nil_or_blank?(personnel.doors_open) then "" else personnel.doors_open.strftime("%H:%M") end
       [
         personnel.airtable_id,
         personnel.date,
         personnel.title,
+        personnel.doors_open,
         display_title,
         if i == 0 then personnel.date else "" end,
         if i == 0 then personnel.date else "" end,
-        personnel.doors_open,
+        display_doors_open,
         personnel.night_manager,
         personnel.vol1,
         personnel.vol2,
@@ -66,12 +72,14 @@ class VolunteerMonthTabController < TabController
     }
   end
 
-  def write_events(personnel_by_date)
-    assert_type(personnel_by_date, DatedCollection)
+  def write_events(events_personnel)
+    assert_type(events_personnel, EventsPersonnel)
     data = []
     requests = []
     i_row = 1
-    personnel_by_date.dates.each_with_index do |d, i_date|
+    personnel_by_date = events_personnel.events_personnel.group_by{ |ep| ep.date }
+    dates = personnel_by_date.keys.sort
+    dates.each_with_index do |d, i_date|
       personnel_for_date = personnel_by_date[d]
       next_rows = rows_for_date(personnel_for_date)
       range_for_date = sheet_range(i_row, i_row + next_rows.size)
@@ -90,40 +98,29 @@ class VolunteerMonthTabController < TabController
 
 
 
-  def read_events()
+  def read_events_personnel()
 
-    max_events = 50
     rows = @wb_controller.get_spreadsheet_values(
-      sheet_range(1, 1 + 2 * max_events)
+      sheet_range(1, 100)
     )
     if rows.nil?
-      DatedCollection.new([])
+      EventsPersonnel.new(events_personnel: [])
     else
-
-      rows_by_date = rows.group_by { |row| Date.parse(row[DATE_COL]) }
-      personnel_by_date = rows_by_date.collect { |date, rows_for_date| 
-        first_title = rows_for_date[0][TITLE_COL]
-        def event_personnel_from_row(row)
+      events_personnel = rows.collect {|row|
           row += [""] * (HEADER.size - row.size) if row.size < HEADER.size
-          title = row[TITLE_COL]
-          title = first_title if title == ""
+          doors_open = if is_nil_or_blank?(row[DOORS_OPEN_COL]) then nil else Time.parse(row[DOORS_OPEN_COL]) end
           EventPersonnel.new(
-            airtable_id: row[GIG_ID_COL],
-            title: title,
-            date: date,
-            doors_open: row[DOORS_OPEN_COL],
+            airtable_id: row[EVENT_ID_COL],
+            title: row[TITLE_COL],
+            date: Date.parse(row[DATE_COL]),
+            doors_open: doors_open,
             vol1: row[VOL_1_COL],
             vol2: row[VOL_2_COL],
             night_manager: row[NIGHT_MANAGER_COL],
             sound_engineer: row[SOUND_ENGINEER_COL]
           )
-        end
-        PersonnelForDate.new(
-          rows_for_date.collect { |row| event_personnel_from_row(row) }.flatten
-        )
-
       }
-      DatedCollection(personnel_by_date)
+      EventsPersonnel.new(events_personnel: events_personnel)
     end
   end
 

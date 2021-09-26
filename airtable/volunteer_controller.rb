@@ -1,13 +1,15 @@
 require_relative 'contract_table'
+require_relative 'contacts'
 require 'time'
 
 class VolunteerAirtableController
+  include EventTableMeta
 
   def self.door_time(rec)
     if rec[DOORS_TIME].nil?
-      ""
+      nil
     else
-      Time.parse(rec[DOORS_TIME]).strftime("%H:%M")
+      Time.parse(rec[DOORS_TIME])
     end
   end
 
@@ -22,45 +24,44 @@ class VolunteerAirtableController
     end
     title
   end
-  def self.read_personnels_by_date(year, month)
-    include EventTableMeta
+
+  def self.read_events_personnel(year, month)
     event_ids = EventTable.ids_for_month(year, month)
     event_records = EventTable.find_many(event_ids)
-    personnels_by_date = event_records.group_by { |rec| rec[EVENT_DATE] }.collect { |date, records_for_date|
-      events_personnel = records_for_date.collect { |rec|
-        EventPersonnel.new(
-          airtable_id: rec[ID], 
-          title: self._event_title(rec),
-          date: rec[EVENT_DATE],
-          doors_open: self.door_time(rec),
-          vol1: rec[VOL_1],
-          vol2: rec[VOL_2],
-          night_manager: rec[NIGHT_MANAGER],
-          sound_engineer: rec[SOUND_ENGINEER],
-        )
-      }
-      PersonnelForDate.new(events_personnel: events_personnel)
+    sound_engineers = SoundEngineers.new()
+    events_personnel = event_records.collect { |rec|
+      sound_engineer = if is_nil_or_blank?(rec[SOUND_ENGINEER]) then
+                         nil
+                       else
+                         sound_engineers[rec[SOUND_ENGINEER][0]]
+                       end
+
+      EventPersonnel.new(
+        airtable_id: rec[ID], 
+        title: self._event_title(rec),
+        date: Date.parse(rec[EVENT_DATE]),
+        doors_open: self.door_time(rec),
+        vol1: rec[VOL_1],
+        vol2: rec[VOL_2],
+        night_manager: rec[NIGHT_MANAGER_NAME],
+        sound_engineer: sound_engineer
+      )
     }
-    DatedCollection.new(personnels_by_date)
-    
+    EventsPersonnel.new(events_personnel: events_personnel)
 
   end
 
 
-  def self.update_events(events)
-    events.each do |event| 
-      puts("Updating record for #{event.date}, #{event.title}, #{event.airtable_id}")
-      airtable_record = EventTable.find(event.airtable_id)
-      airtable_record[SOUND_ENGINEER] = event.sound_engineer
-      airtable_record.save()
+  def self.update_events_personnel(events_personnel)
+    assert_type(events_personnel, EventsPersonnel)
+    events_personnel.events_personnel.each do |ep| 
+      puts("Updating record for #{ep.date}, #{ep.title}, #{ep.airtable_id}")
+      airtable_record = EventTable.find(ep.airtable_id)
 
-      [event.gig1, event.gig2].each do |gig|
-        gig_record = GigTable.find(gig.airtable_id)
-        gig_record[NIGHT_MANAGER] = gig.night_manager
-        gig_record[VOL_1] = gig.vol1
-        gig_record[VOL_2] = gig.vol2
-        gig_record.save
-      end
+      airtable_record[NIGHT_MANAGER_NAME] = ep.night_manager
+      airtable_record[VOL_1] = ep.vol1
+      airtable_record[VOL_2] = ep.vol2
+      airtable_record.save()
     end
   end
 end

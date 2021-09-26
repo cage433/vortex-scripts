@@ -25,26 +25,39 @@ class Controller
     NightManagerMonthTabController.new(year, month, @night_manager_controller)
   end
 
-  def populate_vol_sheet(year, month, force)
+  def update_vol_sheet_from_airtable(year, month, force)
     tab_controller = vol_tab_controller(year, month)
-    sheet_events = DatedCollection.new([])
-    #sheet_events = tab_controller.read_events()
-    airtable_events = VolunteerAirtableController.read_personnels_by_date(year, month)
-    merged_events = sheet_events.merge(airtable_events)
-    if merged_events.size > sheet_events.size || force
-      puts("Adding missing events")
-      tab_controller.replace_events(merged_events)
+    airtable_events_personnel = VolunteerAirtableController.read_events_personnel(year, month)
+    sheet_events_personnel = tab_controller.read_events_personnel()
+    events_personnel = EventsPersonnel.new(
+      events_personnel: sheet_events_personnel.events_personnel.collect { |ep|
+        if airtable_events_personnel.include?(ep.airtable_id)
+          ap = airtable_events_personnel[ep.airtable_id]
+          if ep.metadata_match(ap)
+            ep
+          else
+            ep.with_metadata_from(ap)
+          end
+        else
+          ep
+        end
+      }
+    )
+    events_personnel = events_personnel.add_missing(airtable_events_personnel)
+    if !events_personnel.matches(sheet_events_personnel) || force
+      puts("Updating vol sheet")
+      tab_controller.replace_events(events_personnel)
     end
   end
 
-  def update_airtable_personnel_data(year, month, force)
-    sheet_events = vol_tab_controller(year, month).read_events()
+  def update_airtable_from_vol_sheet(year, month, force)
+    sheet_events = vol_tab_controller(year, month).read_events_personnel()
     if force
-      VolunteerAirtableController.update_events(sheet_events.data)
+      VolunteerAirtableController.update_events_personnel(sheet_events)
     else
-      airtable_events = VolunteerAirtableController.read_events_for_month(year, month)
-      modified_events = sheet_events.changed_data(airtable_events)
-      VolunteerAirtableController.update_events(modified_events.data)
+      airtable_events = VolunteerAirtableController.read_events_personnel(year, month)
+      modified_events = sheet_events.changed_personnel(airtable_events)
+      VolunteerAirtableController.update_events_personnel(modified_events)
     end
 
   end
@@ -86,8 +99,8 @@ end
 
 def sync_personnel_data(year, month, force = false)
   controller = Controller.new()
-  controller.populate_vol_sheet(year, month, force)
-  #controller.update_airtable_personnel_data(year, month, force)
+  controller.update_vol_sheet_from_airtable(year, month, force)
+  controller.update_airtable_from_vol_sheet(year, month, force)
 end
 
 def populate_new_event_table(year, month)
@@ -105,6 +118,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-sync_personnel_data(2021, 10, force=true)
+sync_personnel_data(2021, 10, force=false)
 
 #sync_night_manager_data(2021, 10, force=false)
