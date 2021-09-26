@@ -178,28 +178,6 @@ class EventsPersonnel
   end
 end
 
-class PersonnelForDate
-  include SimpleEqualityMixin
-  attr_reader :events_personnel, :date
-
-  def initialize(events_personnel:)
-    assert_collection_type(events_personnel, EventPersonnel)
-    @events_personnel = events_personnel.sort{ |l, r| compare_with_nils(l.doors_open, r.doors_open)}
-    @date = @events_personnel[0].date
-    @events_personnel.each do |e|
-      raise "Date mismatch #{e}" unless e.date == @date
-    end
-  end
-
-  def state
-    @events_personnel
-  end
-
-  def to_s_table(indent)
-    pre
-  end
-end
-
 
 class GigTakings 
   include SimpleEqualityMixin
@@ -344,70 +322,3 @@ class NightManagerEvent
   end
 end
 
-class DatedCollection 
-  include SimpleEqualityMixin
-  attr_reader :data, :size, :data_by_date, :dates
-
-  def initialize(data)
-    assert_collection_type(data.collect { |d| d.date}, Date)
-    @data = data.sort_by { |e| e.date }
-    @data_by_date = Hash[ *data.collect { |e| [e.date, e ] }.flatten ]
-    @size = data.size
-    @dates = @data_by_date.keys.sort
-
-    data.each { |e|
-      raise "Invalid data, #{e.class}" unless e.class == PersonnelForDate || e.class == NightManagerEvent
-    }
-
-  end
-
-  def merge(rhs)
-    merged_data = [*@data]
-    rhs.data.each do |data|
-      if !include?(data.date)
-        merged_data.push(data)
-      end
-    end
-    DatedCollection.new(merged_data)
-  end
-
-  def include?(date)
-    @data_by_date.include?(date)
-  end
-
-  def [](date)
-    @data_by_date[date]
-  end
-
-  def +(rhs)
-    @data_by_date.keys.each { |d|
-      raise "Both sides contain date #{d}" if rhs.include?(d)
-    }
-    DatedCollection.new(data + rhs.data)
-  end
-
-  def changed_data(rhs)
-    raise "Event date mismatch, #{@dates}, #{rhs.dates}" unless @dates == rhs.dates
-
-    DatedCollection.new(
-      @dates.filter { |d| 
-        @data_by_date[d] != rhs.data_by_date[d]
-      }.collect { |d|
-        @data_by_date[d]
-      }
-    )
-  end
-
-  def diff_by_date(rhs)
-    DatedCollection.new(
-      @data.filter{ |e| 
-        !rhs.data_by_date.include?(e.date)
-      }
-    )
-  end
-
-  def state
-    @data
-  end
-
-end

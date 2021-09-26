@@ -14,7 +14,6 @@ module EventTableMeta
   NIGHT_MANAGER_NAME = "Night Manager Name"
   VOL_1 = "Vol 1 Name"
   VOL_2 = "Vol 2 Name"
-  PRIMARY_EVENT_TYPE = "Primary Event Type"
   STATUS = "Status"
   #FEE_NOTES = "Fee Notes"
   #FLAT_FEE = "Flat Fee"
@@ -34,22 +33,6 @@ class EventTable < Airrecord::Table
     last_date_formatted = last_date.strftime("%Y-%m-%d")
     "AND({#{EVENT_DATE}} >= '#{first_date_formatted}',{#{EVENT_DATE}} <= '#{last_date_formatted}', {#{STATUS}} = 'Confirmed')"
   end
-
-  #def self.populate_for_date_range(first_date, last_date)
-    #original_contracts = OriginalContractsTable.all_records().filter do |c| 
-      #performance_date = Date.parse(c[OriginalContractsTableMeta::PERFORMANCE_DATES])
-      #performance_date >= first_date && performance_date <= last_date
-    #end
-    #original_contracts.each do |c|
-      #EventTable.create(
-        #{
-          #DATE => Date.parse(c[OriginalContractsTableMeta::PERFORMANCE_DATES]),
-          #TITLE => c[OriginalContractsTableMeta::EVENT_TITLE],
-          #EVENT_TYPE => "Standard Evening Gig",
-        #}
-      #)
-    #end
-  #end
 
   def self.ids_for_date_range(first_date, last_date)
     recs = EventTable.all(
