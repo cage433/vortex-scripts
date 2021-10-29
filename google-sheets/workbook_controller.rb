@@ -1,3 +1,5 @@
+require_relative 'sheets-service'
+
 class WorkbookController
   def initialize(workbook_id)
     @service = get_sheets_service()

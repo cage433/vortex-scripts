@@ -63,5 +63,25 @@ class SheetRange
       @sheet_name
     )
   end
+
+  def sub_range(row_range: nil, col_range: nil)
+    def new_indexes(rangish, start_index, end_index)
+      if rangish.nil?
+        [start_index, end_index]
+      else 
+        if rangish.class == Integer
+          row_range = (rangish..rangish)
+        end
+        [start_index + rangish.first, start_index + rangish.last + 1]
+      end
+    end
+    new_start_row, new_end_row = new_indexes(row_range, @start_row_index, @end_row_index)
+    new_start_col, new_end_col = new_indexes(col_range, @start_column_index, @end_column_index)
+    SheetRange.new(
+      new_start_row, new_end_row,
+      new_start_col, new_end_col,
+      @sheet_id, @sheet_name
+    )
+  end
 end
 

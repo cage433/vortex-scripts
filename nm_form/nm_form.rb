@@ -2,6 +2,9 @@ require_relative '../utils/utils'
 require 'date'
 require 'airrecord'
 require_relative '../env'
+require_relative '../google-sheets/tab-controller'
+require_relative '../google-sheets/workbook_controller'
+require_relative '../airtable/contract_table'
 
 ######################
 #     Model
@@ -168,6 +171,40 @@ class NMForm_ExpensesTable < NMForm_Table
 end
 
 
+######################
+#     Sheet
+#######################
+
+class NightManagerTabController < TabController
+  def initialize(date, wb_controller)
+    super(wb_controller, TabController.tab_name_for_date(date))
+    @date = date
+    @heading_range = sheet_range_from_coordinates("B2:C3")
+    @date_row = @heading_range.sub_range(row_range: (0..0))
+    @date_cell = sheet_cell(1, 2)
+    @title_row = sheet_row(2, 1, 3)
+    @title_cell = sheet_cell(2, 2)
+    @title = EventTable.event_title_for_date(date)
+  end
+
+  def format_cells()
+    requests = [
+      set_number_format_request(@date_cell, "d mmm yy"),
+      right_align_text_request(@title_cell),
+      text_format_request(@date_row, {bold: true, font_size: 14}),
+      text_format_request(@title_row, {bold: true, font_size: 14}),
+      set_outside_border_request(@heading_range),
+    ]
+
+    @wb_controller.apply_requests(requests)
+  end
+  def create_sheet_if_necessary()
+    @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
+    format_cells()
+    @wb_controller.set_data(@date_row, [["Date", @date]])
+    @wb_controller.set_data(@title_row, [["Title", @title]])
+  end
+end
 
 ######################
 #     Controller
@@ -245,38 +282,48 @@ class NMFormController
   end
 end
 
-perf_data = NMForm_PerformanceData.new(
-  airtable_id: nil,
-  performance_date: DateTime.new(2021, 10, 3),
-  mugs: NumberSoldAndValue.new(number: 1, value: 8),
-  t_shirts: NumberSoldAndValue.new(number: 10, value: 123),
-  masks: NumberSoldAndValue.new(number: 2, value: 3.5),
-  bags: NumberSoldAndValue.new(number: 4, value: 400),
-  zettle_z_reading: 123.5,
-  cash_z_reading: 121,
-  notes: "blah blah blah"
-)
-
-gig_datas = [1, 2].collect { |i| 
-  NMForm_GigData.new(
+def spike
+  perf_data = NMForm_PerformanceData.new(
     airtable_id: nil,
     performance_date: DateTime.new(2021, 10, 3),
-    gig: "Gig #{i}",
-    online: NumberSoldAndValue.new(number: i * i, value: 8 + i),
-    walk_ins: NumberSoldAndValue.new(number: 3 * i, value: 80 - i),
-    guests_and_cheap: NumberSoldAndValue.new(number: 10 * i, value: 18 * i),
+    mugs: NumberSoldAndValue.new(number: 1, value: 8),
+    t_shirts: NumberSoldAndValue.new(number: 10, value: 123),
+    masks: NumberSoldAndValue.new(number: 2, value: 3.5),
+    bags: NumberSoldAndValue.new(number: 4, value: 400),
+    zettle_z_reading: 123.5,
+    cash_z_reading: 121,
+    notes: "blah blah blah"
   )
-}
 
-expenses_data = [["Beer", 10.0], ["Gin", 111.0]].collect do |note, amt|
-  NMForm_ExpensesData.new(
-    airtable_id: nil,
-    performance_date: DateTime.new(2021, 10, 1),
-    note: note,
-    amount: amt
-  )
+  gig_datas = [1, 2].collect { |i| 
+    NMForm_GigData.new(
+      airtable_id: nil,
+      performance_date: DateTime.new(2021, 10, 3),
+      gig: "Gig #{i}",
+      online: NumberSoldAndValue.new(number: i * i, value: 8 + i),
+      walk_ins: NumberSoldAndValue.new(number: 3 * i, value: 80 - i),
+      guests_and_cheap: NumberSoldAndValue.new(number: 10 * i, value: 18 * i),
+    )
+  }
+
+  expenses_data = [["Beer", 10.0], ["Gin", 111.0]].collect do |note, amt|
+    NMForm_ExpensesData.new(
+      airtable_id: nil,
+      performance_date: DateTime.new(2021, 10, 1),
+      note: note,
+      amount: amt
+    )
+  end
+
+  NMFormController.write_nm_expenses_data(expenses_data)
+  NMFormController.write_nm_performance_data(perf_data)
+  NMFormController.write_nm_gig_data(gig_datas)
 end
 
-NMFormController.write_nm_expenses_data(expenses_data)
-NMFormController.write_nm_performance_data(perf_data)
-NMFormController.write_nm_gig_data(gig_datas)
+def sheet_spike()
+    night_manager_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
+    tab_controller = NightManagerTabController.new(Date.new(2021, 10, 20), night_manager_controller)
+    tab_controller.create_sheet_if_necessary()
+end
+
+sheet_spike()

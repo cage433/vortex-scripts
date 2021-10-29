@@ -29,9 +29,9 @@ class EventTable < Airrecord::Table
   self.table_name = TABLE
 
   def self.filter_text(first_date, last_date)
-    first_date_formatted = first_date.strftime("%Y-%m-%d")
-    last_date_formatted = last_date.strftime("%Y-%m-%d")
-    "AND({#{EVENT_DATE}} >= '#{first_date_formatted}',{#{EVENT_DATE}} <= '#{last_date_formatted}', {#{STATUS}} = 'Confirmed')"
+    first_date_formatted = (first_date - 1).strftime("%Y-%m-%d")
+    last_date_formatted = (last_date + 1).strftime("%Y-%m-%d")
+    "AND({#{EVENT_DATE}} > '#{first_date_formatted}',{#{EVENT_DATE}} < '#{last_date_formatted}', {#{STATUS}} = 'Confirmed')"
   end
 
   def self.ids_for_date_range(first_date, last_date)
@@ -48,6 +48,21 @@ class EventTable < Airrecord::Table
       Date.new(year, month_no, 1),
       Date.new(year, month_no, -1)
     )
+  end
+
+
+  def self.event_title_for_date(date)
+    recs = EventTable.all(
+      fields: [ID, SHEETS_EVENT_TITLE],
+      filter: filter_text(date, date)
+    )
+    titles = recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.uniq
+
+    if titles.size == 1
+      titles[0]
+    else
+      raise "Expected a single title, got #{titles}"
+    end
   end
   
 
