@@ -42,10 +42,10 @@ class TabController
 
   def sheet_range_from_coordinates(coordinates)
     top_left, bottom_right = coordinates.upcase.split(":")
-    start_row_index = top_left[0].ord - "A".ord
-    start_col_index = top_left[1..].to_i - 1
-    end_row_index = bottom_right[0].ord - "A".ord + 1
-    end_col_index = bottom_right[1..].to_i 
+    start_row_index = top_left[1..].to_i - 1
+    start_col_index = top_left[0].ord - "A".ord
+    end_row_index = bottom_right[1..].to_i 
+    end_col_index = bottom_right[0].ord - "A".ord + 1
     sheet_range(start_row_index, end_row_index, start_col_index, end_col_index)
   end
 
@@ -92,6 +92,20 @@ class TabController
     }
   end
 
+  def set_border_request(range, style: "SOLID_MEDIUM", color: @@black, borders:)
+    border_style = {
+          style: style,
+          color: color
+    }
+
+    {
+      update_borders: {range: range.as_json_range()}.merge(Hash[borders.collect{ |b| [b, border_style]}])
+    }
+  end
+
+  def set_top_bottom_border_request(range, style: "SOLID", color: @@black)
+    set_border_request(range, style: style, color: color, borders: [:top, :bottom])
+  end
 
   def set_outside_border_request(range, style: "SOLID_MEDIUM", color: @@black)
     border_style = {
@@ -111,18 +125,7 @@ class TabController
   end
 
   def set_left_right_border_request(range, style: "SOLID", color: @@black)
-    border_style = {
-          style: style,
-          color: color
-    }
-
-    {
-      update_borders: {
-        range: range.as_json_range(),
-        left: border_style,
-        right: border_style
-      }
-    }
+    set_border_request(range, style: style, color: color, borders: [:left, :right])
   end
 
   def set_column_width_request(i_col, width)
@@ -244,7 +247,8 @@ class TabController
     @wb_controller.apply_requests(
       [
         update_all_cells_request("userEnteredValue"),
-        update_all_cells_request("userEnteredFormat")
+        update_all_cells_request("userEnteredFormat"),
+        unmerge_all_request()
       ]
     )
   end

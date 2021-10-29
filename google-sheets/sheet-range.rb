@@ -70,7 +70,10 @@ class SheetRange
         [start_index, end_index]
       else 
         if rangish.class == Integer
-          row_range = (rangish..rangish)
+          rangish = (rangish..rangish)
+        end
+        if rangish.end.nil?
+          rangish = (rangish.first..num_rows - 1)
         end
         [start_index + rangish.first, start_index + rangish.last + 1]
       end
@@ -80,6 +83,22 @@ class SheetRange
     SheetRange.new(
       new_start_row, new_end_row,
       new_start_col, new_end_col,
+      @sheet_id, @sheet_name
+    )
+  end
+
+  def column(col_no)
+    sub_range(col_range: (col_no..col_no))
+  end
+
+  def row(row_no)
+    sub_range(row_range: (row_no..row_no))
+  end
+
+  def cell(range_row, range_col)
+    SheetRange.new(
+      @start_row_index + range_row, @start_row_index + range_row + 1,
+      @start_column_index + range_col, @start_column_index + range_col + 1,
       @sheet_id, @sheet_name
     )
   end

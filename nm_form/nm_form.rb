@@ -179,21 +179,33 @@ class NightManagerTabController < TabController
   def initialize(date, wb_controller)
     super(wb_controller, TabController.tab_name_for_date(date))
     @date = date
-    @heading_range = sheet_range_from_coordinates("B2:C3")
-    @date_row = @heading_range.sub_range(row_range: (0..0))
-    @date_cell = sheet_cell(1, 2)
-    @title_row = sheet_row(2, 1, 3)
-    @title_cell = sheet_cell(2, 2)
     @title = EventTable.event_title_for_date(date)
+
+    @heading_range = sheet_range_from_coordinates("B2:C3")
+    @date_cell = @heading_range.cell(0, 1)
+    @title_cell = @heading_range.cell(1, 1)
+
+
+    @takings_range = sheet_range_from_coordinates("B5:F22")
+    @takings_row_titles = @takings_range.sub_range(col_range: (0..1))
   end
 
   def format_cells()
+    clear_values_and_formats()
     requests = [
       set_number_format_request(@date_cell, "d mmm yy"),
       right_align_text_request(@title_cell),
-      text_format_request(@date_row, {bold: true, font_size: 14}),
-      text_format_request(@title_row, {bold: true, font_size: 14}),
+      text_format_request(@heading_range, {bold: true, font_size: 14}),
       set_outside_border_request(@heading_range),
+
+      set_outside_border_request(@takings_range),
+      text_format_request(@takings_row_titles, {bold: true}),
+      text_format_request(@takings_range.sub_range(row_range: (0..1)), {bold: true}),
+      set_top_bottom_border_request(@takings_range.sub_range(row_range: (2..5))),
+      set_top_bottom_border_request(@takings_range.sub_range(row_range: (10..13))),
+      set_left_right_border_request(@takings_range.sub_range(row_range: (1..), col_range: (2..3))),
+      merge_columns_request(@takings_range.row(0)),
+      center_text_request(@takings_range.sub_range(row_range: (0..1))),
     ]
 
     @wb_controller.apply_requests(requests)
@@ -201,8 +213,34 @@ class NightManagerTabController < TabController
   def create_sheet_if_necessary()
     @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
     format_cells()
-    @wb_controller.set_data(@date_row, [["Date", @date]])
-    @wb_controller.set_data(@title_row, [["Title", @title]])
+    @wb_controller.set_data(@heading_range, [["Date", @date], ["Title", @title]])
+    @wb_controller.set_data(
+      @takings_row_titles,
+      [
+        ["Takings", ""],
+        ["", ""],
+        ["", ""],
+        ["Online", ""],
+        ["", "Tickets"],
+        ["", "Total Paid"],
+        ["", ""],
+        ["Walk-ins", ""],
+        ["", "Num"],
+        ["", "Total Paid"],
+        ["", ""],
+        ["Guests/Cheap", ""],
+        ["", "Num"],
+        ["", "Total Paid"],
+        ["", ""],
+        ["Totals", ""],
+        ["", "Audience"],
+        ["", "Total Paid"],
+      ]
+    )
+    @wb_controller.set_data(
+      @takings_range.row(1), 
+      ["", "", "Gig 1", "Gig 2", "Total"]
+    )
   end
 end
 

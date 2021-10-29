@@ -53,6 +53,13 @@ class WorkbookController
   end
 
   def set_data(range, data)
+    if range.num_rows == 1 && range.num_cols == 1 && data.class != Array
+      data = [[data]]
+    elsif range.num_cols == 1 and data[0].class != Array
+      data = data.collect{ |d| [d] }
+    elsif range.num_rows == 1 and data[0].class != Array
+      data = [data]
+    end
     raise "Dimension mismatch, range rows #{range.num_rows}, data #{data.size}" if range.num_rows != data.size
     raise "Dimension mismatch, range cols #{range.num_cols}, data #{data[0].size}" if range.num_cols != data[0].size
 
