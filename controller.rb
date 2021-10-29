@@ -19,10 +19,10 @@ class Controller
     VolunteerMonthTabController.new(year, month, @vol_rota_controller)
   end
 
-  def night_manager_tab_controller(year, month)
-    tab_name = TabController.tab_name_for_month(year, month)
+  def night_manager_tab_controller(date)
+    tab_name = TabController.tab_name_for_date(date)
     @night_manager_controller.add_tab(tab_name) if !@night_manager_controller.has_tab_with_name?(tab_name)
-    NightManagerMonthTabController.new(year, month, @night_manager_controller)
+    NightManagerTabController2.new(date, @night_manager_controller)
   end
 
   def update_vol_sheet_from_airtable(year, month, force)
@@ -60,6 +60,18 @@ class Controller
       VolunteerAirtableController.update_events_personnel(modified_events)
     end
 
+  end
+
+  def update_nm_tab_from_airtable2(date, force)
+    # Add new events and update any modified prices
+    tab_controller = night_manager_tab_controller2(date)
+    sheet_details = tab_controller.read_details()
+    airtable_details = NightManagerAirtableController.read_events_for_date(date)
+    events = airtable_events.diff_by_date(events) + events
+
+    if sheet_details != airtable_details || force
+      tab_controller.update_details_from_airtable(airtable_details)
+    end
   end
 
   def update_nm_tab_from_airtable(year, month, force)
@@ -118,6 +130,6 @@ end
 
 #populate_new_event_table(2021, 10)
 
-sync_personnel_data(2021, 10, force=false)
+#sync_personnel_data(2021, 10, force=false)
 
-#sync_night_manager_data(2021, 10, force=false)
+sync_night_manager_data(2021, 10, force=false)

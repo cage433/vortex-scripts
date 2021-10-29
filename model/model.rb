@@ -48,6 +48,7 @@ module SimpleEqualityMixin
   end
 end
 
+
 class EventPersonnel 
   #include SimpleEqualityMixin
   attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :night_manager, :sound_engineer

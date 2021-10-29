@@ -49,7 +49,7 @@ class EventTable < Airrecord::Table
       Date.new(year, month_no, -1)
     )
   end
-
+  
 
 end
 

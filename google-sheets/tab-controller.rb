@@ -190,4 +190,8 @@ class TabController
   def self.tab_name_for_month(year, month)
     return Date.new(year, month, 1).strftime("%B %y")
   end
+
+  def self.tab_name_for_date(date)
+    return date.strftime("%-d %b %y")
+  end
 end
