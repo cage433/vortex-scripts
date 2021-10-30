@@ -194,6 +194,7 @@ class NightManagerTabController < TabController
     @fee_range = sheet_range_from_coordinates("B25:C30")
     @expenses_range = sheet_range_from_coordinates("H5:L10")
     @prs_range = sheet_range_from_coordinates("H12:I15")
+    @z_readings_range = sheet_range_from_coordinates("K12:L15")
   end
 
   def build_headings_range()
@@ -341,31 +342,6 @@ class NightManagerTabController < TabController
     @wb_controller.apply_requests(requests)
   end
 
-  def build_prs_range()
-    @wb_controller.set_data(
-      @prs_range.column(0),
-      ["PRS", "", "Fully Improvised", "To Pay"]
-    )
-    is_fully_improvised_cell = @prs_range.cell(2, 1)
-    to_pay_cell = @prs_range.cell(3, 1)
-    @wb_controller.set_data(
-      to_pay_cell,
-      "=if(#{is_fully_improvised_cell.cell_reference}, 0.0, 0.04 * #{@total_ticket_sales.cell_reference})"
-    )
-    requests = [
-      set_outside_border_request(@prs_range),
-      set_border_request(@prs_range.row(0), style: "SOLID", borders: [:bottom]),
-      merge_columns_request(@prs_range.row(0)),
-      bold_text_request(@prs_range.column(0)),
-      center_text_request(@prs_range.row(0)),
-      create_checkbox_request(is_fully_improvised_cell),
-      set_currency_format_request(to_pay_cell),
-      set_background_color_request(is_fully_improvised_cell, @@almond),
-    ]
-    @wb_controller.apply_requests(requests)
-
-  end
-
   def build_expenses_range()
     @wb_controller.set_data(
       @expenses_range.cell(0, 0),
@@ -394,6 +370,51 @@ class NightManagerTabController < TabController
     @wb_controller.apply_requests(requests)
 
   end
+
+  def build_prs_range()
+    @wb_controller.set_data(
+      @prs_range.column(0),
+      ["PRS", "", "Fully Improvised", "To Pay"]
+    )
+    is_fully_improvised_cell = @prs_range.cell(2, 1)
+    to_pay_cell = @prs_range.cell(3, 1)
+    @wb_controller.set_data(
+      to_pay_cell,
+      "=if(#{is_fully_improvised_cell.cell_reference}, 0.0, 0.04 * #{@total_ticket_sales.cell_reference})"
+    )
+    requests = [
+      set_outside_border_request(@prs_range),
+      set_border_request(@prs_range.row(0), style: "SOLID", borders: [:bottom]),
+      merge_columns_request(@prs_range.row(0)),
+      bold_text_request(@prs_range.column(0)),
+      center_text_request(@prs_range.row(0)),
+      create_checkbox_request(is_fully_improvised_cell),
+      set_currency_format_request(to_pay_cell),
+      set_background_color_request(is_fully_improvised_cell, @@almond),
+    ]
+    @wb_controller.apply_requests(requests)
+
+  end
+  def build_z_readings_range()
+    @wb_controller.set_data(
+      @z_readings_range.column(0),
+      ["Z Readings", "", "Cash", "Zettle"]
+    )
+    amounts_range = @z_readings_range.sub_range(row_range: (2..3), col_range: 1)
+    requests = [
+      set_outside_border_request(@z_readings_range),
+      set_border_request(@z_readings_range.row(0), style: "SOLID", borders: [:bottom]),
+      merge_columns_request(@z_readings_range.row(0)),
+      bold_text_request(@z_readings_range.column(0)),
+      center_text_request(@z_readings_range.row(0)),
+      set_currency_format_request(amounts_range),
+      set_background_color_request(amounts_range, @@almond),
+    ]
+    @wb_controller.apply_requests(requests)
+
+  end
+
+
   def size_columns()
     requests = [20, 100, 100, 100, 110, 100, 20, 110, 100, 100, 100, 100].each_with_index.collect { |width, i_col|
       set_column_width_request(i_col, width)
@@ -403,14 +424,15 @@ class NightManagerTabController < TabController
 
   def create_sheet_if_necessary()
     @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
-    #clear_values_and_formats()
-    #build_headings_range()
-    #build_takings_range()
+    clear_values_and_formats()
+    size_columns()
+    build_headings_range()
+    build_takings_range()
     build_fee_details_range()
     build_prs_range()
     build_notes_range()
     build_expenses_range()
-    size_columns()
+    build_z_readings_range()
   end
 end
 
