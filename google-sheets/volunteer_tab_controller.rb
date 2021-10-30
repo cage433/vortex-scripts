@@ -38,8 +38,8 @@ class VolunteerMonthTabController < TabController
 
   def format_columns()
     requests = [
-      set_number_format_request(single_column_range(DATE_COL), "mmm d"),
-      set_number_format_request(single_column_range(DAY_COL), "ddd"),
+      set_date_format_request(single_column_range(DATE_COL), "mmm d"),
+      set_date_format_request(single_column_range(DAY_COL), "ddd"),
     ]
 
     requests.append(hide_column_request(EVENT_ID_COL, DOORS_OPEN_COL + 1))

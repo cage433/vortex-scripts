@@ -282,11 +282,10 @@ class NightManagerTabController < TabController
       @notes_range.cell(0), 
       "Notes"
     )
-    merged_note_range = @notes_range.sub_range(row_range: (1..))
+    note_text_range = @notes_range.sub_range(row_range: (1..))
     requests = [
       set_outside_border_request(@notes_range),
-      merge_columns_request(merged_note_range),
-      set_background_color_request(merged_note_range, @@almond),
+      set_background_color_request(note_text_range, @@almond),
       text_format_request(@notes_range.row(0), {bold: true}),
       center_text_request(@notes_range.row(0)),
     ]
@@ -302,10 +301,10 @@ class NightManagerTabController < TabController
 
   def create_sheet_if_necessary()
     @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
-    #clear_values_and_formats()
-    #build_headings_range()
-    #build_takings_range()
-    #build_notes_range()
+    clear_values_and_formats()
+    build_headings_range()
+    build_takings_range()
+    build_notes_range()
     size_columns()
   end
 end

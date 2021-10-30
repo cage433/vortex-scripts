@@ -7,14 +7,14 @@ def assert_type(thing, expected_type, allow_null: false)
   if thing.nil? 
     raise "Null not allowed when checking for type #{expected_type}" unless allow_null
   else
-    raise "Type mismatch #{thing}, #{thing.class} - expected #{expected_type}" unless thing.class == expected_type
+    raise "Type mismatch #{thing}, #{thing.class} - expected #{expected_type}" unless thing.is_a?(expected_type)
   end
 
 end
 
 def assert_collection_type(things, expected_type)
   things.each do |thing|
-    raise "Collection type mismatch #{thing}, #{thing.class} - expected #{expected_type}" unless thing.class == expected_type
+    raise "Collection type mismatch #{thing}, #{thing.class} - expected #{expected_type}" unless thing.is_a?(expected_type)
   end
 end
 
