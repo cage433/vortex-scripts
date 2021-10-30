@@ -17,6 +17,16 @@ class TabController
       green: 1.0,
       blue: 0.9,
   }
+  @@yellow = {
+      red: 1.0,
+      green: 1.0,
+      blue: 0.8,
+  }
+  @@almond = {
+      red: 1.0,
+      green: 0.9,
+      blue: 0.8,
+  }
 
   def initialize(wb_controller, tab_name)
     @wb_controller = wb_controller
@@ -81,15 +91,19 @@ class TabController
         range: range.as_json_range(),
         cell: {
           user_entered_format: {
-            number_format: {
-              type: "DATE",
-              pattern: format
-            }
+            number_format: format
           }
         },
         fields: "user_entered_format.number_format"
       }
     }
+  end
+
+  def set_date_format_request(range, format)
+    set_number_format_request(range, {type: "DATE", pattern: format})
+  end
+  def set_currency_format_request(range)
+    set_number_format_request(range, {type: "CURRENCY"})
   end
 
   def set_border_request(range, style: "SOLID_MEDIUM", color: @@black, borders:)
@@ -108,20 +122,7 @@ class TabController
   end
 
   def set_outside_border_request(range, style: "SOLID_MEDIUM", color: @@black)
-    border_style = {
-          style: style,
-          color: color
-    }
-
-    {
-      update_borders: {
-        range: range.as_json_range(),
-        top: border_style,
-        bottom: border_style,
-        left: border_style,
-        right: border_style
-      }
-    }
+    set_border_request(range, style: style, color: color, borders: [:left, :right, :top, :bottom])
   end
 
   def set_left_right_border_request(range, style: "SOLID", color: @@black)

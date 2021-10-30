@@ -181,39 +181,32 @@ class NightManagerTabController < TabController
     @date = date
     @title = EventTable.event_title_for_date(date)
 
-    @heading_range = sheet_range_from_coordinates("B2:C3")
+    @heading_range = sheet_range_from_coordinates("B2:F3")
     @date_cell = @heading_range.cell(0, 1)
     @title_cell = @heading_range.cell(1, 1)
 
 
     @takings_range = sheet_range_from_coordinates("B5:F22")
     @takings_row_titles = @takings_range.sub_range(col_range: (0..1))
+
+    @notes_range = sheet_range_from_coordinates("H5:H10")
   end
 
-  def format_cells()
-    clear_values_and_formats()
+  def build_headings_range()
+    @wb_controller.set_data(@heading_range.sub_range(col_range: (0..1)), [["Date", @date], ["Title", @title]])
     requests = [
-      set_number_format_request(@date_cell, "d mmm yy"),
+      set_date_format_request(@date_cell, "d mmm yy"),
       right_align_text_request(@title_cell),
       text_format_request(@heading_range, {bold: true, font_size: 14}),
       set_outside_border_request(@heading_range),
-
-      set_outside_border_request(@takings_range),
-      text_format_request(@takings_row_titles, {bold: true}),
-      text_format_request(@takings_range.sub_range(row_range: (0..1)), {bold: true}),
-      set_top_bottom_border_request(@takings_range.sub_range(row_range: (2..5))),
-      set_top_bottom_border_request(@takings_range.sub_range(row_range: (10..13))),
-      set_left_right_border_request(@takings_range.sub_range(row_range: (1..), col_range: (2..3))),
-      merge_columns_request(@takings_range.row(0)),
-      center_text_request(@takings_range.sub_range(row_range: (0..1))),
+      merge_columns_request(@heading_range.sub_range(row_range: 0, col_range:(1..4))),
+      merge_columns_request(@heading_range.sub_range(row_range: 1, col_range:(1..4))),
     ]
 
     @wb_controller.apply_requests(requests)
   end
-  def create_sheet_if_necessary()
-    @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
-    format_cells()
-    @wb_controller.set_data(@heading_range, [["Date", @date], ["Title", @title]])
+
+  def build_takings_range()
     @wb_controller.set_data(
       @takings_row_titles,
       [
@@ -241,6 +234,79 @@ class NightManagerTabController < TabController
       @takings_range.row(1), 
       ["", "", "Gig 1", "Gig 2", "Total"]
     )
+
+    [4, 5, 8, 9, 12, 13, 16, 17].each do |i_row|
+      row = @takings_range.row(i_row)
+      sum_refs = [2, 3].collect{ |i_col| row.cell(i_col).cell_reference()}.join("+")
+      
+        #"=#{gig1_cell_ref} + #{gig2_cell_ref}"
+      @wb_controller.set_data( row.cell(4), "=#{sum_refs}" 
+      )
+    end
+    [2, 3].each do |i_col|
+      col = @takings_range.column(i_col)
+
+      sum_ticket_refs = [4, 8, 12].collect{ |i_row| col.cell(i_row).cell_reference()}.join("+")
+      @wb_controller.set_data( col.cell(16), "=#{sum_ticket_refs}" )
+
+      sum_amount_refs = [5, 9, 13].collect{ |i_row| col.cell(i_row).cell_reference()}.join("+")
+      @wb_controller.set_data( col.cell(17), "=#{sum_amount_refs}" )
+    end
+
+    requests = [
+      set_outside_border_request(@takings_range),
+      text_format_request(@takings_row_titles, {bold: true}),
+      text_format_request(@takings_range.sub_range(row_range: (0..1)), {bold: true}),
+      set_top_bottom_border_request(@takings_range.sub_range(row_range: (2..5))),
+      set_top_bottom_border_request(@takings_range.sub_range(row_range: (10..13))),
+      set_left_right_border_request(@takings_range.sub_range(row_range: (1..), col_range: (2..3))),
+      merge_columns_request(@takings_range.row(0)),
+      center_text_request(@takings_range.sub_range(row_range: (0..1))),
+    ]
+    [4, 8, 12].each do |i_row|
+      requests.push(
+        set_background_color_request(@takings_range.sub_range(row_range: (i_row..i_row+1), col_range: (2..3)), @@almond)
+      )
+    end
+    [5, 9, 13].each do |i_row|
+      requests.push(
+        set_currency_format_request(@takings_range.sub_range(row_range: (i_row..i_row), col_range: (2..4)))
+      )
+    end
+
+    @wb_controller.apply_requests(requests)
+  end
+
+  def build_notes_range()
+    @wb_controller.set_data(
+      @notes_range.cell(0), 
+      "Notes"
+    )
+    merged_note_range = @notes_range.sub_range(row_range: (1..))
+    requests = [
+      set_outside_border_request(@notes_range),
+      merge_columns_request(merged_note_range),
+      set_background_color_request(merged_note_range, @@almond),
+      text_format_request(@notes_range.row(0), {bold: true}),
+      center_text_request(@notes_range.row(0)),
+    ]
+    @wb_controller.apply_requests(requests)
+  end
+
+  def size_columns()
+    requests = [20, 100, 100, 100, 100, 100, 20, 400].each_with_index.collect { |width, i_col|
+      set_column_width_request(i_col, width)
+    }
+    @wb_controller.apply_requests(requests)
+  end
+
+  def create_sheet_if_necessary()
+    @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
+    #clear_values_and_formats()
+    #build_headings_range()
+    #build_takings_range()
+    #build_notes_range()
+    size_columns()
   end
 end
 

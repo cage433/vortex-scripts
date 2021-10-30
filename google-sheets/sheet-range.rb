@@ -23,6 +23,13 @@ class SheetRange
     "#{@sheet_name}!#{start_col_name}#{@start_row_index + 1}:#{end_col_name}#{@end_row_index}"
   end
 
+  def cell_reference()
+    raise "Not a cell" if num_rows != 1 || num_cols != 1
+    columns = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    col_name = columns[@start_column_index] || (raise "Column #{@start_column_index} outside permitted range")
+    "#{col_name}#{@start_row_index + 1}"
+  end
+
   def as_json_range()
     if @start_row_index.nil? && @end_row_index.nil?
       {
@@ -95,7 +102,22 @@ class SheetRange
     sub_range(row_range: (row_no..row_no))
   end
 
-  def cell(range_row, range_col)
+  def cell(i, j = nil)
+    if j.nil?
+      if num_rows == 1 && num_cols == 1 
+        _cell(i, i)
+      elsif num_rows == 1
+        _cell(0, i)
+      elsif num_cols == 1
+        _cell(i, 0)
+      else
+        raise "Not a single column or row range"
+      end
+    else
+      _cell(i, j)
+    end
+  end
+  def _cell(range_row, range_col)
     SheetRange.new(
       @start_row_index + range_row, @start_row_index + range_row + 1,
       @start_column_index + range_col, @start_column_index + range_col + 1,
