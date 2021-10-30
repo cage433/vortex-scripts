@@ -188,8 +188,12 @@ class NightManagerTabController < TabController
 
     @takings_range = sheet_range_from_coordinates("B5:F22")
     @takings_row_titles = @takings_range.sub_range(col_range: (0..1))
+    @total_ticket_sales = @takings_range.cell(-1, -1)
 
-    @notes_range = sheet_range_from_coordinates("H5:H10")
+    @notes_range = sheet_range_from_coordinates("H24:L29")
+    @fee_range = sheet_range_from_coordinates("B25:C30")
+    @expenses_range = sheet_range_from_coordinates("H5:L10")
+    @prs_range = sheet_range_from_coordinates("H12:I15")
   end
 
   def build_headings_range()
@@ -239,7 +243,6 @@ class NightManagerTabController < TabController
       row = @takings_range.row(i_row)
       sum_refs = [2, 3].collect{ |i_col| row.cell(i_col).cell_reference()}.join("+")
       
-        #"=#{gig1_cell_ref} + #{gig2_cell_ref}"
       @wb_controller.set_data( row.cell(4), "=#{sum_refs}" 
       )
     end
@@ -279,21 +282,120 @@ class NightManagerTabController < TabController
 
   def build_notes_range()
     @wb_controller.set_data(
-      @notes_range.cell(0), 
+      @notes_range.cell(0, 0), 
       "Notes"
     )
     note_text_range = @notes_range.sub_range(row_range: (1..))
     requests = [
       set_outside_border_request(@notes_range),
+      set_border_request(@notes_range.row(0), style: "SOLID", borders: [:bottom]),
       set_background_color_request(note_text_range, @@almond),
       text_format_request(@notes_range.row(0), {bold: true}),
       center_text_request(@notes_range.row(0)),
     ]
+    (0...@notes_range.num_rows).each { |i_row|
+      requests.push(merge_columns_request(@notes_range.row(i_row)))
+    }
     @wb_controller.apply_requests(requests)
   end
 
+  def build_fee_details_range()
+    fee_details = ContractTable.fee_details_for_date(@date)
+    flat_fee_cell, split_cell, ticket_sales_cell, fee_to_pay_cell = (2..5).collect{ |i_row| @fee_range.cell(i_row, 1)}
+    @wb_controller.set_data(
+      @fee_range.column(0),
+      [
+        "Band Fee",
+        "",
+        "Flat Fee",
+        "Split",
+        "Ticket Sales",
+        "Fee to pay"
+      ]
+    )
+    @wb_controller.set_data(flat_fee_cell, fee_details.flat_fee)
+    @wb_controller.set_data(split_cell, fee_details.percentage_split)
+    @wb_controller.set_data(
+      ticket_sales_cell, 
+        "=#{@total_ticket_sales.cell_reference}"
+    )
+    @wb_controller.set_data(
+      fee_to_pay_cell, 
+      if fee_details.vs_fee 
+        "=max(#{flat_fee_cell.cell_reference}, #{split_cell.cell_reference} * #{@total_ticket_sales.cell_reference})"
+      else
+        "=#{flat_fee_cell.cell_reference} + #{split_cell.cell_reference} * #{@total_ticket_sales.cell_reference}"
+      end
+    )
+
+    requests = [
+      set_outside_border_request(@fee_range),
+      set_border_request(@fee_range.row(0), style: "SOLID", borders: [:bottom]),
+      merge_columns_request(@fee_range.row(0)),
+      bold_text_request(@fee_range.column(0)),
+      center_text_request(@fee_range.row(0)),
+      set_currency_format_request(flat_fee_cell),
+      set_percentage_format_request(split_cell),
+      set_currency_format_request(fee_to_pay_cell),
+    ]
+    @wb_controller.apply_requests(requests)
+  end
+
+  def build_prs_range()
+    @wb_controller.set_data(
+      @prs_range.column(0),
+      ["PRS", "", "Fully Improvised", "To Pay"]
+    )
+    is_fully_improvised_cell = @prs_range.cell(2, 1)
+    to_pay_cell = @prs_range.cell(3, 1)
+    @wb_controller.set_data(
+      to_pay_cell,
+      "=if(#{is_fully_improvised_cell.cell_reference}, 0.0, 0.04 * #{@total_ticket_sales.cell_reference})"
+    )
+    requests = [
+      set_outside_border_request(@prs_range),
+      set_border_request(@prs_range.row(0), style: "SOLID", borders: [:bottom]),
+      merge_columns_request(@prs_range.row(0)),
+      bold_text_request(@prs_range.column(0)),
+      center_text_request(@prs_range.row(0)),
+      create_checkbox_request(is_fully_improvised_cell),
+      set_currency_format_request(to_pay_cell),
+      set_background_color_request(is_fully_improvised_cell, @@almond),
+    ]
+    @wb_controller.apply_requests(requests)
+
+  end
+
+  def build_expenses_range()
+    @wb_controller.set_data(
+      @expenses_range.cell(0, 0),
+      "Expenses"
+    )
+    @wb_controller.set_data(
+      @expenses_range.cell(1, 0),
+      "Note"
+    )
+    @wb_controller.set_data(
+      @expenses_range.cell(1, 4),
+      "Amount"
+    )
+    requests = [
+      bold_text_request(@expenses_range.sub_range(row_range: (0..1))),
+      center_text_request(@expenses_range.sub_range(row_range: (0..1))),
+      set_outside_border_request(@expenses_range),
+      set_border_request(@expenses_range.row(1), style: "SOLID", borders: [:bottom]),
+      set_border_request(@expenses_range.column(3).sub_range(row_range: (1..)), style: "SOLID", borders: [:right]),
+      merge_columns_request(@expenses_range.row(0)),
+      set_background_color_request(@expenses_range.sub_range(row_range: (2..)), @@almond),
+    ]
+    (1...@expenses_range.num_rows).each { |i_row|
+      requests.push(merge_columns_request(@expenses_range.row(i_row).sub_range(col_range: (0..3))))
+    }
+    @wb_controller.apply_requests(requests)
+
+  end
   def size_columns()
-    requests = [20, 100, 100, 100, 100, 100, 20, 400].each_with_index.collect { |width, i_col|
+    requests = [20, 100, 100, 100, 110, 100, 20, 110, 100, 100, 100, 100].each_with_index.collect { |width, i_col|
       set_column_width_request(i_col, width)
     }
     @wb_controller.apply_requests(requests)
@@ -301,10 +403,13 @@ class NightManagerTabController < TabController
 
   def create_sheet_if_necessary()
     @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
-    clear_values_and_formats()
-    build_headings_range()
-    build_takings_range()
+    #clear_values_and_formats()
+    #build_headings_range()
+    #build_takings_range()
+    build_fee_details_range()
+    build_prs_range()
     build_notes_range()
+    build_expenses_range()
     size_columns()
   end
 end

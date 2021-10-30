@@ -105,6 +105,9 @@ class TabController
   def set_currency_format_request(range)
     set_number_format_request(range, {type: "CURRENCY"})
   end
+  def set_percentage_format_request(range)
+    set_number_format_request(range, {type: "PERCENT"})
+  end
 
   def set_border_request(range, style: "SOLID_MEDIUM", color: @@black, borders:)
     border_style = {
@@ -198,22 +201,25 @@ class TabController
         }
       }
   end
+
   def bold_text_request(range)
+    text_format_request(range, {bold: true})
+  end
+
+  def create_checkbox_request(range)
       {
         repeat_cell: {
           range: range.as_json_range(),
           cell: {
-            user_entered_format: {
-              text_format: {
-                bold: true
-              }
+            data_validation: {
+              condition: {type: "BOOLEAN"},
+              show_custom_ui: true
             }
           },
-          fields: "user_entered_format.text_format"
+          fields: "data_validation"
         }
       }
   end
-
   def unmerge_all_request()
     {
       unmerge_cells: {

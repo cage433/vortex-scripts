@@ -117,12 +117,18 @@ class SheetRange
       _cell(i, j)
     end
   end
-  def _cell(range_row, range_col)
-    SheetRange.new(
-      @start_row_index + range_row, @start_row_index + range_row + 1,
-      @start_column_index + range_col, @start_column_index + range_col + 1,
-      @sheet_id, @sheet_name
-    )
+  def _cell(i_row, i_col)
+    if i_row < 0
+      _cell(num_rows + i_row, i_col)
+    elsif i_col < 0
+      _cell(i_row, num_cols + i_col)
+    else
+      SheetRange.new(
+        @start_row_index + i_row, @start_row_index + i_row + 1,
+        @start_column_index + i_col, @start_column_index + i_col + 1,
+        @sheet_id, @sheet_name
+      )
+    end
   end
 end
 
