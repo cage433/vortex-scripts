@@ -292,8 +292,7 @@ class NightManagerTabController < TabController
       set_outside_border_request(@notes_range),
       set_border_request(@notes_range.row(0), style: "SOLID", borders: [:bottom]),
       set_background_color_request(note_text_range, @@almond),
-      text_format_request(@notes_range.row(0), {bold: true}),
-      center_text_request(@notes_range.row(0)),
+      bold_and_center_request(@notes_range.row(0)),
     ]
     (0...@notes_range.num_rows).each { |i_row|
       requests.push(merge_columns_request(@notes_range.row(i_row)))
@@ -335,7 +334,7 @@ class NightManagerTabController < TabController
       set_border_request(@fee_range.row(0), style: "SOLID", borders: [:bottom]),
       merge_columns_request(@fee_range.row(0)),
       bold_text_request(@fee_range.column(0)),
-      center_text_request(@fee_range.row(0)),
+      bold_and_center_request(@fee_range.row(0)),
       set_currency_format_request(flat_fee_cell),
       set_percentage_format_request(split_cell),
       set_currency_format_request(fee_to_pay_cell),
@@ -357,8 +356,7 @@ class NightManagerTabController < TabController
       "Amount (£)"
     )
     requests = [
-      bold_text_request(@expenses_range.sub_range(row_range: (0..1))),
-      center_text_request(@expenses_range.sub_range(row_range: (0..1))),
+      bold_and_center_request(@expenses_range.sub_range(row_range: (0..1))),
       set_outside_border_request(@expenses_range),
       set_border_request(@expenses_range.row(1), style: "SOLID", borders: [:bottom]),
       set_border_request(@expenses_range.column(3).sub_range(row_range: (1..)), style: "SOLID", borders: [:right]),
@@ -389,7 +387,7 @@ class NightManagerTabController < TabController
       set_border_request(@prs_range.row(0), style: "SOLID", borders: [:bottom]),
       merge_columns_request(@prs_range.row(0)),
       bold_text_request(@prs_range.column(0)),
-      center_text_request(@prs_range.row(0)),
+      bold_and_center_request(@prs_range.row(0)),
       create_checkbox_request(is_fully_improvised_cell),
       set_currency_format_request(to_pay_cell),
       set_background_color_request(is_fully_improvised_cell, @@almond),
@@ -408,8 +406,7 @@ class NightManagerTabController < TabController
       set_outside_border_request(@z_readings_range),
       set_border_request(@z_readings_range.row(0), style: "SOLID", borders: [:bottom]),
       merge_columns_request(@z_readings_range.row(0)),
-      bold_text_request(@z_readings_range.column(0)),
-      center_text_request(@z_readings_range.row(0)),
+      bold_and_center_request(@z_readings_range.column(0)),
       set_currency_format_request(amounts_range),
       set_background_color_request(amounts_range, @@almond),
     ]
@@ -433,8 +430,7 @@ class NightManagerTabController < TabController
       set_border_request(@merch_range.row(1), style: "SOLID", borders: [:bottom]),
       set_border_request(@merch_range.column(0).sub_range(row_range: (1..)), style: "SOLID", borders: [:right]),
       merge_columns_request(@merch_range.row(0)),
-      center_text_request(titles_range),
-      bold_text_request(titles_range),
+      bold_and_center_request(titles_range),
       bold_text_request(@merch_range.column(0)),
       set_background_color_request(input_range, @@almond),
       set_currency_format_request(input_range.column(1)),
@@ -451,18 +447,21 @@ class NightManagerTabController < TabController
     @wb_controller.apply_requests(requests)
   end
 
-  def create_sheet_if_necessary()
-    @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
-    #clear_values_and_formats()
-    #size_columns()
-    #build_headings_range()
-    #build_takings_range()
-    #build_fee_details_range()
-    #build_prs_range()
-    #build_notes_range()
-    build_expenses_range()
-    build_z_readings_range()
-    build_merch_range()
+  def create_sheet_if_necessary(force: false)
+    tab_exists = @wb_controller.has_tab_with_name?(@tab_name)
+    @wb_controller.add_tab(@tab_name) if !tab_exists
+    if !tab_exists || force
+      clear_values_and_formats()
+      size_columns()
+      build_headings_range()
+      build_takings_range()
+      build_fee_details_range()
+      build_prs_range()
+      build_notes_range()
+      build_expenses_range()
+      build_z_readings_range()
+      build_merch_range()
+    end
   end
 end
 
@@ -583,7 +582,7 @@ end
 def sheet_spike()
     night_manager_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
     tab_controller = NightManagerTabController.new(Date.new(2021, 10, 20), night_manager_controller)
-    tab_controller.create_sheet_if_necessary()
+    tab_controller.create_sheet_if_necessary(force: true)
 end
 
 sheet_spike()

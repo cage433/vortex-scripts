@@ -166,18 +166,31 @@ class TabController
     }
   end
 
-  def horizontal_alignment_request(range, align)
+  def user_entered_format_request(range, format)
+    fields = format.keys.collect { |key| "user_entered_format.#{key}"}.join(",")
       {
         repeat_cell: {
           range: range.as_json_range(),
           cell: {
-            user_entered_format: {
-              horizontal_alignment: "#{align}"
-            }
+            user_entered_format: format
           },
-          fields: "user_entered_format.horizontal_alignment"
+          fields: fields
         }
       }
+  end
+
+  def horizontal_alignment_request(range, align)
+    user_entered_format_request(range, {horizontal_alignment: "#{align}"})
+  end
+
+  def bold_and_center_request(range)
+    user_entered_format_request(
+      range,
+      {
+        horizontal_alignment: "CENTER", 
+        text_format: {bold: true}
+      }
+    )
   end
 
   def center_text_request(range)
@@ -189,17 +202,7 @@ class TabController
   end
 
   def text_format_request(range, format)
-      {
-        repeat_cell: {
-          range: range.as_json_range(),
-          cell: {
-            user_entered_format: {
-              text_format: format
-            }
-          },
-          fields: "user_entered_format.text_format"
-        }
-      }
+    user_entered_format_request(range, {text_format: format})
   end
 
   def bold_text_request(range)
