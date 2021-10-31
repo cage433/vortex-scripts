@@ -23,8 +23,12 @@ class SheetRange
     "#{@sheet_name}!#{start_col_name}#{@start_row_index + 1}:#{end_col_name}#{@end_row_index}"
   end
 
+  def is_cell?
+    num_rows == 1 && num_cols == 1
+  end
+
   def cell_reference()
-    raise "Not a cell" if num_rows != 1 || num_cols != 1
+    raise "Not a cell" if !is_cell?
     columns = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     col_name = columns[@start_column_index] || (raise "Column #{@start_column_index} outside permitted range")
     "#{col_name}#{@start_row_index + 1}"

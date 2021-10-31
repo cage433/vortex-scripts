@@ -72,6 +72,21 @@ class WorkbookController
   end
 
   def get_spreadsheet_values(range)
-    @service.get_spreadsheet_values(@workbook_id, range.as_value_range()).values
+    @service.get_spreadsheet_values(
+      @workbook_id, 
+      range.as_value_range(),
+      {value_render_option: "UNFORMATTED_VALUE"}
+    ).values
+  end
+
+  def get_cell_value(cell)
+    assert_type(cell, SheetRange)
+    raise "Not a cell #{cell}" unless cell.is_cell?
+    values = get_spreadsheet_values(cell)
+    if values.nil?
+      nil
+    else
+      values[0][0]
+    end
   end
 end
