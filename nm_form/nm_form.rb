@@ -160,7 +160,7 @@ end
 module NMForm_ExpensesColumns
   include NMForm_Columns
   NOTE = "Note"
-  AMOUNT = "Amount"
+  AMOUNT = "Amount (£)"
 end
 
 class NMForm_ExpensesTable < NMForm_Table
@@ -191,10 +191,11 @@ class NightManagerTabController < TabController
     @total_ticket_sales = @takings_range.cell(-1, -1)
 
     @notes_range = sheet_range_from_coordinates("H24:L29")
-    @fee_range = sheet_range_from_coordinates("B25:C30")
+    @fee_range = sheet_range_from_coordinates("B24:C29")
     @expenses_range = sheet_range_from_coordinates("H5:L10")
     @prs_range = sheet_range_from_coordinates("H12:I15")
     @z_readings_range = sheet_range_from_coordinates("K12:L15")
+    @merch_range = sheet_range_from_coordinates("H17:J22")
   end
 
   def build_headings_range()
@@ -220,19 +221,19 @@ class NightManagerTabController < TabController
         ["", ""],
         ["Online", ""],
         ["", "Tickets"],
-        ["", "Total Paid"],
+        ["", "Total Paid (£)"],
         ["", ""],
         ["Walk-ins", ""],
         ["", "Num"],
-        ["", "Total Paid"],
+        ["", "Total Paid (£)"],
         ["", ""],
         ["Guests/Cheap", ""],
         ["", "Num"],
-        ["", "Total Paid"],
+        ["", "Total Paid (£)"],
         ["", ""],
         ["Totals", ""],
         ["", "Audience"],
-        ["", "Total Paid"],
+        ["", "Total Paid (£)"],
       ]
     )
     @wb_controller.set_data(
@@ -353,7 +354,7 @@ class NightManagerTabController < TabController
     )
     @wb_controller.set_data(
       @expenses_range.cell(1, 4),
-      "Amount"
+      "Amount (£)"
     )
     requests = [
       bold_text_request(@expenses_range.sub_range(row_range: (0..1))),
@@ -363,6 +364,7 @@ class NightManagerTabController < TabController
       set_border_request(@expenses_range.column(3).sub_range(row_range: (1..)), style: "SOLID", borders: [:right]),
       merge_columns_request(@expenses_range.row(0)),
       set_background_color_request(@expenses_range.sub_range(row_range: (2..)), @@almond),
+      set_currency_format_request(@expenses_range.sub_range.column(-1).sub_range(row_range: (2..))),
     ]
     (1...@expenses_range.num_rows).each { |i_row|
       requests.push(merge_columns_request(@expenses_range.row(i_row).sub_range(col_range: (0..3))))
@@ -395,10 +397,11 @@ class NightManagerTabController < TabController
     @wb_controller.apply_requests(requests)
 
   end
+
   def build_z_readings_range()
     @wb_controller.set_data(
       @z_readings_range.column(0),
-      ["Z Readings", "", "Cash", "Zettle"]
+      ["Z Readings", "", "Cash (£)", "Zettle (£)"]
     )
     amounts_range = @z_readings_range.sub_range(row_range: (2..3), col_range: 1)
     requests = [
@@ -414,6 +417,32 @@ class NightManagerTabController < TabController
 
   end
 
+  def build_merch_range()
+    @wb_controller.set_data(
+      @merch_range.column(0),
+      ["Merch", "", "Mugs", "T-shirts", "Bags", "Masks"]
+    )
+    @wb_controller.set_data(
+      @merch_range.row(1),
+      ["", "Number", "Amount (£)"]
+    )
+    input_range = @merch_range.sub_range(row_range: (2..), col_range: (1..))
+    titles_range = @merch_range.sub_range(row_range: (0..1))
+    requests = [
+      set_outside_border_request(@merch_range),
+      set_border_request(@merch_range.row(1), style: "SOLID", borders: [:bottom]),
+      set_border_request(@merch_range.column(0).sub_range(row_range: (1..)), style: "SOLID", borders: [:right]),
+      merge_columns_request(@merch_range.row(0)),
+      center_text_request(titles_range),
+      bold_text_request(titles_range),
+      bold_text_request(@merch_range.column(0)),
+      set_background_color_request(input_range, @@almond),
+      set_currency_format_request(input_range.column(1)),
+    ]
+    @wb_controller.apply_requests(requests)
+
+  end
+
 
   def size_columns()
     requests = [20, 100, 100, 100, 110, 100, 20, 110, 100, 100, 100, 100].each_with_index.collect { |width, i_col|
@@ -424,15 +453,16 @@ class NightManagerTabController < TabController
 
   def create_sheet_if_necessary()
     @wb_controller.add_tab(@tab_name) if !@wb_controller.has_tab_with_name?(@tab_name)
-    clear_values_and_formats()
-    size_columns()
-    build_headings_range()
-    build_takings_range()
-    build_fee_details_range()
-    build_prs_range()
-    build_notes_range()
+    #clear_values_and_formats()
+    #size_columns()
+    #build_headings_range()
+    #build_takings_range()
+    #build_fee_details_range()
+    #build_prs_range()
+    #build_notes_range()
     build_expenses_range()
     build_z_readings_range()
+    build_merch_range()
   end
 end
 

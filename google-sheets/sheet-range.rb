@@ -80,7 +80,7 @@ class SheetRange
           rangish = (rangish..rangish)
         end
         if rangish.end.nil?
-          rangish = (rangish.first..num_rows - 1)
+          rangish = (rangish.first..end_index - start_index - 1)
         end
         [start_index + rangish.first, start_index + rangish.last + 1]
       end
@@ -95,11 +95,19 @@ class SheetRange
   end
 
   def column(col_no)
-    sub_range(col_range: (col_no..col_no))
+    if col_no < 0
+      column(num_cols + col_no)
+    else
+      sub_range(col_range: (col_no..col_no))
+    end
   end
 
   def row(row_no)
-    sub_range(row_range: (row_no..row_no))
+    if row_no < 0
+      row(num_rows + row_no)
+    else
+      sub_range(row_range: (row_no..row_no))
+    end
   end
 
   def cell(i, j = nil)
