@@ -110,6 +110,14 @@ class SheetRange
     end
   end
 
+  def rows(range)
+    sub_range(row_range: range)
+  end
+
+  def columns(range)
+    sub_range(col_range: range)
+  end
+
   def cell(i, j = nil)
     if j.nil?
       if num_rows == 1 && num_cols == 1 

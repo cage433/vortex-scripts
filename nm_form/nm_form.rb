@@ -187,7 +187,7 @@ class NightManagerTabController < TabController
 
 
     @takings_range = sheet_range_from_coordinates("B5:F22")
-    @takings_row_titles = @takings_range.sub_range(col_range: (0..1))
+    @takings_row_titles = @takings_range.columns(0..1)
     @total_ticket_sales = @takings_range.cell(-1, -1)
 
     @notes_range = sheet_range_from_coordinates("H24:L29")
@@ -199,14 +199,14 @@ class NightManagerTabController < TabController
   end
 
   def build_headings_range()
-    @wb_controller.set_data(@heading_range.sub_range(col_range: (0..1)), [["Date", @date], ["Title", @title]])
+    @wb_controller.set_data(@heading_range.columns(0..1), [["Date", @date], ["Title", @title]])
     requests = [
       set_date_format_request(@date_cell, "d mmm yy"),
       right_align_text_request(@title_cell),
       text_format_request(@heading_range, {bold: true, font_size: 14}),
       set_outside_border_request(@heading_range),
-      merge_columns_request(@heading_range.sub_range(row_range: 0, col_range:(1..4))),
-      merge_columns_request(@heading_range.sub_range(row_range: 1, col_range:(1..4))),
+      merge_columns_request(@heading_range.row(0).columns(1..4)),
+      merge_columns_request(@heading_range.row(1).columns(1..4)),
     ]
 
     @wb_controller.apply_requests(requests)
@@ -261,21 +261,24 @@ class NightManagerTabController < TabController
     requests = [
       set_outside_border_request(@takings_range),
       text_format_request(@takings_row_titles, {bold: true}),
-      text_format_request(@takings_range.sub_range(row_range: (0..1)), {bold: true}),
-      set_top_bottom_border_request(@takings_range.sub_range(row_range: (2..5))),
-      set_top_bottom_border_request(@takings_range.sub_range(row_range: (10..13))),
-      set_left_right_border_request(@takings_range.sub_range(row_range: (1..), col_range: (2..3))),
+      text_format_request(@takings_range.rows(0..1), {bold: true}),
+      set_top_bottom_border_request(@takings_range.rows(2..5)),
+      set_top_bottom_border_request(@takings_range.rows(10..13)),
+      set_left_right_border_request(@takings_range.rows(1..).columns(2..3)),
       merge_columns_request(@takings_range.row(0)),
-      center_text_request(@takings_range.sub_range(row_range: (0..1))),
+      center_text_request(@takings_range.rows(0..1)),
     ]
     [4, 8, 12].each do |i_row|
       requests.push(
-        set_background_color_request(@takings_range.sub_range(row_range: (i_row..i_row+1), col_range: (2..3)), @@almond)
+        set_background_color_request(
+          @takings_range.rows(i_row..i_row+1).columns(2..3), 
+          @@almond
+        )
       )
     end
     [5, 9, 13].each do |i_row|
       requests.push(
-        set_currency_format_request(@takings_range.sub_range(row_range: (i_row..i_row), col_range: (2..4)))
+        set_currency_format_request(@takings_range.row(i_row).columns(2..4))
       )
     end
 
@@ -287,11 +290,10 @@ class NightManagerTabController < TabController
       @notes_range.cell(0, 0), 
       "Notes"
     )
-    note_text_range = @notes_range.sub_range(row_range: (1..))
     requests = [
       set_outside_border_request(@notes_range),
       set_border_request(@notes_range.row(0), style: "SOLID", borders: [:bottom]),
-      set_background_color_request(note_text_range, @@almond),
+      set_background_color_request(@notes_range.rows(1..), @@almond),
       bold_and_center_request(@notes_range.row(0)),
     ]
     (0...@notes_range.num_rows).each { |i_row|
@@ -356,16 +358,16 @@ class NightManagerTabController < TabController
       "Amount (£)"
     )
     requests = [
-      bold_and_center_request(@expenses_range.sub_range(row_range: (0..1))),
+      bold_and_center_request(@expenses_range.rows(0..1)),
       set_outside_border_request(@expenses_range),
       set_border_request(@expenses_range.row(1), style: "SOLID", borders: [:bottom]),
-      set_border_request(@expenses_range.column(3).sub_range(row_range: (1..)), style: "SOLID", borders: [:right]),
+      set_border_request(@expenses_range.column(3).rows(1..), style: "SOLID", borders: [:right]),
       merge_columns_request(@expenses_range.row(0)),
-      set_background_color_request(@expenses_range.sub_range(row_range: (2..)), @@almond),
-      set_currency_format_request(@expenses_range.sub_range.column(-1).sub_range(row_range: (2..))),
+      set_background_color_request(@expenses_range.rows(2..), @@almond),
+      set_currency_format_request(@expenses_range.column(-1).rows(2..)),
     ]
     (1...@expenses_range.num_rows).each { |i_row|
-      requests.push(merge_columns_request(@expenses_range.row(i_row).sub_range(col_range: (0..3))))
+      requests.push(merge_columns_request(@expenses_range.row(i_row).columns(0..3)))
     }
     @wb_controller.apply_requests(requests)
 
@@ -401,7 +403,7 @@ class NightManagerTabController < TabController
       @z_readings_range.column(0),
       ["Z Readings", "", "Cash (£)", "Zettle (£)"]
     )
-    amounts_range = @z_readings_range.sub_range(row_range: (2..3), col_range: 1)
+    amounts_range = @z_readings_range.rows(2..3).column(1)
     requests = [
       set_outside_border_request(@z_readings_range),
       set_border_request(@z_readings_range.row(0), style: "SOLID", borders: [:bottom]),
@@ -423,12 +425,12 @@ class NightManagerTabController < TabController
       @merch_range.row(1),
       ["", "Number", "Amount (£)"]
     )
-    input_range = @merch_range.sub_range(row_range: (2..), col_range: (1..))
-    titles_range = @merch_range.sub_range(row_range: (0..1))
+    input_range = @merch_range.rows(2..).columns(1..)
+    titles_range = @merch_range.rows(0..1)
     requests = [
       set_outside_border_request(@merch_range),
       set_border_request(@merch_range.row(1), style: "SOLID", borders: [:bottom]),
-      set_border_request(@merch_range.column(0).sub_range(row_range: (1..)), style: "SOLID", borders: [:right]),
+      set_border_request(@merch_range.column(0).rows(1..), style: "SOLID", borders: [:right]),
       merge_columns_request(@merch_range.row(0)),
       bold_and_center_request(titles_range),
       bold_text_request(@merch_range.column(0)),
