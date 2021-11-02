@@ -499,21 +499,17 @@ class NightManagerTabController < TabController
     @wb_controller.apply_requests(requests)
   end
 
-  def create_sheet_if_necessary(force: false)
-    tab_exists = @wb_controller.has_tab_with_name?(@tab_name)
-    @wb_controller.add_tab(@tab_name) if !tab_exists
-    if !tab_exists || force
-      clear_values_and_formats()
-      size_columns()
-      build_headings_range()
-      build_takings_range()
-      build_fee_details_range()
-      build_prs_range()
-      build_notes_range()
-      build_expenses_range()
-      build_z_readings_range()
-      build_merch_range()
-    end
+  def build_sheet()
+    clear_values_and_formats()
+    size_columns()
+    build_headings_range()
+    build_takings_range()
+    build_fee_details_range()
+    build_prs_range()
+    build_notes_range()
+    build_expenses_range()
+    build_z_readings_range()
+    build_merch_range()
   end
 
   def get_cell_value(cell)
@@ -524,7 +520,7 @@ class NightManagerTabController < TabController
     @wb_controller.get_spreadsheet_values(range)
   end
   def read_session_data()
-    merch_data = get_spreadsheet_values(@merch_range.rows(2..).columns(1..))
+    merch_data = get_spreadsheet_values(@merch_range.rows(2..).columns(1..)) || []
     def number_and_value(merch_data, i_row)
       if i_row >= merch_data.size
         NumberSoldAndValue.new(number: 0, value: 0)
@@ -712,12 +708,21 @@ def airtable_spike()
 end
 
 def sheet_spike()
-    night_manager_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
-    tab_controller = NightManagerTabController.new(Date.new(2021, 10, 20), night_manager_controller)
-    #tab_controller.create_sheet_if_necessary(force: true)
-    form_data = tab_controller.nm_form_data()
-    puts(form_data)
-    NMFormController.write_nm_form_data(form_data: form_data)
+  date = Date.new(2021, 10, 23)
+  wb_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
+  tab_name = TabController.tab_name_for_date(date)
+  build_required = false
+  if !wb_controller.has_tab_with_name?(tab_name)
+    wb_controller.add_tab(tab_name)
+    build_required = true
+  end
+  tab_controller = NightManagerTabController.new(date, wb_controller)
+  if build_required
+    tab_controller.build_sheet()
+  end
+  form_data = tab_controller.nm_form_data()
+  puts(form_data)
+  NMFormController.write_nm_form_data(form_data: form_data)
 end
 
 sheet_spike()

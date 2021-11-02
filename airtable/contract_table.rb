@@ -97,7 +97,7 @@ end
 
 module ContractTableColumns
   EVENT_TITLE = "Event title"
-  UNIQUE_PERFORMANCE_DATE = "Unique Performance Date"
+  PERFORMANCE_DATE = "Performance date"
   VS_FEE = "VS fee?"
   PERCENTAGE_SPLIT_TO_ARTIST = "Percentage split to Artist"
   FLAT_FEE_TO_ARTIST = "Flat Fee to Artist"
@@ -112,7 +112,7 @@ class ContractTable < Airrecord::Table
     recs = select_with_date_filter(
       table: ContractTable,
       fields: [EVENT_TITLE, VS_FEE, PERCENTAGE_SPLIT_TO_ARTIST, FLAT_FEE_TO_ARTIST],
-      date_field: UNIQUE_PERFORMANCE_DATE,
+      date_field: PERFORMANCE_DATE,
       first_date: date, 
       last_date: date
     )
