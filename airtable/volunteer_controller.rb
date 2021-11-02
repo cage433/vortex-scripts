@@ -1,9 +1,10 @@
 require_relative 'contract_table'
 require_relative 'contacts'
 require 'time'
+require_relative '../model/model'
 
 class VolunteerAirtableController
-  include EventTableMeta
+  include EventTableColumns
 
   def self.door_time(rec)
     if rec[DOORS_TIME].nil?

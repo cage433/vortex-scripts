@@ -75,7 +75,10 @@ class WorkbookController
     @service.get_spreadsheet_values(
       @workbook_id, 
       range.as_value_range(),
-      {value_render_option: "UNFORMATTED_VALUE"}
+      {
+        value_render_option: "UNFORMATTED_VALUE",
+        date_time_render_option: "FORMATTED_STRING"
+      }
     ).values
   end
 

@@ -46,7 +46,7 @@ class EventTable < Airrecord::Table
       fields: [ID],
       first_date: Date.new(year, month_no, 1),
       last_date: Date.new(year, month_no, -1)
-    )
+    ).collect { |rec| rec[ID] }
   end
 
 

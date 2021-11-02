@@ -38,7 +38,7 @@ class VolunteerMonthTabController < TabController
 
   def format_columns()
     requests = [
-      set_date_format_request(single_column_range(DATE_COL), "mmm d"),
+      set_date_format_request(single_column_range(DISPLAY_DATE_COL), "mmm d"),
       set_date_format_request(single_column_range(DAY_COL), "ddd"),
     ]
 

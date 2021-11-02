@@ -1,9 +1,7 @@
 require_relative 'google-sheets/workbook_controller.rb'
 require_relative 'google-sheets/volunteer_tab_controller.rb'
-require_relative 'google-sheets/night_manager_tab_controller.rb'
 require_relative 'env'
 require_relative 'airtable/volunteer_controller'
-require_relative 'airtable/night_manager_controller'
 require 'date'
 
 class Controller
@@ -55,6 +53,7 @@ class Controller
     end
 
   end
+end
 
 
 def sync_personnel_data(year, month, force = false)
@@ -64,5 +63,5 @@ def sync_personnel_data(year, month, force = false)
 end
 
 
-#sync_personnel_data(2021, 10, force=false)
+sync_personnel_data(2021, 11, force=false)
 
