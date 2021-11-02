@@ -35,40 +35,27 @@ class TabController
   end
 
   def single_column_range(col)
-    SheetRange.new(nil, nil, col, col + 1, @sheet_id, @tab_name)
+    SheetRange.new(
+      SheetCell.from_row_and_col(0, col),
+      nil,
+      1,
+      @sheet_id, @tab_name)
   end
 
-
-
-
-  def sheet_range(
-    start_row_index, 
-    end_row_index, 
-    start_column_index = 0, 
-    end_column_index = @width
-  )
-    SheetRange.new(start_row_index, end_row_index, start_column_index, end_column_index, @sheet_id, @tab_name)
-  end
 
   def sheet_range_from_coordinates(coordinates)
     top_left, bottom_right = coordinates.upcase.split(":")
-    start_row_index = top_left[1..].to_i - 1
-    start_col_index = top_left[0].ord - "A".ord
-    end_row_index = bottom_right[1..].to_i 
-    end_col_index = bottom_right[0].ord - "A".ord + 1
-    sheet_range(start_row_index, end_row_index, start_col_index, end_col_index)
-  end
-
-  def sheet_row(
-    row_index,
-    start_column_index,
-    end_column_index
-  )
-    sheet_range(row_index, row_index + 1, start_column_index, end_column_index)
-  end
-
-  def sheet_cell(row_index, column_index)
-    sheet_range(row_index, row_index + 1, column_index, column_index + 1)
+    i_first_row = top_left[1..].to_i - 1
+    i_first_col = top_left[0].ord - "A".ord
+    i_last_row = bottom_right[1..].to_i - 1
+    i_last_col = bottom_right[0].ord - "A".ord 
+    SheetRange.new(
+      SheetCell.from_coordinates(top_left), 
+      i_last_row - i_first_row + 1,
+      i_last_col - i_first_col + 1,
+      @sheet_id,
+      @tab_name
+    )
   end
 
   def set_background_color_request(range, color_json)

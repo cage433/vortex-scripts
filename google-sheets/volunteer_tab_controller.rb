@@ -18,6 +18,12 @@ class VolunteerMonthTabController < TabController
     @year_no = year_no
     @month_no = month_no
     @width = HEADER.size
+    @sheet_range = SheetRange.new(
+      SheetCell.from_coordinates("A1"),
+      100,
+      @width,
+      @sheet_id, @tab_name
+    )
   end
 
   #def event_range(i_event)
@@ -27,7 +33,7 @@ class VolunteerMonthTabController < TabController
 
 
   def write_header()
-    header_range = sheet_range(0, 1)
+    header_range = @sheet_range.row(0)
     @wb_controller.set_data(header_range, [HEADER])
     @wb_controller.apply_requests([
       set_background_color_request(header_range, @@light_green),
@@ -82,7 +88,7 @@ class VolunteerMonthTabController < TabController
     dates.each_with_index do |d, i_date|
       personnel_for_date = personnel_by_date[d]
       next_rows = rows_for_date(personnel_for_date)
-      range_for_date = sheet_range(i_row, i_row + next_rows.size)
+      range_for_date = @sheet_range.rows(i_row...i_row + next_rows.size)
       requests.append(set_outside_border_request(range_for_date))
       if i_date % 2 == 0
         requests.append(set_background_color_request(range_for_date, @@light_yellow))
@@ -91,7 +97,7 @@ class VolunteerMonthTabController < TabController
       i_row += next_rows.size
     end
 
-    @wb_controller.set_data(sheet_range(1, i_row), data)
+    @wb_controller.set_data(@sheet_range.rows(1...i_row), data)
 
     @wb_controller.apply_requests(requests)
   end
@@ -100,9 +106,7 @@ class VolunteerMonthTabController < TabController
 
   def read_events_personnel()
 
-    rows = @wb_controller.get_spreadsheet_values(
-      sheet_range(1, 100)
-    )
+    rows = @wb_controller.get_spreadsheet_values(@sheet_range.rows(1..))
     if rows.nil?
       EventsPersonnel.new(events_personnel: [])
     else
