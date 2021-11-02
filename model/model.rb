@@ -1,56 +1,6 @@
 require_relative '../utils/utils'
 
-module SimpleEqualityMixin
-  # Used to compare DB and spreadsheet versions of objects
-  #
-  # Classes which use this mixin provide a `state` method which is
-  # used to compare objects. 
-  # 
-  # Ignores differences due to nulls/empty strings and floats/int representations
-  # of the same number
-
-  def _transform(x)
-    # Where the DB returns nils, excel will return blanks
-    # ditto for float/ints
-    if x.nil?
-      ''
-    elsif x.class == Integer
-      x.to_f
-    else
-      x
-    end
-  end
-  def ==(o)
-    if self.state.size != o.state.size
-      false
-    else
-      self.state.zip(o.state).all? { |a, b|
-        _transform(a) == _transform(b)
-      }
-    end
-  end
-
-  def compare(rhs)
-    # Utility for when DB/sheet unexpectedly mismatch
-    raise "Mismatching state size" unless state.size == rhs.state.size
-    state.zip(rhs.state).each do |l, r|
-      if l.class == SimpleEqualityMixin
-        puts("#{l.class}, #{r.class}, #{transform(l) == transform(r)}")
-        l.compare(r)
-      else
-        puts("#{l}, #{r}, #{l.class}, #{r.class}, #{transform(l) == transform(r)}")
-      end
-    end
-  end
-
-  def state
-    raise "Mixed-in class must provide its own implementation of `state`" 
-  end
-end
-
-
 class EventPersonnel 
-  #include SimpleEqualityMixin
   attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :night_manager, :sound_engineer
 
   def initialize(airtable_id:, title:, date:, doors_open:, vol1:, vol2:, night_manager:, sound_engineer:)
