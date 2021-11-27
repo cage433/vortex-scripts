@@ -1,10 +1,10 @@
-require_relative '../utils/utils'
-require 'date'
 require 'airrecord'
+require 'date'
+require_relative '../airtable/contract_table'
 require_relative '../env'
 require_relative '../google-sheets/tab-controller'
 require_relative '../google-sheets/workbook_controller'
-require_relative '../airtable/contract_table'
+require_relative '../utils/utils'
 
 ######################
 #     Model
