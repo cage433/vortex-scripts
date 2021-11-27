@@ -20,22 +20,54 @@ class WorkbookController
   end
 
   def apply_request(request)
-		result = @service.batch_update_spreadsheet(
-		  @workbook_id, 
-		  {requests: [request]},
-		  fields: nil, quota_user: nil, options: nil
-      
-		)
+    request_with_retries(
+      lambda {
+        @service.batch_update_spreadsheet(
+          @workbook_id, 
+          {requests: [request]},
+          fields: nil, quota_user: nil, options: nil
+        )
+      }
+    )
   end
 
   def apply_requests(requests)
-		result = @service.batch_update_spreadsheet(
-		  @workbook_id, 
-		  {requests: requests},
-		  fields: nil,
-		  quota_user: nil,
-		  options: nil
-		)
+		request_with_retries(
+		  lambda {
+        @service.batch_update_spreadsheet(
+          @workbook_id, 
+          {requests: requests},
+          fields: nil,
+          quota_user: nil,
+          options: nil
+        )
+      }
+    )
+  end
+
+  def request_with_retries(request)
+    num_tries = 5
+    i_try = 0
+    have_succeeded = false
+    result = nil
+    while i_try < num_tries && !have_succeeded
+      begin
+        result = request.yield
+        have_succeeded = true
+      rescue 
+        i_try += 1
+        if i_try < num_tries
+          puts("Will retry writing data")
+          sleep 20
+          retry
+        end
+      end
+    end
+    if have_succeeded
+      result
+    else
+      raise "Failed to write data after several retries"
+    end
   end
 
   def add_tab(name)
@@ -65,21 +97,29 @@ class WorkbookController
 
     value_range = range.as_value_range()
     value_range_object = Google::Apis::SheetsV4::ValueRange.new(range: value_range, values: data)
-    result = @service.update_spreadsheet_value(@workbook_id,
-                                              value_range,
-                                              value_range_object,
-                                              value_input_option: "USER_ENTERED")
+    request_with_retries(
+      lambda {
+        @service.update_spreadsheet_value(@workbook_id,
+                                          value_range,
+                                          value_range_object,
+                                          value_input_option: "USER_ENTERED")
+      }
+    )
   end
 
   def get_spreadsheet_values(range)
-    @service.get_spreadsheet_values(
-      @workbook_id, 
-      range.as_value_range(),
-      {
-        value_render_option: "UNFORMATTED_VALUE",
-        date_time_render_option: "FORMATTED_STRING"
+    request_with_retries(
+      lambda {
+        @service.get_spreadsheet_values(
+          @workbook_id, 
+          range.as_value_range(),
+          {
+            value_render_option: "UNFORMATTED_VALUE",
+            date_time_render_option: "FORMATTED_STRING"
+          }
+        ).values
       }
-    ).values
+    )
   end
 
   def get_cell_value(cell)
