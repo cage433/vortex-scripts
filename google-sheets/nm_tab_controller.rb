@@ -196,6 +196,46 @@ class TicketSalesRange < TabController
   end
 end
 
+class NotesRange < TabController
+  def initialize(wb_controller, range, tab_name)
+    super(wb_controller, tab_name)
+    @range = range
+    @header = @range.row(0)
+    @notes_range = @range.rows(1..)
+  end
+
+  def initialise_range()
+    @wb_controller.set_data(
+      @header.cell(0), 
+      "Notes"
+    )
+    requests = [
+      set_outside_border_request(@range),
+      set_border_request(@header, style: "SOLID", borders: [:bottom]),
+      set_background_color_request(@notes_range, @@almond),
+      bold_and_center_request(@header),
+    ]
+    (0...@range.num_rows).each { |i_row|
+      requests.push(merge_columns_request(@range.row(i_row)))
+    }
+    @wb_controller.apply_requests(requests)
+  end
+
+  def write_merged_note(merged_note)
+    lines = merged_note.split("\n")
+    lines_to_write = lines[...(@notes_range.num_rows)]
+    @wb_controller.set_data(
+      @notes_range.column(0).rows(...(lines_to_write.size)),
+      lines_to_write
+    )
+  end
+
+  def read_merged_note()
+    notes = (get_spreadsheet_values(@notes_range) || []).collect{ |row| row[0]}.filter { |note| !note.nil? && note.strip != ""}
+    if notes.size > 0 then notes.join("\n") else nil end
+  end
+end
+
 class NightManagerTabController < TabController
   def initialize(date, wb_controller)
     super(wb_controller, TabController.tab_name_for_date(date))
@@ -209,7 +249,7 @@ class NightManagerTabController < TabController
 
     @ticket_sales_range = TicketSalesRange.new(@wb_controller, sheet_range_from_coordinates("B5:F22"), @tab_name)
 
-    @notes_range = sheet_range_from_coordinates("H24:L29")
+    @notes_range = NotesRange.new(@wb_controller, sheet_range_from_coordinates("H24:L29"), @tab_name)
     @fee_range = sheet_range_from_coordinates("B24:C29")
     @fee_to_pay_cell = @fee_range.cell(5, 1)
     @expenses_range = ExpensesRange.new(@wb_controller, sheet_range_from_coordinates("H5:L10"), @tab_name)
@@ -234,22 +274,6 @@ class NightManagerTabController < TabController
   end
 
 
-  def build_notes_range()
-    @wb_controller.set_data(
-      @notes_range.cell(0, 0), 
-      "Notes"
-    )
-    requests = [
-      set_outside_border_request(@notes_range),
-      set_border_request(@notes_range.row(0), style: "SOLID", borders: [:bottom]),
-      set_background_color_request(@notes_range.rows(1..), @@almond),
-      bold_and_center_request(@notes_range.row(0)),
-    ]
-    (0...@notes_range.num_rows).each { |i_row|
-      requests.push(merge_columns_request(@notes_range.row(i_row)))
-    }
-    @wb_controller.apply_requests(requests)
-  end
 
   def build_fee_details_range()
     fee_details = ContractTable.fee_details_for_date(@date)
@@ -376,7 +400,7 @@ class NightManagerTabController < TabController
     @ticket_sales_range.initialise_range()
     build_fee_details_range()
     build_prs_range()
-    build_notes_range()
+    @notes_range.initialise_range()
     @expenses_range.initialise_range()
     build_z_readings_range()
     build_merch_range()
@@ -398,8 +422,6 @@ class NightManagerTabController < TabController
         )
       end
     end
-    notes = (get_spreadsheet_values(@notes_range.rows(1..)) || []).collect{ |row| row[0]}.filter { |note| !note.nil? && note.strip != ""}
-    merged_note = if notes.size > 0 then notes.join("\n") else nil end
     fee_to_pay = get_cell_value(@fee_to_pay_cell) || 0.0
     prs_to_pay = get_cell_value(@prs_to_pay_cell) || 0.0
     NMForm_SessionData.new(
@@ -409,7 +431,7 @@ class NightManagerTabController < TabController
       masks: number_and_value(merch_data, 3),
       zettle_z_reading: get_cell_value(@z_readings_range.cell(3, 1)),
       cash_z_reading: get_cell_value(@z_readings_range.cell(2, 1)),
-      notes: merged_note,
+      notes: @notes_range.read_merged_note(),
       fee_to_pay: fee_to_pay,
       prs_to_pay: prs_to_pay
     )
@@ -426,6 +448,7 @@ class NightManagerTabController < TabController
 
   def set_nm_form_data(form_data:)
     assert_type(form_data, NMForm_Data)
+    @notes_range.write_merged_note(form_data.session_data.notes)
     @expenses_range.write_expenses(form_data.expenses_data)
     @ticket_sales_range.write_ticket_sales(form_data.ticket_sales)
   end
