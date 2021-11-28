@@ -1,4 +1,4 @@
-require_relative 'tab-controller'
+require_relative 'tab_controller'
 require_relative 'workbook_controller'
 
 class NightManagerTabController < TabController

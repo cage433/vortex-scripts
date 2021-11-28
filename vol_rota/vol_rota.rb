@@ -1,7 +1,7 @@
 require 'airrecord'
 require_relative '../airtable/vortex_table'
 require_relative '../env'
-require_relative '../google-sheets/tab-controller'
+require_relative '../google-sheets/tab_controller'
 require_relative '../google-sheets/workbook_controller'
 require_relative '../utils/utils'
 require_relative '../model/event_personnel'

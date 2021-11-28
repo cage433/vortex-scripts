@@ -1,4 +1,4 @@
-require_relative 'sheets-service'
+require_relative 'sheets_service'
 
 class WorkbookController
   def initialize(workbook_id)

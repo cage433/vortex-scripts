@@ -1,5 +1,5 @@
 require 'date'
-require_relative 'sheet-range'
+require_relative 'sheet_range'
 
 class TabController
   @@light_green = {
