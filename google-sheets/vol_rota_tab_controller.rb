@@ -1,6 +1,6 @@
 require_relative '../env'
-require_relative 'tab_controller'
-require_relative 'workbook_controller'
+require_relative 'utils/tab_controller'
+require_relative 'utils/workbook_controller'
 require_relative '../utils/utils'
 require_relative '../model/event_personnel'
 

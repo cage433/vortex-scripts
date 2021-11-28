@@ -1,5 +1,5 @@
-require_relative 'tab_controller'
-require_relative 'workbook_controller'
+require_relative 'utils/tab_controller'
+require_relative 'utils/workbook_controller'
 
 class NightManagerTabController < TabController
   def initialize(date, wb_controller)
