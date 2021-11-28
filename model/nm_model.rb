@@ -47,7 +47,7 @@ class NMForm_SessionData
   end
 end
 
-class NMForm_GigData
+class NMFormTicketSales
   attr_reader :performance_date, :gig, :online, :walk_ins, :guests_and_cheap
 
   def initialize(gig:, online:, walk_ins:, guests_and_cheap:)
@@ -84,16 +84,16 @@ class NMForm_ExpensesData
 end
 
 class NMForm_Data
-  attr_reader :date, :session_data, :gigs_data, :expenses_data
+  attr_reader :date, :session_data, :ticket_sales, :expenses_data
 
-  def initialize(date:, session_data:, gigs_data:, expenses_data:)
+  def initialize(date:, session_data:, ticket_sales:, expenses_data:)
     assert_type(date, Date)
     assert_type(session_data, NMForm_SessionData)
-    assert_collection_type(gigs_data, NMForm_GigData)
+    assert_collection_type(ticket_sales, NMFormTicketSales)
     assert_collection_type(expenses_data, NMForm_ExpensesData)
     @date = date
     @session_data = session_data
-    @gigs_data = gigs_data
+    @ticket_sales = ticket_sales
     @expenses_data = expenses_data
   end
 
@@ -102,7 +102,7 @@ class NMForm_Data
       "Form",
       @session_data.to_s,
       "", "Expenses",
-    ] + @expenses_data.collect{ |e| e.to_s} + ["", "Gigs"] + @gigs_data.collect{ |g| g.to_s}
+    ] + @expenses_data.collect{ |e| e.to_s} + ["", "Gigs"] + @ticket_sales.collect{ |g| g.to_s}
     terms.join("\n")
   end
 end

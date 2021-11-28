@@ -50,10 +50,10 @@ class NMFormController
     end
   end
 
-  def self.write_nm_gig_data(date, datas)
+  def self.write_nm_ticket_sales(date, datas)
     include NMForm_GigColumns
     raise "Expected two data, got #{datas}" unless datas.size == 2
-    assert_collection_type(datas, NMForm_GigData)
+    assert_collection_type(datas, NMFormTicketSales)
 
     raise "Expected gigs 1 & 2" unless Set[GIG_1, GIG_2] == datas.collect{ |d| d.gig}.to_set
 
@@ -74,11 +74,11 @@ class NMFormController
 
   end
 
-  def self.read_nm_gig_data(date)
+  def self.read_nm_ticket_sales(date)
     include NMForm_GigColumns
     records = NMForm_GigTable.records_for_date(date)
     records.collect do |record|
-      NMForm_GigData.new(
+      NMFormTicketSales.new(
         gig: record[GIG],
         online: NumberSoldAndValue.new(number: record[ONLINE_NUMBER], value: record[ONLINE_VALUE]),
         walk_ins: NumberSoldAndValue.new(number: record[WALK_IN_NUMBER], value: record[WALK_IN_VALUE]),
@@ -113,7 +113,7 @@ class NMFormController
 
   def self.write_nm_form_data(form_data:)
     write_nm_performance_data(form_data.date, form_data.session_data)
-    write_nm_gig_data(form_data.date, form_data.gigs_data)
+    write_nm_ticket_sales(form_data.date, form_data.ticket_sales)
     write_nm_expenses_data(form_data.date, form_data.expenses_data)
   end
 
@@ -125,7 +125,7 @@ class NMFormController
       NMForm_Data.new(
         date: date,
         session_data: performance_data,
-        gigs_data: read_nm_gig_data(date),
+        ticket_sales: read_nm_ticket_sales(date),
         expenses_data: read_nm_expenses_data(date)
       )
     end

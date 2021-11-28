@@ -67,6 +67,113 @@ class ExpensesRange < TabController
   end
 end
 
+class TicketSalesRange < TabController
+  attr_reader :total_ticket_sales
+
+  def initialize(wb_controller, range, tab_name)
+    super(wb_controller, tab_name)
+    @range = range
+    @row_titles = @range.columns(0..1)
+    @total_ticket_sales = @range.cell(-1, -1)
+  end
+
+  def initialise_range()
+    @wb_controller.set_data(
+      @row_titles,
+      [
+        ["Takings", ""],
+        ["", ""],
+        ["", ""],
+        ["Online", ""],
+        ["", "Tickets"],
+        ["", "Total Paid (£)"],
+        ["", ""],
+        ["Walk-ins", ""],
+        ["", "Num"],
+        ["", "Total Paid (£)"],
+        ["", ""],
+        ["Guests/Cheap", ""],
+        ["", "Num"],
+        ["", "Total Paid (£)"],
+        ["", ""],
+        ["Totals", ""],
+        ["", "Audience"],
+        ["", "Total Paid (£)"],
+      ]
+    )
+    @wb_controller.set_data(
+      @range.row(1), 
+      ["", "", "Gig 1", "Gig 2", "Total"]
+    )
+
+    [4, 5, 8, 9, 12, 13, 16, 17].each do |i_row|
+      row = @range.row(i_row)
+      sum_refs = [2, 3].collect{ |i_col| row.cell(i_col).cell_reference()}.join("+")
+      
+      @wb_controller.set_data( row.cell(4), "=#{sum_refs}" 
+      )
+    end
+    [2, 3].each do |i_col|
+      col = @range.column(i_col)
+
+      sum_ticket_refs = [4, 8, 12].collect{ |i_row| col.cell(i_row).cell_reference()}.join("+")
+      @wb_controller.set_data( col.cell(16), "=#{sum_ticket_refs}" )
+
+      sum_amount_refs = [5, 9, 13].collect{ |i_row| col.cell(i_row).cell_reference()}.join("+")
+      @wb_controller.set_data( col.cell(17), "=#{sum_amount_refs}" )
+    end
+
+    requests = [
+      set_outside_border_request(@range),
+      text_format_request(@row_titles, {bold: true}),
+      text_format_request(@range.rows(0..1), {bold: true}),
+      set_top_bottom_border_request(@range.rows(2..5)),
+      set_top_bottom_border_request(@range.rows(10..13)),
+      set_left_right_border_request(@range.rows(1..).columns(2..3)),
+      merge_columns_request(@range.row(0)),
+      center_text_request(@range.rows(0..1)),
+    ]
+    [4, 8, 12].each do |i_row|
+      requests.push(
+        set_background_color_request(
+          @range.rows(i_row..i_row+1).columns(2..3), 
+          @@almond
+        )
+      )
+    end
+    [5, 9, 13].each do |i_row|
+      requests.push(
+        set_currency_format_request(@range.row(i_row).columns(2..4))
+      )
+    end
+
+    @wb_controller.apply_requests(requests)
+  end
+
+  def read_ticket_sales()
+    takings_data = get_spreadsheet_values(@range.rows(4..13).columns(2..3)) || []
+    if takings_data.size < 10
+      takings_data += [0, 0] * (10 - takings_data.size)
+    end
+    
+    def number_and_value(data, i_col)
+      NumberSoldAndValue.new(number: data[0][i_col], value: data[1][i_col])
+    end
+    def ticket_sales_for_gig(takings_data, i_col)
+      online = takings_data[0..1]
+      walk_ins = takings_data[4..5]
+      guests = takings_data[8..9]
+      NMFormTicketSales.new(
+        gig: "Gig #{i_col + 1}",
+        online: number_and_value(online, i_col),
+        walk_ins: number_and_value(walk_ins, i_col),
+        guests_and_cheap: number_and_value(guests, i_col),
+      )
+    end
+    (0..1).collect{ |i_gig| ticket_sales_for_gig(takings_data, i_gig) }
+  end
+end
+
 class NightManagerTabController < TabController
   def initialize(date, wb_controller)
     super(wb_controller, TabController.tab_name_for_date(date))
@@ -78,9 +185,7 @@ class NightManagerTabController < TabController
     @title_cell = @heading_range.cell(1, 1)
 
 
-    @takings_range = sheet_range_from_coordinates("B5:F22")
-    @takings_row_titles = @takings_range.columns(0..1)
-    @total_ticket_sales = @takings_range.cell(-1, -1)
+    @ticket_sales_range = TicketSalesRange.new(@wb_controller, sheet_range_from_coordinates("B5:F22"), @tab_name)
 
     @notes_range = sheet_range_from_coordinates("H24:L29")
     @fee_range = sheet_range_from_coordinates("B24:C29")
@@ -106,78 +211,6 @@ class NightManagerTabController < TabController
     @wb_controller.apply_requests(requests)
   end
 
-  def build_takings_range()
-    @wb_controller.set_data(
-      @takings_row_titles,
-      [
-        ["Takings", ""],
-        ["", ""],
-        ["", ""],
-        ["Online", ""],
-        ["", "Tickets"],
-        ["", "Total Paid (£)"],
-        ["", ""],
-        ["Walk-ins", ""],
-        ["", "Num"],
-        ["", "Total Paid (£)"],
-        ["", ""],
-        ["Guests/Cheap", ""],
-        ["", "Num"],
-        ["", "Total Paid (£)"],
-        ["", ""],
-        ["Totals", ""],
-        ["", "Audience"],
-        ["", "Total Paid (£)"],
-      ]
-    )
-    @wb_controller.set_data(
-      @takings_range.row(1), 
-      ["", "", "Gig 1", "Gig 2", "Total"]
-    )
-
-    [4, 5, 8, 9, 12, 13, 16, 17].each do |i_row|
-      row = @takings_range.row(i_row)
-      sum_refs = [2, 3].collect{ |i_col| row.cell(i_col).cell_reference()}.join("+")
-      
-      @wb_controller.set_data( row.cell(4), "=#{sum_refs}" 
-      )
-    end
-    [2, 3].each do |i_col|
-      col = @takings_range.column(i_col)
-
-      sum_ticket_refs = [4, 8, 12].collect{ |i_row| col.cell(i_row).cell_reference()}.join("+")
-      @wb_controller.set_data( col.cell(16), "=#{sum_ticket_refs}" )
-
-      sum_amount_refs = [5, 9, 13].collect{ |i_row| col.cell(i_row).cell_reference()}.join("+")
-      @wb_controller.set_data( col.cell(17), "=#{sum_amount_refs}" )
-    end
-
-    requests = [
-      set_outside_border_request(@takings_range),
-      text_format_request(@takings_row_titles, {bold: true}),
-      text_format_request(@takings_range.rows(0..1), {bold: true}),
-      set_top_bottom_border_request(@takings_range.rows(2..5)),
-      set_top_bottom_border_request(@takings_range.rows(10..13)),
-      set_left_right_border_request(@takings_range.rows(1..).columns(2..3)),
-      merge_columns_request(@takings_range.row(0)),
-      center_text_request(@takings_range.rows(0..1)),
-    ]
-    [4, 8, 12].each do |i_row|
-      requests.push(
-        set_background_color_request(
-          @takings_range.rows(i_row..i_row+1).columns(2..3), 
-          @@almond
-        )
-      )
-    end
-    [5, 9, 13].each do |i_row|
-      requests.push(
-        set_currency_format_request(@takings_range.row(i_row).columns(2..4))
-      )
-    end
-
-    @wb_controller.apply_requests(requests)
-  end
 
   def build_notes_range()
     @wb_controller.set_data(
@@ -214,14 +247,14 @@ class NightManagerTabController < TabController
     @wb_controller.set_data(split_cell, fee_details.percentage_split)
     @wb_controller.set_data(
       ticket_sales_cell, 
-        "=#{@total_ticket_sales.cell_reference}"
+      "=#{@ticket_sales_range.total_ticket_sales.cell_reference}"
     )
     @wb_controller.set_data(
       @fee_to_pay_cell, 
       if fee_details.vs_fee 
-        "=max(#{flat_fee_cell.cell_reference}, #{split_cell.cell_reference} * #{@total_ticket_sales.cell_reference})"
+        "=max(#{flat_fee_cell.cell_reference}, #{split_cell.cell_reference} * #{@ticket_sales_range.total_ticket_sales.cell_reference})"
       else
-        "=#{flat_fee_cell.cell_reference} + #{split_cell.cell_reference} * #{@total_ticket_sales.cell_reference}"
+        "=#{flat_fee_cell.cell_reference} + #{split_cell.cell_reference} * #{@ticket_sales_range.total_ticket_sales.cell_reference}"
       end
     )
 
@@ -247,7 +280,7 @@ class NightManagerTabController < TabController
     is_fully_improvised_cell = @prs_range.cell(2, 1)
     @wb_controller.set_data(
       @prs_to_pay_cell,
-      "=if(#{is_fully_improvised_cell.cell_reference}, 0.0, 0.04 * #{@total_ticket_sales.cell_reference})"
+      "=if(#{is_fully_improvised_cell.cell_reference}, 0.0, 0.04 * #{@ticket_sales_range.total_ticket_sales.cell_reference})"
     )
     requests = [
       set_outside_border_request(@prs_range),
@@ -318,7 +351,7 @@ class NightManagerTabController < TabController
     clear_values_and_formats()
     size_columns()
     build_headings_range()
-    build_takings_range()
+    @ticket_sales_range.initialise_range()
     build_fee_details_range()
     build_prs_range()
     build_notes_range()
@@ -360,34 +393,11 @@ class NightManagerTabController < TabController
     )
   end
 
-  def read_gigs_data()
-    takings_data = get_spreadsheet_values(@takings_range.rows(4..13).columns(2..3)) || []
-    if takings_data.size < 10
-      takings_data += [0, 0] * (10 - takings_data.size)
-    end
-    
-    def number_and_value(data, i_col)
-      NumberSoldAndValue.new(number: data[0][i_col], value: data[1][i_col])
-    end
-    def gig_data(takings_data, i_col)
-      online = takings_data[0..1]
-      walk_ins = takings_data[4..5]
-      guests = takings_data[8..9]
-      NMForm_GigData.new(
-        gig: "Gig #{i_col + 1}",
-        online: number_and_value(online, i_col),
-        walk_ins: number_and_value(walk_ins, i_col),
-        guests_and_cheap: number_and_value(guests, i_col),
-      )
-    end
-    (0..1).collect{ |i_gig| gig_data(takings_data, i_gig) }
-  end
-
   def read_nm_form_data()
     NMForm_Data.new(
       date: @date,
       session_data: read_session_data(),
-      gigs_data: read_gigs_data(),
+      ticket_sales: @ticket_sales_range.read_ticket_sales(),
       expenses_data: @expenses_range.read_expenses()
     )
   end

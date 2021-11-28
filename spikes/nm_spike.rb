@@ -13,8 +13,8 @@ def airtable_spike()
     prs_to_pay: 200,
   )
 
-  gigs_data = [1, 2].collect { |i| 
-    NMForm_GigData.new(
+  ticket_sales = [1, 2].collect { |i| 
+    NMFormTicketSales.new(
       gig: "Gig #{i}",
       online: NumberSoldAndValue.new(number: i * i, value: 8 + i),
       walk_ins: NumberSoldAndValue.new(number: 3 * i, value: 80 - i),
@@ -32,7 +32,7 @@ def airtable_spike()
   form_data = NMForm_Data.new(
       date: event_date,
       session_data: perf_data,
-      gigs_data: gigs_data,
+      ticket_sales: ticket_sales,
       expenses_data: expenses_data
   )
   NMFormController.write_nm_form_data(
