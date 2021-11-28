@@ -38,6 +38,10 @@ class TabController
     @wb_controller.get_spreadsheet_values(range)
   end
 
+  def get_cell_values(cell)
+    @wb_controller.get_cell_value(cell)
+  end
+
   def single_column_range(col)
     SheetRange.new(
       SheetCell.from_row_and_col(0, col),

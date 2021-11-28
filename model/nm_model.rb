@@ -60,6 +60,16 @@ class NMFormTicketSales
     @guests_and_cheap = guests_and_cheap
   end
 
+  def gig_number
+    if @gig == "Gig 1"
+      1
+    elsif @gig == "Gig 2"
+      2
+    else
+      raise "Unexpected gig #{@gig}"
+    end
+  end
+
   def to_s
     terms = [
       @gig,
