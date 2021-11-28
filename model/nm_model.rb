@@ -85,6 +85,7 @@ end
 
 class NMForm_Data
   attr_reader :date, :session_data, :gigs_data, :expenses_data
+
   def initialize(date:, session_data:, gigs_data:, expenses_data:)
     assert_type(date, Date)
     assert_type(session_data, NMForm_SessionData)
@@ -95,6 +96,7 @@ class NMForm_Data
     @gigs_data = gigs_data
     @expenses_data = expenses_data
   end
+
   def to_s
     terms = [
       "Form",

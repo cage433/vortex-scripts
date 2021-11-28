@@ -28,6 +28,27 @@ class NMFormController
     record.save
   end
 
+  def self.read_nm_performance_data(date)
+    include NMForm_SessionColumns
+    records = NMForm_SessionTable.records_for_date(date)
+    if records.empty?
+      nil
+    else
+      raise "Expected a single record for date #{date}" unless records.size == 1
+      record = records[0]
+      NMForm_SessionData.new(
+        mugs: NumberSoldAndValue.new(number: record[MUGS_NUMBER], value: record[MUGS_VALUE]),
+        t_shirts: NumberSoldAndValue.new(number: record[T_SHIRTS_NUMBER], value: record[T_SHIRTS_VALUE]),
+        masks: NumberSoldAndValue.new(number: record[MASKS_NUMBER], value: record[MASKS_VALUE]),
+        bags: NumberSoldAndValue.new(number: record[BAGS_NUMBER], value: record[BAGS_VALUE]),
+        zettle_z_reading: record[ZETTLE_Z_READING],
+        cash_z_reading: record[CASH_Z_READING],
+        notes: record[NOTES],
+        fee_to_pay: record[BAND_FEE],
+        prs_to_pay: record[PRS_FEE]
+      )
+    end
+  end
 
   def self.write_nm_gig_data(date, datas)
     include NMForm_GigColumns
@@ -53,6 +74,19 @@ class NMFormController
 
   end
 
+  def self.read_nm_gig_data(date)
+    include NMForm_GigColumns
+    records = NMForm_GigTable.records_for_date(date)
+    records.collect do |record|
+      NMForm_GigData.new(
+        gig: record[GIG],
+        online: NumberSoldAndValue.new(number: record[ONLINE_NUMBER], value: record[ONLINE_VALUE]),
+        walk_ins: NumberSoldAndValue.new(number: record[WALK_IN_NUMBER], value: record[WALK_IN_VALUE]),
+        guests_and_cheap: NumberSoldAndValue.new(number: record[GUESTS_AND_CHEAP_NUMBER], value: record[GUESTS_AND_CHEAP_VALUE])
+      )
+    end 
+  end
+
   def self.write_nm_expenses_data(date, datas)
     include NMForm_ExpensesColumns
     assert_collection_type(datas, NMForm_ExpensesData)
@@ -66,10 +100,35 @@ class NMFormController
     }
   end
 
+  def self.read_nm_expenses_data(date)
+    include NMForm_ExpensesColumns
+    records = NMForm_ExpensesTable.records_for_date(date)
+    records.collect do |record|
+      NMForm_ExpensesData.new(
+        note: record[NOTE],
+        amount: record[AMOUNT]
+      )
+    end 
+  end
+
   def self.write_nm_form_data(form_data:)
     write_nm_performance_data(form_data.date, form_data.session_data)
     write_nm_gig_data(form_data.date, form_data.gigs_data)
     write_nm_expenses_data(form_data.date, form_data.expenses_data)
+  end
+
+  def self.read_nm_form_data(date:)
+    performance_data = read_nm_performance_data(date)
+    if performance_data.nil?
+      nil
+    else
+      NMForm_Data.new(
+        date: date,
+        session_data: performance_data,
+        gigs_data: read_nm_gig_data(date),
+        expenses_data: read_nm_expenses_data(date)
+      )
+    end
   end
 end
 

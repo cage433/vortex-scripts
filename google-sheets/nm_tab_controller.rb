@@ -5,6 +5,7 @@ class ExpensesRange < TabController
   def initialize(wb_controller, range, tab_name)
     super(wb_controller, tab_name)
     @range = range
+    @expenses_list_range = @range.rows(2..)
   end
 
   def initialise_range()
@@ -26,7 +27,7 @@ class ExpensesRange < TabController
       set_border_request(@range.row(1), style: "SOLID", borders: [:bottom]),
       set_border_request(@range.column(3).rows(1..), style: "SOLID", borders: [:right]),
       merge_columns_request(@range.row(0)),
-      set_background_color_request(@range.rows(2..), @@almond),
+      set_background_color_request(@expenses_list_range, @@almond),
       set_currency_format_request(@range.column(-1).rows(2..)),
     ]
     (1...@range.num_rows).each { |i_row|
@@ -36,7 +37,7 @@ class ExpensesRange < TabController
   end
 
   def read_expenses()
-    expenses_data = get_spreadsheet_values(@range.rows(2..)) || []
+    expenses_data = get_spreadsheet_values(@expenses_list_range) || []
     expenses = []
     expenses_data.each { |data_row|
       note = data_row[0]
@@ -46,6 +47,23 @@ class ExpensesRange < TabController
       end
     }
     expenses
+  end
+
+  def set_data(expenses_data)
+    assert_collection_type(expenses_data, NMForm_ExpensesData)
+    clear_values(@expenses_list_range)
+    notes = expenses_data.collect{ |e| e.note}
+    amounts = expenses_data.collect{ |e| e.amount}
+    if notes.size > 0
+      @wb_controller.set_data(
+        @expenses_list_range.column(0).rows(...(notes.length)),
+        notes
+      )
+      @wb_controller.set_data(
+        @expenses_list_range.column(4).rows(...(amounts.length)),
+        amounts
+      )
+    end
   end
 end
 
@@ -365,13 +383,18 @@ class NightManagerTabController < TabController
     (0..1).collect{ |i_gig| gig_data(takings_data, i_gig) }
   end
 
-  def nm_form_data()
+  def read_nm_form_data()
     NMForm_Data.new(
       date: @date,
       session_data: read_session_data(),
       gigs_data: read_gigs_data(),
       expenses_data: @expenses_range.read_expenses()
     )
+  end
+
+  def set_nm_form_data(form_data:)
+    assert_type(form_data, NMForm_Data)
+    @expenses_range.set_data(form_data.expenses_data)
   end
 
 end

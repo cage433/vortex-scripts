@@ -254,6 +254,19 @@ class TabController
     )
   end
 
+  def clear_values(range)
+    @wb_controller.apply_requests(
+      [
+        {
+          update_cells: {
+            range: range.as_json_range(),
+            fields: "userEnteredValue"
+          }
+        }
+      ]
+    )
+  end
+
   def self.tab_name_for_month(year, month)
     return Date.new(year, month, 1).strftime("%B %y")
   end

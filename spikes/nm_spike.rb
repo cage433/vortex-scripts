@@ -28,8 +28,9 @@ def airtable_spike()
       amount: amt
     )
   end
+  event_date =  DateTime.new(2021, 10, 23)
   form_data = NMForm_Data.new(
-      date: DateTime.new(2021, 10, 23),
+      date: event_date,
       session_data: perf_data,
       gigs_data: gigs_data,
       expenses_data: expenses_data
@@ -37,6 +38,8 @@ def airtable_spike()
   NMFormController.write_nm_form_data(
     form_data: form_data
   )
+
+  form_data2 = NMFormController.read_nm_form_data(date: event_date)
     
 end
 
@@ -53,9 +56,8 @@ def sheet_spike()
   if build_required 
     tab_controller.build_sheet()
   end
-  form_data = tab_controller.nm_form_data()
-  #puts(form_data)
-  #NMFormController.write_nm_form_data(form_data: form_data)
+  airtable_data = NMFormController.read_nm_form_data(date: date)
+  tab_controller.set_nm_form_data(form_data: airtable_data)
 end
 
 #airtable_spike()
