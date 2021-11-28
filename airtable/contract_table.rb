@@ -17,10 +17,6 @@ module EventTableColumns
   VOL_1 = "Vol 1 Name"
   VOL_2 = "Vol 2 Name"
   STATUS = "Status"
-  #FEE_NOTES = "Fee Notes"
-  #FLAT_FEE = "Flat Fee"
-  #MIN_FEE = "Min Fee"
-  #FEE_PERCENTAGE = "Fee %age"
 end
 
 class EventTable < Airrecord::Table

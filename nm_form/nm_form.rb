@@ -508,11 +508,14 @@ class NMForm_Table < Airrecord::Table
   end
   
   def self.records_for_date(date)
-    # Ugly-ass nonsense to handle timezone related issues messing up comparisons
-    first_date_formatted = (date - 1).strftime("%Y-%m-%d")
-    last_date_formatted = (date + 1).strftime("%Y-%m-%d")
-    filter_text = "AND({#{PERFORMANCE_DATE}} > '#{first_date_formatted}',{#{PERFORMANCE_DATE}} < '#{last_date_formatted}')"
-    all(filter: filter_text)
+    select_with_date_filter(
+      fields: nil,
+      table: table_name,
+      date_field: PERFORMANCE_DATE,
+      first_date: date,
+      last_date: date
+    )
+
   end
 
   def self.destroy_records_for_date(date)
