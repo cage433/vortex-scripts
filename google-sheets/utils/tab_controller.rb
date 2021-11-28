@@ -38,7 +38,7 @@ class TabController
     @wb_controller.get_spreadsheet_values(range)
   end
 
-  def get_cell_values(cell)
+  def get_cell_value(cell)
     @wb_controller.get_cell_value(cell)
   end
 

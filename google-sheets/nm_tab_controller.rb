@@ -76,12 +76,9 @@ class TicketSalesRange < TabController
     @row_titles = @range.columns(0..1)
     @total_ticket_sales = @range.cell(-1, -1)
     sales_cols = @range.columns(2..3)
-    @online_tickets = sales_cols.row(4)
-    @online_paid = sales_cols.row(5)
-    @walk_in_tickets = sales_cols.row(8)
-    @walk_in_paid = sales_cols.row(9)
-    @guest_cheap_tickets = sales_cols.row(12)
-    @guest_cheap_paid = sales_cols.row(13)
+    @online_range = sales_cols.rows(4..5)
+    @walk_in_range = sales_cols.rows(8..9)
+    @guest_cheap_range = sales_cols.rows(12..13)
   end
 
   def initialise_range()
@@ -158,18 +155,18 @@ class TicketSalesRange < TabController
   end
 
   def read_ticket_sales()
-    def number_and_value(tickets_row, paid_row, i_col)
+    def number_and_value(tickets_and_paid_range, i_col)
       NumberSoldAndValue.new(
-        number: get_cell_value(tickets_row.cell(i_col)), 
-        value: get_cell_value(paid_row.cell(i_col))
+        number: get_cell_value(tickets_and_paid_range.cell(0, i_col)), 
+        value: get_cell_value(tickets_and_paid_range.cell(1, i_col))
       )
     end
     def ticket_sales_for_gig(i_col)
       NMFormTicketSales.new(
         gig: "Gig #{i_col + 1}",
-        online: number_and_value(@online_tickets, @online_paid, i_col),
-        walk_ins: number_and_value(@walk_in_tickets, @walk_in_paid, i_col),
-        guests_and_cheap: number_and_value(@guest_cheap_tickets, @guest_cheap_paid, i_col),
+        online: number_and_value(@online_range, i_col),
+        walk_ins: number_and_value(@walk_in_range, i_col),
+        guests_and_cheap: number_and_value(@guest_cheap_range, i_col),
       )
     end
     (0..1).collect{ |i_gig| ticket_sales_for_gig(i_gig) }
@@ -177,21 +174,17 @@ class TicketSalesRange < TabController
 
   def write_ticket_sales(ticket_sales)
     assert_collection_type(ticket_sales, NMFormTicketSales)
-    def set_number_and_value(tickets_row, paid_row, i_col, number_and_value)
+    def set_number_and_value(tickets_and_paid_range, i_col, number_and_value)
       @wb_controller.set_data(
-        tickets_row.cell(i_col),
-        number_and_value.number
-      )
-      @wb_controller.set_data(
-        paid_row.cell(i_col),
-        number_and_value.value
+        tickets_and_paid_range.column(i_col),
+        [number_and_value.number, number_and_value.value]
       )
     end
     ticket_sales.each do |ts| 
       i_col = ts.gig_number - 1
-      set_number_and_value(@online_tickets, @online_paid, i_col, ts.online)
-      set_number_and_value(@walk_in_tickets, @walk_in_paid, i_col, ts.walk_ins)
-      set_number_and_value(@guest_cheap_tickets, @guest_cheap_paid, i_col, ts.guests_and_cheap)
+      set_number_and_value(@online_range, i_col, ts.online)
+      set_number_and_value(@walk_in_range, i_col, ts.walk_ins)
+      set_number_and_value(@guest_cheap_range, i_col, ts.guests_and_cheap)
     end
   end
 end
@@ -404,10 +397,6 @@ class NightManagerTabController < TabController
     @expenses_range.initialise_range()
     build_z_readings_range()
     build_merch_range()
-  end
-
-  def get_cell_value(cell)
-    @wb_controller.get_cell_value(cell)
   end
 
   def read_session_data()

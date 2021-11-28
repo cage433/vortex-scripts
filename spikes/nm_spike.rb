@@ -53,11 +53,12 @@ def sheet_spike()
     build_required = true
   end
   tab_controller = NightManagerTabController.new(date, wb_controller)
-  if build_required || true
+  if build_required 
     tab_controller.build_sheet()
   end
   airtable_data = NMFormController.read_nm_form_data(date: date)
   tab_controller.set_nm_form_data(form_data: airtable_data)
+  form_data_again = tab_controller.read_nm_form_data()
 end
 
 #airtable_spike()
