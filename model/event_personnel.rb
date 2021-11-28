@@ -81,6 +81,9 @@ class EventPersonnel
   end
 end
 
+
+# A collection of EventPersonnel - exists to compare airtable and google sheets 
+# view of the world
 class EventsPersonnel
   attr_reader :events_personnel, :airtable_ids
   def initialize(events_personnel:)
@@ -128,4 +131,3 @@ class EventsPersonnel
     end
   end
 end
-
