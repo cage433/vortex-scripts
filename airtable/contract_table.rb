@@ -1,5 +1,5 @@
 require_relative '../env'
-require_relative 'original_contracts_table'
+#require_relative 'original_contracts_table'
 require_relative '../utils/utils'
 require_relative 'vortex_table'
 require 'airrecord'
