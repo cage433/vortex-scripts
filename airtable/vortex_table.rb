@@ -13,7 +13,7 @@ def select_with_date_filter(
     ] 
   filter_text = "And(" + filters.join(", ") + ")"
 
-  if !fields.include?(date_field)
+  if !fields.nil? && !fields.include?(date_field)
     fields = fields.push(date_field)
   end
 

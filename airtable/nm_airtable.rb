@@ -26,7 +26,7 @@ class NMForm_Table < Airrecord::Table
   def self.records_for_date(date)
     select_with_date_filter(
       fields: nil,
-      table: table_name,
+      table: self,
       date_field: PERFORMANCE_DATE,
       first_date: date,
       last_date: date
