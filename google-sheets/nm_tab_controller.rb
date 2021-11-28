@@ -253,6 +253,108 @@ class HeadingsRange < TabController
 
 end
 
+class FeeDetailsRange < TabController
+  def initialize(wb_controller, range, tab_name, ticket_sales_range, fee_details)
+    super(wb_controller, tab_name)
+    @range = range
+    @fee_to_pay_cell = @range.cell(5, 1)
+    @ticket_sales_range = ticket_sales_range
+    @fee_details = fee_details
+  end
+
+  def initialise_range()
+    flat_fee_cell, split_cell, ticket_sales_cell = (2..4).collect{ |i_row| @range.cell(i_row, 1)}
+    @wb_controller.set_data(
+      @range.column(0),
+      [
+        "Band Fee",
+        "",
+        "Flat Fee",
+        "Split",
+        "Ticket Sales",
+        "Fee to pay"
+      ]
+    )
+    @wb_controller.set_data(flat_fee_cell, @fee_details.flat_fee)
+    @wb_controller.set_data(split_cell, @fee_details.percentage_split)
+    @wb_controller.set_data(
+      ticket_sales_cell, 
+      "=#{@ticket_sales_range.total_ticket_sales.cell_reference}"
+    )
+    @wb_controller.set_data(
+      @fee_to_pay_cell, 
+      if @fee_details.vs_fee 
+        "=max(#{flat_fee_cell.cell_reference}, #{split_cell.cell_reference} * #{@ticket_sales_range.total_ticket_sales.cell_reference})"
+      else
+        "=#{flat_fee_cell.cell_reference} + #{split_cell.cell_reference} * #{@ticket_sales_range.total_ticket_sales.cell_reference}"
+      end
+    )
+
+    requests = [
+      set_outside_border_request(@range),
+      set_border_request(@range.row(0), style: "SOLID", borders: [:bottom]),
+      merge_columns_request(@range.row(0)),
+      bold_text_request(@range.column(0)),
+      bold_and_center_request(@range.row(0)),
+      set_currency_format_request(flat_fee_cell),
+      set_percentage_format_request(split_cell),
+      set_currency_format_request(@fee_to_pay_cell),
+    ]
+    @wb_controller.apply_requests(requests)
+  end
+
+  def fee_to_pay_value
+    get_cell_value(@fee_to_pay_cell) || 0.0
+  end
+  
+end
+
+class PRSRange < TabController
+  def initialize(wb_controller, range, tab_name, ticket_sales_range)
+    super(wb_controller, tab_name)
+    @range = range
+    @fully_improvised_cell = @range.cell(2, 1)
+    @prs_to_pay_cell = @range.cell(3, 1)
+    @ticket_sales_range = ticket_sales_range
+  end
+
+  def initialise_range()
+    @wb_controller.set_data(
+      @range.column(0),
+      ["PRS", "", "Fully Improvised", "To Pay"]
+    )
+    @wb_controller.set_data(
+      @prs_to_pay_cell,
+      "=if(#{@fully_improvised_cell.cell_reference}, 0.0, 0.04 * #{@ticket_sales_range.total_ticket_sales.cell_reference})"
+    )
+    requests = [
+      set_outside_border_request(@range),
+      set_border_request(@range.row(0), style: "SOLID", borders: [:bottom]),
+      merge_columns_request(@range.row(0)),
+      bold_text_request(@range.column(0)),
+      bold_and_center_request(@range.row(0)),
+      create_checkbox_request(@fully_improvised_cell),
+      set_currency_format_request(@prs_to_pay_cell),
+      set_background_color_request(@fully_improvised_cell, @@almond),
+    ]
+    @wb_controller.apply_requests(requests)
+  end
+
+  def set_fully_improvised(fully_improvised)
+    @wb_controller.set_data(
+      @fully_improvised_cell, fully_improvised
+    )
+  end
+
+  def fully_improvised()
+    get_cell_value(@fully_improvised_cell)
+  end
+
+  def prs_to_pay_value()
+    get_cell_value(@prs_to_pay_cell)
+  end
+end
+
 class NightManagerTabController < TabController
   def initialize(date, wb_controller)
     super(wb_controller, TabController.tab_name_for_date(date))
@@ -263,11 +365,15 @@ class NightManagerTabController < TabController
     @ticket_sales_range = TicketSalesRange.new(@wb_controller, sheet_range_from_coordinates("B5:F22"), @tab_name)
     @notes_range = NotesRange.new(@wb_controller, sheet_range_from_coordinates("H24:L29"), @tab_name)
 
-    @fee_range = sheet_range_from_coordinates("B24:C29")
-    @fee_to_pay_cell = @fee_range.cell(5, 1)
+    @fee_range = FeeDetailsRange.new(
+      @wb_controller, 
+      sheet_range_from_coordinates("B24:C29"), 
+      @tab_name, 
+      @ticket_sales_range, 
+      ContractTable.fee_details_for_date(@date)
+    )
     @expenses_range = ExpensesRange.new(@wb_controller, sheet_range_from_coordinates("H5:L10"), @tab_name)
-    @prs_range = sheet_range_from_coordinates("H12:I15")
-    @prs_to_pay_cell = @prs_range.cell(3, 1)
+    @prs_range = PRSRange.new(@wb_controller, sheet_range_from_coordinates("H12:I15"), @tab_name, @ticket_sales_range)
     @z_readings_range = sheet_range_from_coordinates("K12:L15")
     @merch_range = sheet_range_from_coordinates("H17:J22")
   end
@@ -275,72 +381,8 @@ class NightManagerTabController < TabController
 
 
 
-  def build_fee_details_range()
-    fee_details = ContractTable.fee_details_for_date(@date)
-    flat_fee_cell, split_cell, ticket_sales_cell = (2..4).collect{ |i_row| @fee_range.cell(i_row, 1)}
-    @wb_controller.set_data(
-      @fee_range.column(0),
-      [
-        "Band Fee",
-        "",
-        "Flat Fee",
-        "Split",
-        "Ticket Sales",
-        "Fee to pay"
-      ]
-    )
-    @wb_controller.set_data(flat_fee_cell, fee_details.flat_fee)
-    @wb_controller.set_data(split_cell, fee_details.percentage_split)
-    @wb_controller.set_data(
-      ticket_sales_cell, 
-      "=#{@ticket_sales_range.total_ticket_sales.cell_reference}"
-    )
-    @wb_controller.set_data(
-      @fee_to_pay_cell, 
-      if fee_details.vs_fee 
-        "=max(#{flat_fee_cell.cell_reference}, #{split_cell.cell_reference} * #{@ticket_sales_range.total_ticket_sales.cell_reference})"
-      else
-        "=#{flat_fee_cell.cell_reference} + #{split_cell.cell_reference} * #{@ticket_sales_range.total_ticket_sales.cell_reference}"
-      end
-    )
-
-    requests = [
-      set_outside_border_request(@fee_range),
-      set_border_request(@fee_range.row(0), style: "SOLID", borders: [:bottom]),
-      merge_columns_request(@fee_range.row(0)),
-      bold_text_request(@fee_range.column(0)),
-      bold_and_center_request(@fee_range.row(0)),
-      set_currency_format_request(flat_fee_cell),
-      set_percentage_format_request(split_cell),
-      set_currency_format_request(@fee_to_pay_cell),
-    ]
-    @wb_controller.apply_requests(requests)
-  end
 
 
-  def build_prs_range()
-    @wb_controller.set_data(
-      @prs_range.column(0),
-      ["PRS", "", "Fully Improvised", "To Pay"]
-    )
-    is_fully_improvised_cell = @prs_range.cell(2, 1)
-    @wb_controller.set_data(
-      @prs_to_pay_cell,
-      "=if(#{is_fully_improvised_cell.cell_reference}, 0.0, 0.04 * #{@ticket_sales_range.total_ticket_sales.cell_reference})"
-    )
-    requests = [
-      set_outside_border_request(@prs_range),
-      set_border_request(@prs_range.row(0), style: "SOLID", borders: [:bottom]),
-      merge_columns_request(@prs_range.row(0)),
-      bold_text_request(@prs_range.column(0)),
-      bold_and_center_request(@prs_range.row(0)),
-      create_checkbox_request(is_fully_improvised_cell),
-      set_currency_format_request(@prs_to_pay_cell),
-      set_background_color_request(is_fully_improvised_cell, @@almond),
-    ]
-    @wb_controller.apply_requests(requests)
-
-  end
 
   def build_z_readings_range()
     @wb_controller.set_data(
@@ -398,8 +440,8 @@ class NightManagerTabController < TabController
     size_columns()
     @heading_range.initialise_range(@date, @title)
     @ticket_sales_range.initialise_range()
-    build_fee_details_range()
-    build_prs_range()
+    @fee_range.initialise_range()
+    @prs_range.initialise_range()
     @notes_range.initialise_range()
     @expenses_range.initialise_range()
     build_z_readings_range()
@@ -418,8 +460,6 @@ class NightManagerTabController < TabController
         )
       end
     end
-    fee_to_pay = get_cell_value(@fee_to_pay_cell) || 0.0
-    prs_to_pay = get_cell_value(@prs_to_pay_cell) || 0.0
     NMForm_SessionData.new(
       mugs: number_and_value(merch_data, 0),
       t_shirts: number_and_value(merch_data, 1),
@@ -428,8 +468,9 @@ class NightManagerTabController < TabController
       zettle_z_reading: get_cell_value(@z_readings_range.cell(3, 1)),
       cash_z_reading: get_cell_value(@z_readings_range.cell(2, 1)),
       notes: @notes_range.read_merged_note(),
-      fee_to_pay: fee_to_pay,
-      prs_to_pay: prs_to_pay
+      fee_to_pay: @fee_range.fee_to_pay_value,
+      fully_improvised: @prs_range.fully_improvised(),
+      prs_to_pay: @prs_range.prs_to_pay_value()
     )
   end
 
@@ -447,6 +488,7 @@ class NightManagerTabController < TabController
     @notes_range.write_merged_note(form_data.session_data.notes)
     @expenses_range.write_expenses(form_data.expenses_data)
     @ticket_sales_range.write_ticket_sales(form_data.ticket_sales)
+    @prs_range.set_fully_improvised(form_data.session_data.fully_improvised)
   end
 
 end

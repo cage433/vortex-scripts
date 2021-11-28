@@ -10,6 +10,7 @@ def airtable_spike()
     cash_z_reading: 121,
     notes: "blah blah blah\nfoo bar",
     fee_to_pay: 100,
+    fully_improvised: true,
     prs_to_pay: 200,
   )
 
@@ -53,7 +54,7 @@ def sheet_spike()
     build_required = true
   end
   tab_controller = NightManagerTabController.new(date, wb_controller)
-  if build_required || true
+  if build_required 
     tab_controller.build_sheet()
   end
   airtable_data = NMFormController.read_nm_form_data(date: date)

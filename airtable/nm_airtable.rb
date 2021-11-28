@@ -56,6 +56,7 @@ module NMForm_SessionColumns
   CASH_Z_READING = "Cash Z Reading"
   NOTES = "Notes"
   BAND_FEE = "Band Fee"
+  FULLY_IMPROVISED = "Fully Improvised"
   PRS_FEE = "PRS Fee"
 end
 

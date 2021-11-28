@@ -23,6 +23,7 @@ class NMFormController
     record[CASH_Z_READING] = data.cash_z_reading
     record[NOTES] = data.notes
     record[BAND_FEE] = data.fee_to_pay
+    record[FULLY_IMPROVISED] = data.fully_improvised
     record[PRS_FEE] = data.prs_to_pay
 
     record.save
@@ -45,6 +46,7 @@ class NMFormController
         cash_z_reading: record[CASH_Z_READING],
         notes: record[NOTES],
         fee_to_pay: record[BAND_FEE],
+        fully_improvised: record[FULLY_IMPROVISED],
         prs_to_pay: record[PRS_FEE]
       )
     end

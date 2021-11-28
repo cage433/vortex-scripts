@@ -14,9 +14,9 @@ class NumberSoldAndValue
 end
 
 class NMForm_SessionData
-  attr_reader :mugs, :t_shirts, :masks, :bags, :zettle_z_reading, :cash_z_reading, :notes, :fee_to_pay, :prs_to_pay
+  attr_reader :mugs, :t_shirts, :masks, :bags, :zettle_z_reading, :cash_z_reading, :notes, :fee_to_pay, :fully_improvised, :prs_to_pay
 
-  def initialize(mugs:, t_shirts:, masks:, bags:, zettle_z_reading:, cash_z_reading:, notes:, fee_to_pay:, prs_to_pay:)
+  def initialize(mugs:, t_shirts:, masks:, bags:, zettle_z_reading:, cash_z_reading:, notes:, fee_to_pay:, fully_improvised:, prs_to_pay:)
     [mugs, t_shirts, masks, bags].each do |merch|
       assert_type(merch, NumberSoldAndValue)
     end
@@ -28,6 +28,7 @@ class NMForm_SessionData
     @cash_z_reading = cash_z_reading.to_f
     @notes = notes
     @fee_to_pay = fee_to_pay.to_f
+    @fully_improvised = fully_improvised
     @prs_to_pay = prs_to_pay.to_f
   end
 
@@ -42,6 +43,7 @@ class NMForm_SessionData
       " Cash: #{@cash_z_reading}",
       " Notes: #{@notes}",
       " Fee To Pay: #{@fee_to_pay}",
+      " Fully Improvised: #{@fully_improvised}",
       " PRS To Pay: #{@prs_to_pay}",
     ].join("\n")
   end
