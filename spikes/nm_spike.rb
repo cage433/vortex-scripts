@@ -50,13 +50,13 @@ def sheet_spike()
     build_required = true
   end
   tab_controller = NightManagerTabController.new(date, wb_controller)
-  if build_required || true
+  if build_required 
     tab_controller.build_sheet()
   end
-  #form_data = tab_controller.nm_form_data()
+  form_data = tab_controller.nm_form_data()
   #puts(form_data)
   #NMFormController.write_nm_form_data(form_data: form_data)
 end
 
-airtable_spike()
+#airtable_spike()
 sheet_spike()

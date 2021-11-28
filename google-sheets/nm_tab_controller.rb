@@ -1,6 +1,54 @@
 require_relative 'utils/tab_controller'
 require_relative 'utils/workbook_controller'
 
+class ExpensesRange < TabController
+  def initialize(wb_controller, range, tab_name)
+    super(wb_controller, tab_name)
+    @range = range
+  end
+
+  def initialise_range()
+    @wb_controller.set_data(
+      @range.cell(0, 0),
+      "Expenses"
+    )
+    @wb_controller.set_data(
+      @range.cell(1, 0),
+      "Note"
+    )
+    @wb_controller.set_data(
+      @range.cell(1, 4),
+      "Amount (£)"
+    )
+    requests = [
+      bold_and_center_request(@range.rows(0..1)),
+      set_outside_border_request(@range),
+      set_border_request(@range.row(1), style: "SOLID", borders: [:bottom]),
+      set_border_request(@range.column(3).rows(1..), style: "SOLID", borders: [:right]),
+      merge_columns_request(@range.row(0)),
+      set_background_color_request(@range.rows(2..), @@almond),
+      set_currency_format_request(@range.column(-1).rows(2..)),
+    ]
+    (1...@range.num_rows).each { |i_row|
+      requests.push(merge_columns_request(@range.row(i_row).columns(0..3)))
+    }
+    @wb_controller.apply_requests(requests)
+  end
+
+  def read_expenses()
+    expenses_data = get_spreadsheet_values(@range.rows(2..)) || []
+    expenses = []
+    expenses_data.each { |data_row|
+      note = data_row[0]
+      amount = data_row[-1]
+      if !note.nil? && note.strip != ""
+        expenses.push(NMForm_ExpensesData.new(note: note, amount: amount))
+      end
+    }
+    expenses
+  end
+end
+
 class NightManagerTabController < TabController
   def initialize(date, wb_controller)
     super(wb_controller, TabController.tab_name_for_date(date))
@@ -19,7 +67,7 @@ class NightManagerTabController < TabController
     @notes_range = sheet_range_from_coordinates("H24:L29")
     @fee_range = sheet_range_from_coordinates("B24:C29")
     @fee_to_pay_cell = @fee_range.cell(5, 1)
-    @expenses_range = sheet_range_from_coordinates("H5:L10")
+    @expenses_range = ExpensesRange.new(@wb_controller, sheet_range_from_coordinates("H5:L10"), @tab_name)
     @prs_range = sheet_range_from_coordinates("H12:I15")
     @prs_to_pay_cell = @prs_range.cell(3, 1)
     @z_readings_range = sheet_range_from_coordinates("K12:L15")
@@ -172,34 +220,6 @@ class NightManagerTabController < TabController
     @wb_controller.apply_requests(requests)
   end
 
-  def build_expenses_range()
-    @wb_controller.set_data(
-      @expenses_range.cell(0, 0),
-      "Expenses"
-    )
-    @wb_controller.set_data(
-      @expenses_range.cell(1, 0),
-      "Note"
-    )
-    @wb_controller.set_data(
-      @expenses_range.cell(1, 4),
-      "Amount (£)"
-    )
-    requests = [
-      bold_and_center_request(@expenses_range.rows(0..1)),
-      set_outside_border_request(@expenses_range),
-      set_border_request(@expenses_range.row(1), style: "SOLID", borders: [:bottom]),
-      set_border_request(@expenses_range.column(3).rows(1..), style: "SOLID", borders: [:right]),
-      merge_columns_request(@expenses_range.row(0)),
-      set_background_color_request(@expenses_range.rows(2..), @@almond),
-      set_currency_format_request(@expenses_range.column(-1).rows(2..)),
-    ]
-    (1...@expenses_range.num_rows).each { |i_row|
-      requests.push(merge_columns_request(@expenses_range.row(i_row).columns(0..3)))
-    }
-    @wb_controller.apply_requests(requests)
-
-  end
 
   def build_prs_range()
     @wb_controller.set_data(
@@ -284,7 +304,7 @@ class NightManagerTabController < TabController
     build_fee_details_range()
     build_prs_range()
     build_notes_range()
-    build_expenses_range()
+    @expenses_range.initialise_range()
     build_z_readings_range()
     build_merch_range()
   end
@@ -293,9 +313,6 @@ class NightManagerTabController < TabController
     @wb_controller.get_cell_value(cell)
   end
 
-  def get_spreadsheet_values(range)
-    @wb_controller.get_spreadsheet_values(range)
-  end
   def read_session_data()
     merch_data = get_spreadsheet_values(@merch_range.rows(2..).columns(1..)) || []
     def number_and_value(merch_data, i_row)
@@ -348,26 +365,13 @@ class NightManagerTabController < TabController
     (0..1).collect{ |i_gig| gig_data(takings_data, i_gig) }
   end
 
-  def read_expenses()
-    expenses_data = get_spreadsheet_values(@expenses_range.rows(2..)) || []
-    expenses = []
-    expenses_data.each { |data_row|
-      note = data_row[0]
-      amount = data_row[-1]
-      puts("Expense #{data_row.join(', ')}, amount #{amount}")
-      if !note.nil? && note.strip != ""
-        expenses.push(NMForm_ExpensesData.new(note: note, amount: amount))
-      end
-    }
-    expenses
-  end
-
   def nm_form_data()
     NMForm_Data.new(
       date: @date,
       session_data: read_session_data(),
       gigs_data: read_gigs_data(),
-      expenses_data: read_expenses()
+      expenses_data: @expenses_range.read_expenses()
     )
   end
+
 end

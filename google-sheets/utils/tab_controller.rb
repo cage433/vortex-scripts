@@ -34,6 +34,10 @@ class TabController
     @sheet_id = @wb_controller.tab_ids_by_name()[tab_name]
   end
 
+  def get_spreadsheet_values(range)
+    @wb_controller.get_spreadsheet_values(range)
+  end
+
   def single_column_range(col)
     SheetRange.new(
       SheetCell.from_row_and_col(0, col),
