@@ -1,4 +1,4 @@
-require_relative 'authorise-sheets'
+require_relative 'authorise_sheets'
 
 def get_sheets_service()
   service = Google::Apis::SheetsV4::SheetsService.new
