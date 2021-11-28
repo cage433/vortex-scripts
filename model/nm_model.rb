@@ -104,3 +104,30 @@ class NMForm_Data
     terms.join("\n")
   end
 end
+
+class FeeDetails
+  attr_reader :flat_fee, :percentage_split, :vs_fee, :error_text
+
+  def initialize(flat_fee:, percentage_split:, vs_fee:, error_text:)
+    assert_type(flat_fee, Numeric)
+    assert_type(percentage_split, Numeric)
+    @flat_fee = flat_fee
+    @percentage_split = percentage_split
+    @vs_fee = vs_fee
+    @error_text = error_text
+  end
+
+  def self.error_details(error_text)
+    FeeDetails.new(flat_fee: 0, percentage_split: 0, vs_fee: false, error_text: error_text)
+  end
+
+  def to_s
+    "Fee(flat: #{@flat_fee}, %age: #{@percentage_split}, VS: #{@vs_fee}, error: #{@error_text || 'None'})"
+  end
+  def has_flat_fee?
+    @flat_fee > 0
+  end
+  def has_percentage?
+    @percentage_split > 0
+  end
+end

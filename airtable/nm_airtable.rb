@@ -1,6 +1,6 @@
 require 'airrecord'
 require 'date'
-require_relative 'contract_table'
+require_relative 'event_table'
 require_relative '../env'
 require_relative '../utils/utils'
 require_relative '../model/nm_model'
@@ -115,3 +115,36 @@ class NMForm_ExpensesTable < NMForm_Table
 
 end
 
+module ContractTableColumns
+  EVENT_TITLE = "Event title"
+  PERFORMANCE_DATE = "Performance date"
+  VS_FEE = "VS fee?"
+  PERCENTAGE_SPLIT_TO_ARTIST = "Percentage split to Artist"
+  FLAT_FEE_TO_ARTIST = "Flat Fee to Artist"
+end
+
+class ContractTable < Airrecord::Table
+  include ContractTableColumns
+  self.base_key = VORTEX_DATABASE_ID
+  self.table_name = "Contracts"
+
+  def self.fee_details_for_date(date)
+    recs = select_with_date_filter(
+      table: ContractTable,
+      fields: [EVENT_TITLE, VS_FEE, PERCENTAGE_SPLIT_TO_ARTIST, FLAT_FEE_TO_ARTIST],
+      date_field: PERFORMANCE_DATE,
+      first_date: date, 
+      last_date: date
+    )
+
+    if recs.size != 1
+      FeeDetails.error_details("Expected a single contract, got #{recs.size} for date #{date}")
+    else
+      rec = recs[0]
+      percentage_split = rec[PERCENTAGE_SPLIT_TO_ARTIST].to_f
+      flat_fee = rec[FLAT_FEE_TO_ARTIST].to_f
+      vs_fee = (rec[VS_FEE] || false)
+      FeeDetails.new(flat_fee: flat_fee, percentage_split: percentage_split, vs_fee: vs_fee, error_text: nil)
+    end
+  end
+end

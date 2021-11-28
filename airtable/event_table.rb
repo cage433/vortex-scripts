@@ -1,0 +1,66 @@
+require_relative '../env'
+require_relative '../utils/utils'
+require_relative 'vortex_table'
+require 'airrecord'
+Airrecord.api_key = AIRTABLE_API_KEY 
+
+module EventTableColumns
+  TABLE = "Events"
+
+  ID = "Record ID"
+  SHEETS_EVENT_TITLE = "SheetsEventTitle"
+  EVENT_DATE = "Event Date"
+  DOORS_TIME = "Doors Time"
+  SOUND_ENGINEER = "Sound Engineer"
+  NIGHT_MANAGER_NAME = "Night Manager Name"
+  VOL_1 = "Vol 1 Name"
+  VOL_2 = "Vol 2 Name"
+  STATUS = "Status"
+end
+
+class EventTable < Airrecord::Table
+
+  include EventTableColumns
+   
+  self.base_key = VORTEX_DATABASE_ID
+  self.table_name = TABLE
+
+  def self._select(fields:, first_date:, last_date:)
+    select_with_date_filter(
+      table: EventTable,
+      fields: fields,
+      date_field: EVENT_DATE,
+      first_date: first_date,
+      last_date: last_date,
+      extra_filters: ["{#{STATUS}} = 'Confirmed'"]
+    )
+  end
+
+  def self.ids_for_month(year, month_no)
+    _select(
+      fields: [ID],
+      first_date: Date.new(year, month_no, 1),
+      last_date: Date.new(year, month_no, -1)
+    ).collect { |rec| rec[ID] }
+  end
+
+
+  def self.event_title_for_date(date)
+    recs = _select(
+      fields: [SHEETS_EVENT_TITLE],
+      first_date: date,
+      last_date: date
+    )
+    titles = recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.uniq
+
+    if titles.size == 1
+      titles[0]
+    else
+      raise "Expected a single title, got #{titles}"
+    end
+  end
+  
+
+end
+
+
