@@ -229,20 +229,40 @@ class NotesRange < TabController
   end
 end
 
+class HeadingsRange < TabController
+  def initialize(wb_controller, range, tab_name)
+    super(wb_controller, tab_name)
+    @range = range
+    @date_cell = @range.cell(0, 1)
+    @title_cell = @range.cell(1, 1)
+  end
+
+  def initialise_range(date, title)
+    @wb_controller.set_data(@range.columns(0..1), [["Date", date], ["Title", title]])
+    requests = [
+      set_date_format_request(@date_cell, "d mmm yy"),
+      right_align_text_request(@title_cell),
+      text_format_request(@range, {bold: true, font_size: 14}),
+      set_outside_border_request(@range),
+      merge_columns_request(@range.row(0).columns(1..4)),
+      merge_columns_request(@range.row(1).columns(1..4)),
+    ]
+
+    @wb_controller.apply_requests(requests)
+  end
+
+end
+
 class NightManagerTabController < TabController
   def initialize(date, wb_controller)
     super(wb_controller, TabController.tab_name_for_date(date))
     @date = date
     @title = EventTable.event_title_for_date(date)
 
-    @heading_range = sheet_range_from_coordinates("B2:F3")
-    @date_cell = @heading_range.cell(0, 1)
-    @title_cell = @heading_range.cell(1, 1)
-
-
+    @heading_range = HeadingsRange.new(@wb_controller, sheet_range_from_coordinates("B2:F3"), @tab_name)
     @ticket_sales_range = TicketSalesRange.new(@wb_controller, sheet_range_from_coordinates("B5:F22"), @tab_name)
-
     @notes_range = NotesRange.new(@wb_controller, sheet_range_from_coordinates("H24:L29"), @tab_name)
+
     @fee_range = sheet_range_from_coordinates("B24:C29")
     @fee_to_pay_cell = @fee_range.cell(5, 1)
     @expenses_range = ExpensesRange.new(@wb_controller, sheet_range_from_coordinates("H5:L10"), @tab_name)
@@ -252,19 +272,6 @@ class NightManagerTabController < TabController
     @merch_range = sheet_range_from_coordinates("H17:J22")
   end
 
-  def build_headings_range()
-    @wb_controller.set_data(@heading_range.columns(0..1), [["Date", @date], ["Title", @title]])
-    requests = [
-      set_date_format_request(@date_cell, "d mmm yy"),
-      right_align_text_request(@title_cell),
-      text_format_request(@heading_range, {bold: true, font_size: 14}),
-      set_outside_border_request(@heading_range),
-      merge_columns_request(@heading_range.row(0).columns(1..4)),
-      merge_columns_request(@heading_range.row(1).columns(1..4)),
-    ]
-
-    @wb_controller.apply_requests(requests)
-  end
 
 
 
@@ -389,7 +396,7 @@ class NightManagerTabController < TabController
   def build_sheet()
     clear_values_and_formats()
     size_columns()
-    build_headings_range()
+    @heading_range.initialise_range(@date, @title)
     @ticket_sales_range.initialise_range()
     build_fee_details_range()
     build_prs_range()
