@@ -29,7 +29,7 @@ def airtable_spike()
       amount: amt
     )
   end
-  event_date =  DateTime.new(2021, 10, 23)
+  event_date =  DateTime.new(2021, 12, 22)
   form_data = NMForm_Data.new(
       date: event_date,
       session_data: perf_data,
@@ -45,7 +45,7 @@ def airtable_spike()
 end
 
 def sheet_spike()
-  date = Date.new(2021, 10, 23)
+  date = Date.new(2021, 12, 28)
   wb_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
   tab_name = TabController.tab_name_for_date(date)
   build_required = false
@@ -58,9 +58,11 @@ def sheet_spike()
     tab_controller.build_sheet()
   end
   airtable_data = NMFormController.read_nm_form_data(date: date)
-  tab_controller.set_nm_form_data(form_data: airtable_data)
+  if ! airtable_data.nil?
+    tab_controller.set_nm_form_data(form_data: airtable_data)
+  end
   form_data_again = tab_controller.read_nm_form_data()
 end
 
-#airtable_spike()
+airtable_spike()
 sheet_spike()

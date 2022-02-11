@@ -78,6 +78,51 @@ class NMForm_SessionTable < NMForm_Table
     end
   end
 
+  def self.write_data(date, data)
+    assert_type(data, NMForm_SessionData)
+    destroy_records_for_date(date)
+
+    record = NMForm_SessionTable.new({})
+    record[PERFORMANCE_DATE] = date
+    record[MUGS_NUMBER] = data.mugs.number
+    record[MUGS_VALUE] = data.mugs.value
+    record[T_SHIRTS_NUMBER] = data.t_shirts.number
+    record[T_SHIRTS_VALUE] = data.t_shirts.value
+    record[MASKS_NUMBER] = data.masks.number
+    record[MASKS_VALUE] = data.masks.value
+    record[BAGS_NUMBER] = data.bags.number
+    record[BAGS_VALUE] = data.bags.value
+    record[ZETTLE_Z_READING] = data.zettle_z_reading
+    record[CASH_Z_READING] = data.cash_z_reading
+    record[NOTES] = data.notes
+    record[BAND_FEE] = data.fee_to_pay
+    record[FULLY_IMPROVISED] = data.fully_improvised
+    record[PRS_FEE] = data.prs_to_pay
+
+    record.save
+  end
+
+  def self.read_data(date)
+    records = records_for_date(date)
+    if records.empty?
+      nil
+    else
+      raise "Expected a single record for date #{date}" unless records.size == 1
+      record = records[0]
+      NMForm_SessionData.new(
+        mugs: NumberSoldAndValue.new(number: record[MUGS_NUMBER], value: record[MUGS_VALUE]),
+        t_shirts: NumberSoldAndValue.new(number: record[T_SHIRTS_NUMBER], value: record[T_SHIRTS_VALUE]),
+        masks: NumberSoldAndValue.new(number: record[MASKS_NUMBER], value: record[MASKS_VALUE]),
+        bags: NumberSoldAndValue.new(number: record[BAGS_NUMBER], value: record[BAGS_VALUE]),
+        zettle_z_reading: record[ZETTLE_Z_READING],
+        cash_z_reading: record[CASH_Z_READING],
+        notes: record[NOTES],
+        fee_to_pay: record[BAND_FEE],
+        fully_improvised: record[FULLY_IMPROVISED],
+        prs_to_pay: record[PRS_FEE]
+      )
+    end
+  end
 end
 
 module NMForm_GigColumns

@@ -7,4 +7,4 @@ def sync_personnel_data(year, month, force = false)
 end
 
 
-sync_personnel_data(2021, 11, force=false)
+sync_personnel_data(2021, 12, force=false)

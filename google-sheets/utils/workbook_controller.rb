@@ -54,7 +54,8 @@ class WorkbookController
       begin
         result = request.yield
         have_succeeded = true
-      rescue 
+      rescue Exception => e
+        puts(e)
         i_try += 1
         if i_try < num_tries
           puts("Will retry writing data")

@@ -4,53 +4,53 @@ require_relative '../google-sheets/nm_tab_controller'
 
 class NMFormController
 
-  def self.write_nm_performance_data(date, data)
-    include NMForm_SessionColumns
-    assert_type(data, NMForm_SessionData)
-    NMForm_SessionTable.destroy_records_for_date(date)
+  #def self.write_nm_session_data(date, data)
+    #include NMForm_SessionColumns
+    #assert_type(data, NMForm_SessionData)
+    #NMForm_SessionTable.destroy_records_for_date(date)
 
-    record = NMForm_SessionTable.new({})
-    record[PERFORMANCE_DATE] = date
-    record[MUGS_NUMBER] = data.mugs.number
-    record[MUGS_VALUE] = data.mugs.value
-    record[T_SHIRTS_NUMBER] = data.t_shirts.number
-    record[T_SHIRTS_VALUE] = data.t_shirts.value
-    record[MASKS_NUMBER] = data.masks.number
-    record[MASKS_VALUE] = data.masks.value
-    record[BAGS_NUMBER] = data.bags.number
-    record[BAGS_VALUE] = data.bags.value
-    record[ZETTLE_Z_READING] = data.zettle_z_reading
-    record[CASH_Z_READING] = data.cash_z_reading
-    record[NOTES] = data.notes
-    record[BAND_FEE] = data.fee_to_pay
-    record[FULLY_IMPROVISED] = data.fully_improvised
-    record[PRS_FEE] = data.prs_to_pay
+    #record = NMForm_SessionTable.new({})
+    #record[PERFORMANCE_DATE] = date
+    #record[MUGS_NUMBER] = data.mugs.number
+    #record[MUGS_VALUE] = data.mugs.value
+    #record[T_SHIRTS_NUMBER] = data.t_shirts.number
+    #record[T_SHIRTS_VALUE] = data.t_shirts.value
+    #record[MASKS_NUMBER] = data.masks.number
+    #record[MASKS_VALUE] = data.masks.value
+    #record[BAGS_NUMBER] = data.bags.number
+    #record[BAGS_VALUE] = data.bags.value
+    #record[ZETTLE_Z_READING] = data.zettle_z_reading
+    #record[CASH_Z_READING] = data.cash_z_reading
+    #record[NOTES] = data.notes
+    #record[BAND_FEE] = data.fee_to_pay
+    #record[FULLY_IMPROVISED] = data.fully_improvised
+    #record[PRS_FEE] = data.prs_to_pay
 
-    record.save
-  end
+    #record.save
+  #end
 
-  def self.read_nm_performance_data(date)
-    include NMForm_SessionColumns
-    records = NMForm_SessionTable.records_for_date(date)
-    if records.empty?
-      nil
-    else
-      raise "Expected a single record for date #{date}" unless records.size == 1
-      record = records[0]
-      NMForm_SessionData.new(
-        mugs: NumberSoldAndValue.new(number: record[MUGS_NUMBER], value: record[MUGS_VALUE]),
-        t_shirts: NumberSoldAndValue.new(number: record[T_SHIRTS_NUMBER], value: record[T_SHIRTS_VALUE]),
-        masks: NumberSoldAndValue.new(number: record[MASKS_NUMBER], value: record[MASKS_VALUE]),
-        bags: NumberSoldAndValue.new(number: record[BAGS_NUMBER], value: record[BAGS_VALUE]),
-        zettle_z_reading: record[ZETTLE_Z_READING],
-        cash_z_reading: record[CASH_Z_READING],
-        notes: record[NOTES],
-        fee_to_pay: record[BAND_FEE],
-        fully_improvised: record[FULLY_IMPROVISED],
-        prs_to_pay: record[PRS_FEE]
-      )
-    end
-  end
+  #def self.read_nm_session_data(date)
+    #include NMForm_SessionColumns
+    #records = NMForm_SessionTable.records_for_date(date)
+    #if records.empty?
+      #nil
+    #else
+      #raise "Expected a single record for date #{date}" unless records.size == 1
+      #record = records[0]
+      #NMForm_SessionData.new(
+        #mugs: NumberSoldAndValue.new(number: record[MUGS_NUMBER], value: record[MUGS_VALUE]),
+        #t_shirts: NumberSoldAndValue.new(number: record[T_SHIRTS_NUMBER], value: record[T_SHIRTS_VALUE]),
+        #masks: NumberSoldAndValue.new(number: record[MASKS_NUMBER], value: record[MASKS_VALUE]),
+        #bags: NumberSoldAndValue.new(number: record[BAGS_NUMBER], value: record[BAGS_VALUE]),
+        #zettle_z_reading: record[ZETTLE_Z_READING],
+        #cash_z_reading: record[CASH_Z_READING],
+        #notes: record[NOTES],
+        #fee_to_pay: record[BAND_FEE],
+        #fully_improvised: record[FULLY_IMPROVISED],
+        #prs_to_pay: record[PRS_FEE]
+      #)
+    #end
+  #end
 
   def self.write_nm_ticket_sales(date, datas)
     include NMForm_GigColumns
@@ -114,19 +114,20 @@ class NMFormController
   end
 
   def self.write_nm_form_data(form_data:)
-    write_nm_performance_data(form_data.date, form_data.session_data)
+    NMForm_SessionTable.write_data(form_data.date, form_data.session_data)
+    #write_nm_session_data(form_data.date, form_data.session_data)
     write_nm_ticket_sales(form_data.date, form_data.ticket_sales)
     write_nm_expenses_data(form_data.date, form_data.expenses_data)
   end
 
   def self.read_nm_form_data(date:)
-    performance_data = read_nm_performance_data(date)
-    if performance_data.nil?
+    session_data = NMForm_SessionTable.read_data(date)
+    if session_data.nil?
       nil
     else
       NMForm_Data.new(
         date: date,
-        session_data: performance_data,
+        session_data: session_data,
         ticket_sales: read_nm_ticket_sales(date),
         expenses_data: read_nm_expenses_data(date)
       )

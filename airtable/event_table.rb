@@ -51,7 +51,7 @@ class EventTable < Airrecord::Table
       first_date: date,
       last_date: date
     )
-    titles = recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.uniq
+    titles = recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.flatten.uniq
 
     if titles.size == 1
       titles[0]
