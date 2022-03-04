@@ -9,11 +9,12 @@ module VolunteerRotaColumns
   EVENT_ID_COL, DATE_COL, TITLE_COL, DOORS_OPEN_COL, 
     DISPLAY_TITLE_COL, DISPLAY_DATE_COL, DAY_COL, 
     DISPLAY_DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
-    VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL = [*0..12]
+    VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL, 
+    MEMBER_BOOKINGS_COL, NM_NOTES_COL = [*0..14]
 end
 
 class VolunteerMonthTabController < TabController
-  HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer"]
+  HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer", "Members Bookings", "NM Notes"]
   include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
@@ -36,14 +37,22 @@ class VolunteerMonthTabController < TabController
     @wb_controller.apply_requests([
       set_background_color_request(header_range, @@light_green),
       set_outside_border_request(header_range),
-      set_column_width_request(DISPLAY_TITLE_COL, 300)
+      set_column_width_request(DISPLAY_TITLE_COL, 300),
+      set_column_width_request(MEMBER_BOOKINGS_COL, 200),
+      set_column_width_request(NM_NOTES_COL, 200),
     ])
   end
 
-  def format_columns()
+  def format_columns(num_events)
+    nm_range = @sheet_range.column(NIGHT_MANAGER_COL).sub_range(relative_row_range: 0..num_events)
+    vols_range = @sheet_range.sub_range(relative_row_range: 0..num_events, relative_col_range: VOL_1_COL..VOL_2_COL)
+    sound_engineer_range = @sheet_range.column(SOUND_ENGINEER_COL).sub_range(relative_row_range: 0..num_events)
     requests = [
       set_date_format_request(single_column_range(DISPLAY_DATE_COL), "mmm d"),
       set_date_format_request(single_column_range(DAY_COL), "ddd"),
+      set_outside_border_request(nm_range),
+      set_outside_border_request(sound_engineer_range),
+      set_outside_border_request(vols_range),
     ]
 
     requests.append(hide_column_request(EVENT_ID_COL, DOORS_OPEN_COL + 1))
@@ -71,7 +80,9 @@ class VolunteerMonthTabController < TabController
         personnel.night_manager,
         personnel.vol1,
         personnel.vol2,
-        personnel.sound_engineer
+        personnel.sound_engineer,
+        personnel.member_bookings,
+        personnel.nm_notes
       ]
     }
   end
@@ -119,7 +130,9 @@ class VolunteerMonthTabController < TabController
             vol1: row[VOL_1_COL],
             vol2: row[VOL_2_COL],
             night_manager: row[NIGHT_MANAGER_COL],
-            sound_engineer: row[SOUND_ENGINEER_COL]
+            sound_engineer: row[SOUND_ENGINEER_COL],
+            member_bookings: row[MEMBER_BOOKINGS_COL],
+            nm_notes: row[NM_NOTES_COL]
           )
       }
       EventsPersonnel.new(events_personnel: events_personnel)
@@ -129,7 +142,7 @@ class VolunteerMonthTabController < TabController
   def replace_events(month_events)
       clear_values_and_formats()
       write_header()
-      format_columns()
+      format_columns(month_events.size)
       write_events(month_events)
   end
 

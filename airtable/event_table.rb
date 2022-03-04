@@ -16,6 +16,8 @@ module EventTableColumns
   VOL_1 = "Vol 1 Name"
   VOL_2 = "Vol 2 Name"
   STATUS = "Status"
+  MEMBER_BOOKINGS = "Member Bookings"
+  NM_NOTES = "NM Notes"
 end
 
 class EventTable < Airrecord::Table

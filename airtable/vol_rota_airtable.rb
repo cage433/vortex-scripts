@@ -85,7 +85,9 @@ class VolunteerAirtableController
         vol1: rec[VOL_1],
         vol2: rec[VOL_2],
         night_manager: rec[NIGHT_MANAGER_NAME],
-        sound_engineer: sound_engineer
+        sound_engineer: sound_engineer,
+        member_bookings: rec[MEMBER_BOOKINGS],
+        nm_notes: rec[NM_NOTES]
       )
     }
     EventsPersonnel.new(events_personnel: events_personnel)

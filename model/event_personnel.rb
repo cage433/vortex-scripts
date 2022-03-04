@@ -1,9 +1,15 @@
 require_relative '../utils/utils'
 
 class EventPersonnel 
-  attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :night_manager, :sound_engineer
+  attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :night_manager, :sound_engineer, :member_bookings, :nm_notes
 
-  def initialize(airtable_id:, title:, date:, doors_open:, vol1:, vol2:, night_manager:, sound_engineer:)
+  def initialize(
+    airtable_id:, 
+    title:, date:, 
+    doors_open:, 
+    vol1:, vol2:, night_manager:, sound_engineer:, 
+    member_bookings:, nm_notes:
+  )
     assert_type(doors_open, Time, allow_null: true)
     @airtable_id = airtable_id
     @title = title
@@ -13,11 +19,9 @@ class EventPersonnel
     @vol2 = vol2
     @night_manager = night_manager
     @sound_engineer = sound_engineer
+    @member_bookings = member_bookings
+    @nm_notes = nm_notes
   end
-
-  #def state
-    #[@airtable_id, @title, @date, @doors_open, @vol1, @vol2, @night_manager, @sound_engineer]
-  #end
 
   def to_s_table(indent)
     [
@@ -28,6 +32,8 @@ class EventPersonnel
       "Vol2:            #{@vol2}",
       "NM:              #{@night_manager}",
       "SE:              #{@sound_engineer}",
+      "Mem Books:       #{@member_bookings}",
+      "NM Notes:        #{@nm_notes}",
     ].collect { |t| "#{indent}#{t}" }
   end
 
@@ -69,7 +75,9 @@ class EventPersonnel
       vol1:           @vol1,
       vol2:           @vo2,
       night_manager:  @night_manager,
-      sound_engineer: rhs.sound_engineer
+      sound_engineer: rhs.sound_engineer,
+      member_bookings: rhs.member_bookings,
+      nm_notes:       rhs.nm_notes
     )
   end
 

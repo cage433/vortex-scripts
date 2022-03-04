@@ -1,7 +1,6 @@
-require_relative 'google-sheets/workbook_controller.rb'
-require_relative 'google-sheets/volunteer_tab_controller.rb'
+require_relative 'google-sheets/vol_rota_tab_controller'
 require_relative 'env'
-require_relative 'airtable/volunteer_controller'
+require_relative 'airtable/vol_rota_airtable'
 require 'date'
 
 class Controller
@@ -63,5 +62,5 @@ def sync_personnel_data(year, month, force = false)
 end
 
 
-sync_personnel_data(2021, 11, force=false)
+sync_personnel_data(2022, 4, force=true)
 
