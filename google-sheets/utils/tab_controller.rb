@@ -144,6 +144,23 @@ class TabController
     }
   end
 
+  def set_row_height_request(i_first_row, i_last_row, height)
+    {
+      update_dimension_properties: {
+        range: {
+          sheet_id: @sheet_id,
+          dimension: "ROWS",
+          start_index: i_first_row,
+          end_index: i_last_row + 1
+        },
+        properties: {
+          pixel_size: height
+        },
+        fields: "pixel_size"
+      }
+    }
+  end
+
   def hide_column_request(i_col, i_end_col = nil)
     {
       update_dimension_properties: {
@@ -176,6 +193,15 @@ class TabController
 
   def horizontal_alignment_request(range, align)
     user_entered_format_request(range, {horizontal_alignment: "#{align}"})
+  end
+
+  def bold_request(range)
+    user_entered_format_request(
+      range,
+      {
+        text_format: {bold: true}
+      }
+    )
   end
 
   def bold_and_center_request(range)

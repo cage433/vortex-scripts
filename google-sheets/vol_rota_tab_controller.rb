@@ -14,7 +14,7 @@ module VolunteerRotaColumns
 end
 
 class VolunteerMonthTabController < TabController
-  HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound Engineer", "Members Bookings", "NM Notes"]
+  HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound", "Members Bookings", "NM Notes"]
   include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
@@ -37,22 +37,27 @@ class VolunteerMonthTabController < TabController
     @wb_controller.apply_requests([
       set_background_color_request(header_range, @@light_green),
       set_outside_border_request(header_range),
-      set_column_width_request(DISPLAY_TITLE_COL, 300),
-      set_column_width_request(MEMBER_BOOKINGS_COL, 200),
-      set_column_width_request(NM_NOTES_COL, 200),
+      set_column_width_request(DISPLAY_TITLE_COL, 200),
+      set_column_width_request(DISPLAY_DATE_COL, 50),
+      set_column_width_request(DAY_COL, 50),
+      set_column_width_request(MEMBER_BOOKINGS_COL, 300),
+      set_column_width_request(NM_NOTES_COL, 300),
     ])
   end
 
   def format_columns(num_events)
-    nm_range = @sheet_range.column(NIGHT_MANAGER_COL).sub_range(relative_row_range: 0..num_events)
-    vols_range = @sheet_range.sub_range(relative_row_range: 0..num_events, relative_col_range: VOL_1_COL..VOL_2_COL)
-    sound_engineer_range = @sheet_range.column(SOUND_ENGINEER_COL).sub_range(relative_row_range: 0..num_events)
+    events_range = @sheet_range.sub_range(relative_row_range: 0..num_events)
     requests = [
       set_date_format_request(single_column_range(DISPLAY_DATE_COL), "mmm d"),
       set_date_format_request(single_column_range(DAY_COL), "ddd"),
-      set_outside_border_request(nm_range),
-      set_outside_border_request(sound_engineer_range),
-      set_outside_border_request(vols_range),
+      set_outside_border_request(events_range.column(NIGHT_MANAGER_COL)),
+      set_outside_border_request(events_range.column(SOUND_ENGINEER_COL)),
+      set_outside_border_request(events_range.sub_range(relative_col_range: VOL_1_COL..VOL_2_COL)),
+      set_row_height_request(0, num_events, 30),
+      bold_and_center_request(@sheet_range.row(0)),
+      set_border_request(events_range.column(VOL_1_COL), style: "SOLID", color: @@black, borders: [:right]),
+      set_border_request(events_range.column(MEMBER_BOOKINGS_COL), style: "SOLID", color: @@black, borders: [:right]),
+      bold_text_request(events_range.sub_range(relative_col_range: DISPLAY_TITLE_COL..DISPLAY_DOORS_OPEN_COL)),
     ]
 
     requests.append(hide_column_request(EVENT_ID_COL, DOORS_OPEN_COL + 1))

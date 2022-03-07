@@ -20,16 +20,14 @@ class VolRotaController
     airtable_events_personnel = VolunteerAirtableController.read_events_personnel(year, month)
     sheet_events_personnel = tab_controller.read_events_personnel()
     events_personnel = EventsPersonnel.new(
-      events_personnel: sheet_events_personnel.events_personnel.collect { |ep|
-        if airtable_events_personnel.include?(ep.airtable_id)
-          ap = airtable_events_personnel[ep.airtable_id]
-          if ep.metadata_match(ap)
-            ep
-          else
-            ep.with_metadata_from(ap)
-          end
-        else
+      events_personnel: sheet_events_personnel.events_personnel.select { |ep|
+        airtable_events_personnel.include?(ep.airtable_id)
+      }.collect { |ep|
+        ap = airtable_events_personnel[ep.airtable_id]
+        if ep.metadata_match(ap)
           ep
+        else
+          ep.with_metadata_from(ap)
         end
       }
     )

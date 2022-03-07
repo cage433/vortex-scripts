@@ -47,19 +47,14 @@ class EventTable < Airrecord::Table
   end
 
 
-  def self.event_title_for_date(date)
+  def self.event_titles_for_date(date)
+    # Could be more than 1, e.g. late night Saturday gigs
     recs = _select(
       fields: [SHEETS_EVENT_TITLE],
       first_date: date,
       last_date: date
     )
-    titles = recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.flatten.uniq
-
-    if titles.size == 1
-      titles[0]
-    else
-      raise "Expected a single title, got #{titles}"
-    end
+    recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.flatten.uniq
   end
   
 

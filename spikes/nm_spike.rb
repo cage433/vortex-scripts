@@ -44,11 +44,18 @@ def airtable_spike()
     
 end
 
-def sheet_spike()
-  date = Date.new(2021, 12, 28)
+def sync_sheets_for_date(date, force=false)
   wb_controller = WorkbookController.new(NIGHT_MANAGER_SPREADSHEET_ID)
+  titles = EventTable.event_titles_for_date(date)
+  sheet_data = NMFormController.read_nm_form_data(date: date)
+  puts("titles = #{titles}")
+  puts("Sheet data")
+  puts(sheet_data.class)
+  puts("returning")
+  return 0
+  
   tab_name = TabController.tab_name_for_date(date)
-  build_required = false
+  build_required = force
   if !wb_controller.has_tab_with_name?(tab_name)
     wb_controller.add_tab(tab_name)
     build_required = true
@@ -63,6 +70,4 @@ def sheet_spike()
   end
   form_data_again = tab_controller.read_nm_form_data()
 end
-
-airtable_spike()
-sheet_spike()
+sync_sheets_for_date(Date.new(2022, 3, 5), force=true)
