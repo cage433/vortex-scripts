@@ -195,14 +195,6 @@ class TabController
     user_entered_format_request(range, {horizontal_alignment: "#{align}"})
   end
 
-  def bold_request(range)
-    user_entered_format_request(
-      range,
-      {
-        text_format: {bold: true}
-      }
-    )
-  end
 
   def bold_and_center_request(range)
     user_entered_format_request(

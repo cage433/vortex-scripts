@@ -10,5 +10,5 @@ def sync_personnel_data(year, month, force = false)
 end
 
 
-VOL_ROTA_LOGGER.info("syncing data for #{VOL_ROTA_YEAR}/#{VOL_ROTA_MONTH}")
+VOL_ROTA_LOGGER.info("syncing data for #{VOL_ROTA_YEAR}/#{VOL_ROTA_MONTH}\n")
 sync_personnel_data(VOL_ROTA_YEAR, VOL_ROTA_MONTH, force=false)

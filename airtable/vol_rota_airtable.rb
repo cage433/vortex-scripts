@@ -2,6 +2,7 @@ require 'airrecord'
 require_relative 'vortex_table'
 require_relative 'event_table'
 require_relative '../env'
+require_relative '../logging'
 require_relative '../utils/utils'
 require_relative '../model/event_personnel'
 
@@ -98,7 +99,7 @@ class VolunteerAirtableController
   def self.update_events_personnel(events_personnel)
     assert_type(events_personnel, EventsPersonnel)
     events_personnel.events_personnel.each do |ep| 
-      puts("Updating record for #{ep.date}, #{ep.title}, #{ep.airtable_id}")
+      VOL_ROTA_LOGGER.info("Updating record for #{ep.date}, #{ep.title}, #{ep.airtable_id}")
       airtable_record = EventTable.find(ep.airtable_id)
 
       airtable_record[NIGHT_MANAGER_NAME] = ep.night_manager
