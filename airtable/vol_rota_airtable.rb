@@ -105,6 +105,8 @@ class VolunteerAirtableController
       airtable_record[NIGHT_MANAGER_NAME] = ep.night_manager
       airtable_record[VOL_1] = ep.vol1
       airtable_record[VOL_2] = ep.vol2
+      airtable_record[MEMBER_BOOKINGS] = ep.member_bookings
+      airtable_record[NM_NOTES] = ep.nm_notes
       airtable_record.save()
     end
   end

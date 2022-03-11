@@ -59,7 +59,7 @@ class EventPersonnel
   end
 
   def personnel_state
-    [@vol1, @vol2, @night_manager, @sound_engineer]
+    [@vol1, @vol2, @night_manager, @nm_notes, @member_bookings]
   end
 
   def metadata_state
@@ -73,7 +73,7 @@ class EventPersonnel
       date:           rhs.date, 
       doors_open:     rhs.doors_open,
       vol1:           @vol1,
-      vol2:           @vo2,
+      vol2:           @vol2,
       night_manager:  @night_manager,
       sound_engineer: rhs.sound_engineer,
       member_bookings: rhs.member_bookings,
