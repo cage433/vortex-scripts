@@ -124,7 +124,7 @@ class VolunteerMonthTabController < TabController
     if rows.nil?
       EventsPersonnel.new(events_personnel: [])
     else
-      events_personnel = rows.collect {|row|
+      events_personnel = rows.filter{|row| !row[EVENT_ID_COL].nil? and row[EVENT_ID_COL].strip != ""}.collect {|row|
           row += [""] * (HEADER.size - row.size) if row.size < HEADER.size
           doors_open = if is_nil_or_blank?(row[DOORS_OPEN_COL]) then nil else Time.parse(row[DOORS_OPEN_COL]) end
           EventPersonnel.new(
