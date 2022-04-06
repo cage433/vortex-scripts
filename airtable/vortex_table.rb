@@ -17,7 +17,7 @@ def select_with_date_filter(
     fields = fields.push(date_field)
   end
 
-  table.all(
+  all(
     fields: fields,
     filter: filter_text,
     view: view_name
