@@ -29,6 +29,21 @@ class ContactsTable < Airrecord::Table
 
 end
 
+
+class Contacts
+  include ContactsTableMeta
+  def initialize()
+    recs = ContactsTable.all(
+      fields:[ID, FULL_NAME]
+    )
+    @names_by_id = Hash[ *recs.collect { |rec| [rec[ID], rec[FULL_NAME]]}.flatten ]
+  end
+
+  def [](id)
+    @names_by_id[id]
+  end
+end
+
 class SoundEngineers
   include ContactsTableMeta
   def initialize()
@@ -70,12 +85,12 @@ class VolunteerAirtableController
   def self.read_events_personnel(year, month)
     event_ids = EventTable.ids_for_month(year, month)
     event_records = EventTable.find_many(event_ids)
-    sound_engineers = SoundEngineers.new()
+    contacts = Contacts.new()
     events_personnel = event_records.collect { |rec|
       sound_engineer = if is_nil_or_blank?(rec[SOUND_ENGINEER]) then
                          nil
                        else
-                         sound_engineers[rec[SOUND_ENGINEER][0]]
+                         contacts[rec[SOUND_ENGINEER][0]]
                        end
 
       EventPersonnel.new(
