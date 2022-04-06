@@ -1,7 +1,7 @@
 require 'csv'
 require_relative '../airtable/contracts'
 
-downloads_dir = "/Users/alex/Downloads"
+downloads_dir = "/home/alex/Downloads"
 id_re = /\((\d+)\)/
 csv_paths = Dir.glob("#{downloads_dir}/Contracts*.csv").select { |path| path.include?("(") }
 
@@ -22,6 +22,9 @@ original_csv = CSV.read("#{downloads_dir}/Original-report.csv")
 raise "Mismatch in file lengths, latest #{latest_csv.size} vs #{original_csv.size}" \
   unless latest_csv.size == original_csv.size
 cols_to_ignore = [0]
+
+raise "line mismatch" unless latest_csv.size == original_csv.size
+puts "Num lines = #{latest_csv.size}"
 latest_csv.zip(original_csv).each_with_index { |l_and_r, i|
   l, r = l_and_r
   raise "length mismatch for line #{i}, #{l.size} vs #{r.size}" unless l.size == r.size
