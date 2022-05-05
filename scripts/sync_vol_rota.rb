@@ -10,5 +10,8 @@ def sync_personnel_data(year, month, force = false)
 end
 
 
-VOL_ROTA_LOGGER.info("syncing data for #{VOL_ROTA_YEAR}/#{VOL_ROTA_MONTH}\n")
-sync_personnel_data(VOL_ROTA_YEAR, VOL_ROTA_MONTH, force=false)
+[[2022, 5], [2022, 6]].each { |y, m|
+  VOL_ROTA_LOGGER.info("syncing data for #{y}/#{m}\n")
+  sync_personnel_data(y, m, force=false)
+
+}
