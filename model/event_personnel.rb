@@ -38,7 +38,7 @@ class EventPersonnel
   end
 
   def to_s()
-    to_s_table("")
+    to_s_table("").join("\n")
   end
 
   def personnel_match(rhs)

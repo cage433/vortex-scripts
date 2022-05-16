@@ -99,17 +99,29 @@ class VolunteerMonthTabController < TabController
     i_row = 1
     personnel_by_date = events_personnel.events_personnel.group_by{ |ep| ep.date }
     dates = personnel_by_date.keys.sort
-    dates.each_with_index do |d, i_date|
-      personnel_for_date = personnel_by_date[d]
-      next_rows = rows_for_date(personnel_for_date)
+    personnel_by_session = []
+    # Can have multiple events in a day, so break them into sessions, by using the title
+    # then order them by their first door opening time (which can be nil)
+    dates.each {|date|
+      personnel_for_date = personnel_by_date[date]
+      personnel_by_title = personnel_for_date.group_by{ |ep| ep.title }
+      titles = personnel_by_title.keys
+      sorted_titles = titles.sort_by{ |title| personnel_by_title[title][0].doors_open.to_s}
+      sorted_titles.each { |title|
+        personnel_by_session.append(personnel_by_title[title])
+      }
+    }
+    personnel_by_session.each_with_index { |personnel_for_session, i_session|
+      next_rows = rows_for_date(personnel_for_session)
       range_for_date = @sheet_range.rows(i_row...i_row + next_rows.size)
       requests.append(set_outside_border_request(range_for_date))
-      if i_date % 2 == 0
+      if i_session % 2 == 0
         requests.append(set_background_color_request(range_for_date, @@light_yellow))
       end
       data += next_rows
       i_row += next_rows.size
-    end
+
+    }
 
     @wb_controller.set_data(@sheet_range.rows(1...i_row), data)
 
