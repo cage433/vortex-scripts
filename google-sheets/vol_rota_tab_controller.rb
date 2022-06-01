@@ -50,13 +50,14 @@ class VolunteerMonthTabController < TabController
     requests = [
       set_date_format_request(single_column_range(DISPLAY_DATE_COL), "mmm d"),
       set_date_format_request(single_column_range(DAY_COL), "ddd"),
-      set_outside_border_request(events_range.column(NIGHT_MANAGER_COL)),
-      set_outside_border_request(events_range.column(SOUND_ENGINEER_COL)),
-      set_outside_border_request(events_range.sub_range(relative_col_range: VOL_1_COL..VOL_2_COL)),
+      set_outside_border_request(events_range, style: "SOLID_THICK"),
+      set_border_request(events_range.column(TITLE_COL), style: "SOLID_THICK", borders: [:left]),
+      set_border_request(events_range.column(NIGHT_MANAGER_COL), style: "SOLID_THICK", borders: [:right, :left]),
+      set_border_request(events_range.column(SOUND_ENGINEER_COL), style: "SOLID_THICK", borders: [:right, :left]),
       set_row_height_request(0, num_events, 30),
       bold_and_center_request(@sheet_range.row(0)),
-      set_border_request(events_range.column(VOL_1_COL), style: "SOLID", color: @@black, borders: [:right]),
-      set_border_request(events_range.column(MEMBER_BOOKINGS_COL), style: "SOLID", color: @@black, borders: [:right]),
+      set_border_request(events_range.column(VOL_1_COL), style: "DOTTED", borders: [:right]),
+      set_border_request(events_range.column(MEMBER_BOOKINGS_COL), style: "DOTTED", color: @@black, borders: [:right]),
       bold_text_request(events_range.sub_range(relative_col_range: DISPLAY_TITLE_COL..DISPLAY_DOORS_OPEN_COL)),
     ]
 
