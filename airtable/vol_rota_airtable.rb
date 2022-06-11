@@ -82,6 +82,9 @@ class VolunteerAirtableController
     title
   end
 
+  # @param [int] year
+  # @param [int] month
+  # @return [void]
   def self.read_events_personnel(year, month)
     event_ids = EventTable.ids_for_month(year, month)
     event_records = EventTable.find_many(event_ids)
