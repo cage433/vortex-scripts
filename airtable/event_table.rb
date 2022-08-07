@@ -28,6 +28,8 @@ module EventTableColumns
   MEMBER_PRICE = "Ca ticket price (if different)"
   STUDENT_PRICE = "E - Student ticket price"
   STUDENT_TICKETS_SOLD = "E - Student tickets sold"
+  CASH_TICKET_VALUE = "D Cash or Live Stream tickets"
+  ZETTLE_READING = "N Credit card Takings - Polling report total"
 end
 
 class EventTable < Airrecord::Table
@@ -95,6 +97,14 @@ class EventTable < Airrecord::Table
 
   def student_ticket_value
     student_tickets_sold * student_ticket_price
+  end
+
+  def cash_ticket_value
+    fields[CASH_TICKET_VALUE] || 0
+  end
+
+  def zettle_reading
+    fields[ZETTLE_READING] || 0
   end
 end
 

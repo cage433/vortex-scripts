@@ -14,8 +14,18 @@ weeks = [VortexWeek::WEEK_40_JUN_22, VortexWeek::WEEK_41_JUN_22]
 weeks.each do |w|
   mce = MultipleContractsAndEvents.read_many(date_range: w)
   puts
-  puts("#{w} #{mce.total_ticket_count}, #{mce.total_ticket_value}")
+  puts(w)
+  puts("Tickets:          #{mce.total_ticket_count}")
+  puts("Value:            #{mce.total_ticket_value}")
+  puts("Bar (ex VAT):     #{mce.total_bar_takings_ex_vat}")
+  puts("Student value:    #{mce.total_student_ticket_value}")
+  puts("Zettle:           #{mce.total_zettle_reading}")
+
+
   mce.contracts_and_events.each do |ce|
-    puts("#{ce.event_name} #{ce.total_ticket_value}")
+    puts("        #{ce.event_name}")
+    puts("            Total Ticket Value #{ce.total_ticket_value}")
+    puts("            Bar Takings        #{ce.bar_takings}")
+    puts("            Zettle             #{ce.zettle_reading}")
   end
 end

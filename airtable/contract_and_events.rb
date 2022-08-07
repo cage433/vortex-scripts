@@ -60,8 +60,23 @@ class ContractAndEvents
     @events.collect{|e| e.student_ticket_value}.sum
 
   end
+
+  def cash_ticket_value
+    @events.collect{|e| e.cash_ticket_value}.sum
+  end
+
   def total_ticket_value
-    standard_ticket_value + member_ticket_value + student_ticket_value
+    standard_ticket_value + member_ticket_value + student_ticket_value + cash_ticket_value
+  end
+
+  def zettle_reading
+    @events.collect{|e| e.zettle_reading}.sum
+  end
+
+
+  def bar_takings
+    # Note the incorrect subtraction of student_ticket_value - for now mirroring the daily takings data spreadsheet
+    zettle_reading - cash_ticket_value - student_ticket_value - member_ticket_value
   end
 
 end
@@ -77,6 +92,18 @@ class MultipleContractsAndEvents
 
   def total_ticket_value
     @contracts_and_events.collect { |ce| ce.total_ticket_value }.sum
+  end
+
+  def total_student_ticket_value
+    @contracts_and_events.collect { |ce| ce.student_ticket_value }.sum
+  end
+
+  def total_bar_takings_ex_vat
+    @contracts_and_events.collect { |ce| ce.bar_takings }.sum / 1.2
+  end
+
+  def total_zettle_reading
+    @contracts_and_events.collect { |ce| ce.zettle_reading }.sum / 1.2
   end
   def self.read_many(date_range:)
 
