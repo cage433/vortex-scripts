@@ -44,20 +44,6 @@ class Contacts
   end
 end
 
-class SoundEngineers
-  include ContactsTableMeta
-  def initialize()
-    recs = ContactsTable.all(
-      fields:[ID, FULL_NAME],
-      filter: "{#{ROLE}} = 'Sound Engineer'"
-    )
-    @engineers_by_id = Hash[ *recs.collect { |rec| [rec[ID], rec[FULL_NAME]]}.flatten ]
-  end
-
-  def [](id)
-    @engineers_by_id[id]
-  end
-end
 
 class VolunteerAirtableController
   include EventTableColumns
@@ -97,7 +83,7 @@ class VolunteerAirtableController
                        end
 
       EventPersonnel.new(
-        airtable_id: rec[ID], 
+        airtable_id: rec[EVENT_ID],
         title: self._event_title(rec),
         date: Date.parse(rec[EVENT_DATE]),
         doors_open: self.door_time(rec),

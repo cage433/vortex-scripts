@@ -7,7 +7,7 @@ Airrecord.api_key = AIRTABLE_API_KEY
 module EventTableColumns
   TABLE = "Events"
 
-  ID = "Record ID"
+  EVENT_ID = "Record ID"
   SHEETS_EVENT_TITLE = "SheetsEventTitle"
   EVENT_DATE = "Event Date"
   DOORS_TIME = "Doors Time"
@@ -18,6 +18,12 @@ module EventTableColumns
   STATUS = "Status"
   MEMBER_BOOKINGS = "Member Bookings"
   NM_NOTES = "NM Notes"
+  BA_TICKETS = "Ba Tickets sold - card advance"
+  B_TICKETS = "B Tickets sold - Advance Online & credit card"
+  C_TICKETS = "C Tickets sold - card door"
+  D_TICKETS = "D Tickets sold - cash"
+  E_TICKETS = "E - Student tickets sold"
+  PROMO_TICKETS = "Promo tickets (free)"
 end
 
 class EventTable < Airrecord::Table
@@ -40,10 +46,10 @@ class EventTable < Airrecord::Table
 
   def self.ids_for_month(year, month_no)
     _select(
-      fields: [ID],
+      fields: [EVENT_ID],
       first_date: Date.new(year, month_no, 1),
       last_date: Date.new(year, month_no, -1)
-    ).collect { |rec| rec[ID] }
+    ).collect { |rec| rec[EVENT_ID] }
   end
 
 

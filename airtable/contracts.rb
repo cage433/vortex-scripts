@@ -9,7 +9,9 @@ module ContractsColumns
   TABLE = "Contracts"
 
   CODE = "Code"
+  RECORD_ID = "Record ID"
   EVENT_TITLE = "Event title"
+  EVENTS_LINK = "Events Link"
   ORGANISERS = "Organisers"
   TYPE = "Type"
   STATUS = "Status"
@@ -25,6 +27,8 @@ module ContractsColumns
   COS_REQUIRED = "COS required"
   TOTAL_TICKET_SALES_CALC = "Total Ticket Sales £ calc"
   PERFORMANCE_DATE = "Performance date"
+  BA_TICKETS = "Ba tickets"
+
   B_ONLINE = "B - Online"
   C_CARD = "C - Card"
   D_CASH = "D - Cash"
@@ -46,7 +50,7 @@ end
 class Contracts < Airrecord::Table
 
   include ContractsColumns
-   
+
   self.base_key = VORTEX_DATABASE_ID
   self.table_name = TABLE
 
@@ -60,11 +64,12 @@ class Contracts < Airrecord::Table
     )
   end
 
-  def self.titles_for_month(year, month_no)
+  def self.ids_for_date_range(date_range:)
     _select(
-      fields: [PERFORMANCE_DATE, EVENT_TITLE],
-      first_date: Date.new(year, month_no, 1),
-      last_date: Date.new(year, month_no, -1)
-    ).collect { |rec| [rec[PERFORMANCE_DATE], rec[EVENT_TITLE]] }
+      fields: [RECORD_ID],
+      first_date: date_range.first_date,
+      last_date: date_range.last_date
+    ).collect { |rec| rec[RECORD_ID] }
   end
+
 end
