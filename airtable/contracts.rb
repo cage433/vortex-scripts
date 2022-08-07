@@ -45,6 +45,8 @@ module ContractsColumns
   PAID = "Paid?"
   NIGHT_MANAGER = "Night Manager"
   GRANTS = "Grants"
+
+  STANDARD_TICKET_PRICE = "Ticket price"
 end
 
 class Contracts < Airrecord::Table

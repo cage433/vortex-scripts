@@ -5,3 +5,4 @@ tags
 *scratch.rb
 logs
 .idea
+*.lock

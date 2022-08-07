@@ -42,6 +42,28 @@ class ContractAndEvents
     @contract[EVENT_TITLE]
   end
 
+  def standard_ticket_price
+    @contract[STANDARD_TICKET_PRICE] || 0
+  end
+
+  def standard_ticket_value
+    @events.collect{|e|
+      e[STANDARD_TICKET_VALUE_HISTORIC] || (e.b_tickets_sold * standard_ticket_price)
+    }.sum
+  end
+
+  def member_ticket_value
+    @events.collect{|e| e.member_ticket_value(standard_ticket_price)}.sum
+  end
+
+  def student_ticket_value
+    @events.collect{|e| e.student_ticket_value}.sum
+
+  end
+  def total_ticket_value
+    standard_ticket_value + member_ticket_value + student_ticket_value
+  end
+
 end
 
 class MultipleContractsAndEvents
@@ -53,6 +75,9 @@ class MultipleContractsAndEvents
     @contracts_and_events.collect { |ce| ce.total_ticket_count }.sum
   end
 
+  def total_ticket_value
+    @contracts_and_events.collect { |ce| ce.total_ticket_value }.sum
+  end
   def self.read_many(date_range:)
 
     contract_ids = Contracts.ids_for_date_range(date_range: date_range)

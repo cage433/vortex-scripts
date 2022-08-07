@@ -24,6 +24,10 @@ module EventTableColumns
   D_TICKETS = "D Tickets sold - cash"
   E_TICKETS = "E - Student tickets sold"
   PROMO_TICKETS = "Promo tickets (free)"
+  STANDARD_TICKET_VALUE_HISTORIC = "B Advance Online&credit card tickets (historic)"
+  MEMBER_PRICE = "Ca ticket price (if different)"
+  STUDENT_PRICE = "E - Student ticket price"
+  STUDENT_TICKETS_SOLD = "E - Student tickets sold"
 end
 
 class EventTable < Airrecord::Table
@@ -62,8 +66,36 @@ class EventTable < Airrecord::Table
     )
     recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.flatten.uniq
   end
-  
 
+  def b_tickets_sold
+    fields[B_TICKETS] || 0
+  end
+
+  def member_tickets_sold
+    fields[C_TICKETS] || 0
+  end
+
+  def member_ticket_price_or_nil
+    fields[MEMBER_PRICE]
+  end
+
+  def member_ticket_value(standard_ticket_price)
+    member_ticket_price = fields[MEMBER_PRICE] || standard_ticket_price
+    member_tickets_sold * member_ticket_price
+  end
+
+  def student_tickets_sold
+    fields[STUDENT_TICKETS_SOLD] || 0
+
+  end
+
+  def student_ticket_price
+    fields[STUDENT_PRICE] || 0
+  end
+
+  def student_ticket_value
+    student_tickets_sold * student_ticket_price
+  end
 end
 
 

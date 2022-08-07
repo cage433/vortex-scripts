@@ -60,11 +60,3 @@ class DateRange < AbstractDateRange
     @last_date = last_date
   end
 end
-
-vw = VortexWeek.new(
-  month: Month.new(year_no: 2020, month_no: 2),
-  week_number: 40,
-  first_date: Date.new(2020, 5, 30),
-  last_date: Date.new(2020, 3, 5))
-
-puts(vw.month)
