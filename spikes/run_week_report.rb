@@ -20,6 +20,7 @@ weeks.each do |w|
   puts("Bar (ex VAT):     #{mce.total_bar_takings_ex_vat}")
   puts("Student value:    #{mce.total_student_ticket_value}")
   puts("Zettle:           #{mce.total_zettle_reading}")
+  puts("Musician Fees:    #{mce.total_musician_fees}")
 
 
   mce.contracts_and_events.each do |ce|

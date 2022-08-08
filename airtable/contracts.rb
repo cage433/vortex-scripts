@@ -47,6 +47,7 @@ module ContractsColumns
   GRANTS = "Grants"
 
   STANDARD_TICKET_PRICE = "Ticket price"
+  IS_VS_FEE = "VS fee?"
 end
 
 class Contracts < Airrecord::Table
@@ -72,6 +73,18 @@ class Contracts < Airrecord::Table
       first_date: date_range.first_date,
       last_date: date_range.last_date
     ).collect { |rec| rec[RECORD_ID] }
+  end
+
+  def is_vs_fee?
+    fields[IS_VS_FEE] || false
+  end
+
+  def flat_fee_to_artist
+    fields[FLAT_FEE_TO_ARTIST] || 0
+  end
+
+  def percentage_split_to_artist
+    fields[PERCENTAGE_SPLIT_TO_ARTIST] || 0
   end
 
 end

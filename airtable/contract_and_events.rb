@@ -79,6 +79,14 @@ class ContractAndEvents
     zettle_reading - cash_ticket_value - student_ticket_value - member_ticket_value
   end
 
+  def live_payable
+    if @contract.is_vs_fee?
+      max(@contract.flat_fee_to_artist, @contract.percentage_split_to_artist * total_ticket_value)
+    else
+      @contract.flat_fee_to_artist + @contract.percentage_split_to_artist * total_ticket_value
+    end
+  end
+
 end
 
 class MultipleContractsAndEvents
@@ -104,6 +112,9 @@ class MultipleContractsAndEvents
 
   def total_zettle_reading
     @contracts_and_events.collect { |ce| ce.zettle_reading }.sum / 1.2
+  end
+  def total_musician_fees
+    @contracts_and_events.collect { |ce| ce.live_payable }.sum
   end
   def self.read_many(date_range:)
 
