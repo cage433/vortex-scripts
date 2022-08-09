@@ -41,7 +41,7 @@ module ContractsColumns
   TRANSPORT = "Transport"
   TRANSPORT_COST = "Transport Cost"
   AUDIENCE_FOOD_COST = "Audience Food Cost "
-  PRS = "PRS?"
+  PRS_PAYABLE = "PRS?"
   PAID = "Paid?"
   NIGHT_MANAGER = "Night Manager"
   GRANTS = "Grants"
@@ -56,6 +56,9 @@ class Contracts < Airrecord::Table
 
   self.base_key = VORTEX_DATABASE_ID
   self.table_name = TABLE
+
+  STREAMING_PRS_FEE = 22
+  PRS_RATE = 0.04
 
   def self._select(fields:, first_date:, last_date:)
     select_with_date_filter(
@@ -85,6 +88,23 @@ class Contracts < Airrecord::Table
 
   def percentage_split_to_artist
     fields[PERCENTAGE_SPLIT_TO_ARTIST] || 0
+  end
+
+  def gig_type
+    fields[TYPE]
+  end
+
+  def is_streaming?
+    gig_type == "Live Stream"
+  end
+
+  def is_prs_payable?
+    is_payable = fields[PRS_PAYABLE]
+    if is_payable.nil?
+      true
+    else
+      is_payable
+    end
   end
 
 end

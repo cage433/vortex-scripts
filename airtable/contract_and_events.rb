@@ -87,10 +87,24 @@ class ContractAndEvents
     end
   end
 
+  def prs_fee
+    if @contract.is_prs_payable?
+      if @contract.is_streaming?
+        Contracts::STREAMING_PRS_FEE
+      else
+        total_ticket_value * Contracts::PRS_RATE
+      end
+    else
+      0
+    end
+  end
 end
 
 class MultipleContractsAndEvents
   attr_reader :contracts_and_events
+
+  VAT_RATE = 1.2
+
   def initialize(contracts_and_events:)
     @contracts_and_events = contracts_and_events
   end
@@ -107,15 +121,20 @@ class MultipleContractsAndEvents
   end
 
   def total_bar_takings_ex_vat
-    @contracts_and_events.collect { |ce| ce.bar_takings }.sum / 1.2
+    @contracts_and_events.collect { |ce| ce.bar_takings }.sum / VAT_RATE
   end
 
   def total_zettle_reading
-    @contracts_and_events.collect { |ce| ce.zettle_reading }.sum / 1.2
+    @contracts_and_events.collect { |ce| ce.zettle_reading }.sum / VAT_RATE
   end
   def total_musician_fees
     @contracts_and_events.collect { |ce| ce.live_payable }.sum
   end
+
+  def total_prs_fee_ex_vat
+    @contracts_and_events.collect { |ce| ce.prs_fee }.sum / VAT_RATE
+  end
+
   def self.read_many(date_range:)
 
     contract_ids = Contracts.ids_for_date_range(date_range: date_range)

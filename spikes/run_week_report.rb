@@ -20,13 +20,15 @@ weeks.each do |w|
   puts("Bar (ex VAT):     #{mce.total_bar_takings_ex_vat}")
   puts("Student value:    #{mce.total_student_ticket_value}")
   puts("Zettle:           #{mce.total_zettle_reading}")
-  puts("Musician Fees:    #{mce.total_musician_fees}")
+  puts("Musician Fees:    #{mce.total_zettle_reading}")
+  puts("PRS Fee:          #{mce.total_prs_fee_ex_vat}")
 
 
-  mce.contracts_and_events.each do |ce|
-    puts("        #{ce.event_name}")
-    puts("            Total Ticket Value #{ce.total_ticket_value}")
-    puts("            Bar Takings        #{ce.bar_takings}")
-    puts("            Zettle             #{ce.zettle_reading}")
-  end
+  # mce.contracts_and_events.each do |ce|
+  #   puts("        #{ce.event_name}")
+  #   puts("            Total Ticket Value #{ce.total_ticket_value}")
+  #   puts("            Bar Takings        #{ce.bar_takings}")
+  #   puts("            Zettle             #{ce.zettle_reading}")
+  #   puts("            PRS                #{ce.prs_fee}")
+  # end
 end
