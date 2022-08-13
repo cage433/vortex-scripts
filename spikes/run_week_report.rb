@@ -11,6 +11,7 @@ include EventTableColumns
 
 
 weeks = [VortexWeek::WEEK_40_JUN_22, VortexWeek::WEEK_41_JUN_22]
+weeks = [Week.new(2021, 40), Week.new(2021, 41)]
 weeks.each do |w|
   mce = MultipleContractsAndEvents.read_many(date_range: w)
   puts

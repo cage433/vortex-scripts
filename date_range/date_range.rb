@@ -1,4 +1,6 @@
 require 'date'
+require 'csv'
+require_relative '../utils/utils'
 class AbstractDateRange
   def to_s
     "#{self.class} #{first_date} - #{last_date}"
@@ -6,11 +8,22 @@ class AbstractDateRange
 end
 
 class Month < AbstractDateRange
+  include Comparable
   attr_reader :year_no, :month_no
 
-  def initialize(year_no:, month_no:)
+  def initialize(year_no, month_no)
     @year_no = year_no
     @month_no = month_no
+    raise "Invalid month #{year_no}/#{month_no}" if @month_no < 1 || @month_no > 12
+    raise "Invalid month #{year_no}/#{month_no}" if @year_no < 2010 || @year_no > 2030
+  end
+
+  def self.containing(date)
+    Month.new(date.year, date.month)
+  end
+
+  def to_s
+    "#{@year_no}/#{@month_no}"
   end
 
   def first_date
@@ -32,34 +45,75 @@ class Month < AbstractDateRange
       y -= 1
       m += 12
     end
-    Month.new(year_no: y, month_no: m)
+    Month.new(y, m)
   end
 
   def -(dec)
     self + (-dec)
   end
 
-  def ==(other)
-    other.is_a?(Month) && other.year_no == @year_no && other.month_no == @month_no
+  def <=>(other)
+    assert_type(other, Month)
+    [@year_no, @month_no] <=> [other.year_no, other.month_no]
+  end
+
+  alias :eql? :==
+
+  def tab_name
+    return Date.new(@year_no, @month_no, 1).strftime("%B %y")
+  end
+
+  def first_week
+    if MONTHS_TO_FIRST_WEEK.include?(self )
+      MONTHS_TO_FIRST_WEEK[self]
+    else
+      d = first_date
+      while d.cwday != 5 do
+        d += 1
+      end
+      Week.containing(d)
+    end
+  end
+
+  def weeks
+    result = []
+    w = first_week
+
+    foo = last_week
+    while w <= last_week do
+      result << w
+      w += 1
+    end
+    result
+  end
+
+  def last_week
+    (self + 1).first_week - 1
+  end
+
+  def hash
+    17 * @year_no + @month_no
   end
 end
 
 class Week < AbstractDateRange
+  include Comparable
   attr_reader :year_no, :week_number
   def to_s
     "#{self.class}, #{@year_no} #{@week_number}: #{first_date} - #{last_date}"
   end
 
-  def initialize(year_no:, week_number:)
+  def initialize(year_no, week_number)
     @year_no = year_no
     @week_number = week_number
-    raise "Invalid week #{week_number} for year #{year_no}" unless \
-      week_number >= 1 && week_number <= Week.last_week_number_of_year(year_no: year_no)
+    # raise "Invalid week #{week_number} for year #{year_no}" unless \
+    #   week_number >= 1 && week_number <= Week.last_week_number_of_year(year_no: year_no)
   end
 
   def first_date
     Week.start_of_first_week(year_no: @year_no) + (@week_number - 1) * 7
   end
+
   def last_date
     first_date + 6
   end
@@ -97,21 +151,21 @@ class Week < AbstractDateRange
     monday = d - d.cwday + 1
     week_number = ((monday - Week.start_of_first_week(year_no: y)) / 7).to_i + 1
 
-    Week.new(year_no: y, week_number: week_number)
+    Week.new(y, week_number)
   end
 
   def next
     if @week_number < Week.last_week_number_of_year(year_no: @year_no)
-      Week.new(year_no: @year_no, week_number: @week_number + 1)
+      Week.new(@year_no, @week_number + 1)
     else
-      Week.new(year_no: @year_no + 1, week_number: 1)
+      Week.new(@year_no + 1, 1)
     end
   end
   def previous
     if @week_number > 1
-      Week.new(year_no: @year_no, week_number: @week_number - 1)
+      Week.new(@year_no, @week_number - 1)
     else
-      Week.new(year_no: @year_no - 1, week_number: Week.last_week_number_of_year(year_no: @year_no - 1))
+      Week.new(@year_no - 1, Week.last_week_number_of_year(year_no: @year_no - 1))
     end
   end
 
@@ -133,150 +187,55 @@ class Week < AbstractDateRange
     self + (-dec)
   end
 
-  def ==(other)
-    other.is_a?(Week) && other.year_no == @year_no && other.week_number == @week_number
-  end
-end
+  # def ==(other)
+  #   other.is_a?(Week) && other.year_no == @year_no && other.week_number == @week_number
+  # end
 
-class WeekReport
-  attr_reader :week, :audience_number, :advance_ticket_sales, :card_ticket_sales, :cash_ticket_sales
-  def initialize(week:, audience_number:, advance_ticket_sales:, card_ticket_sales:, cash_ticket_sales:)
-    @week = week
-    @audience_number = audience_number
-    @advance_ticket_sales = advance_ticket_sales
-    @card_ticket_sales = card_ticket_sales
-    @cash_ticket_sales = cash_ticket_sales
-  end
-end
-
-class DateRange < AbstractDateRange
-  attr_reader :first_date, :last_date
-  def initialize(first_date:, last_date:)
-    @first_date = first_date
-    @last_date = last_date
-  end
-end
-
-class DateRangeIterator
-  attr_reader :first_date, :last_date
-  def initialize(first_date:, last_date:)
-    @first_date = first_date
-    @last_date = last_date
+  def <=>(other)
+    assert_type(other, Week)
+    [@year_no, @week_number] <=> [other.year_no, other.week_number]
   end
 
-  def each(&block)
-    while @first_date <= @last_date do
-      block.call(@first_date)
-      @first_date += 1
-    end
-  end
-end
+  # def <(other)
+  #   assert_type(other, Week)
+  #   (self <=> other) < 0
+  # end
 
-class DateRangeEnumerator
-  attr_reader :first_date, :last_date
-  def initialize(first_date:, last_date:)
-    @first_date = first_date
-    @last_date = last_date
-  end
+  def self.read_weeks_data
+    path = file = File.join(
+      File.dirname(__FILE__), '..', 'data', 'VortexWeeks.csv'
+    )
+    data = CSV.readlines(path).drop(1)
+    month_to_first_week = {}
+    data.each { |row|
 
-  def each(&block)
-    while @first_date <= @last_date do
-      block.call(@first_date)
-      @first_date += 1
-    end
-  end
-end
+      if row[0].nil? || row[0].strip == ""
+        next
+      end
+      month = Month.containing(Date.parse("1-#{row[2]}"))
+      year_no = row[3].to_i
+      week_no = row[1].to_i
+      if !month_to_first_week.include?(month)
+        month_to_first_week[month] = Week.new(year_no, week_no)
+      end
 
-class DateRangeEnumerator2
-  attr_reader :first_date, :last_date
-  def initialize(first_date:, last_date:)
-    @first_date = first_date
-  end
-end
-
-class WeekReport
-  attr_reader :week, :audience_number, :advance_ticket_sales, :card_ticket_sales, :cash_ticket_sales
-  def initialize(week:, audience_number:, advance_ticket_sales:, card_ticket_sales:, cash_ticket_sales:)
-    @week = week
-    @audience_number = audience_number
-    @advance_ticket_sales = advance_ticket_sales
-    @card_ticket_sales = card_ticket_sales
-    @cash_ticket_sales = cash_ticket_sales
-  end
-end
-
-class WeekReportController
-  def initialize(year_no:, month_no:)
-    @year_no = year_no
-    @month_no = month_no
-  end
-
-  def week_reports
-    weeks.map { |week|
-      WeekReport.new(
-        week: week,
-        audience_number: audience_number(week),
-        advance_ticket_sales: advance_ticket_sales(week),
-        card_ticket_sales: card_ticket_sales(week),
-        cash_ticket_sales: cash_ticket_sales(week)
-      )
     }
-  end
 
-  def weeks
-    first_week = Week.new(year_no: @year_no, week_number: 1)
-    last_week = Week.last_week_of_year(year_no: @year_no)
-    (first_week..last_week).step(7)
-  end
-
-  def audience_number(week)
-    week.first_date.cwday == 1 ? 0 : 1
-  end
-
-  def advance_ticket_sales(week)
-    week.first_date.cwday == 1 ? 0 : 1
-  end
-
-  def card_ticket_sales(week)
-    week.first_date.cwday == 1 ? 0 : 1
+    month_to_first_week
   end
 
 end
-class VortexWeek < AbstractDateRange
-  attr_reader :month, :week_number, :first_day, :last_day
 
-  def initialize(month:, week_number:, first_date:, last_date:)
-    @month = month
-    @week_number = week_number
-    @first_date = first_date
-    @last_date = last_date
-  end
-
-  def first_date
-    @first_date
-  end
-
-  def last_date
-    @last_date
-  end
-
-  WEEK_40_JUN_22 = VortexWeek.new(
-    month: Month.new(year_no: 2022, month_no: 6),
-    week_number: 40,
-    first_date: Date.new(2022, 5, 30),
-    last_date: Date.new(2022, 6, 5)
-  )
-  WEEK_41_JUN_22 = VortexWeek.new(
-    month: Month.new(year_no: 2022, month_no: 6),
-    week_number: 41,
-    first_date: Date.new(2022, 6, 6),
-    last_date: Date.new(2022, 6, 12)
-  )
-end
+MONTHS_TO_FIRST_WEEK = Week.read_weeks_data
 
 class DateRange < AbstractDateRange
+  attr_reader :first_date, :last_date
   def initialize(first_date:, last_date:)
     @first_date = first_date
     @last_date = last_date
   end
 end
+
+puts(
+  MONTHS_TO_FIRST_WEEK
+)

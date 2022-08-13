@@ -1,3 +1,4 @@
+require_relative '../../utils/utils'
 class SheetCell
   attr_reader :coordinates, :i_row, :i_col
   def initialize(coordinates, i_row, i_col)

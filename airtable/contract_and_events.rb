@@ -48,7 +48,7 @@ class ContractAndEvents
 
   def standard_ticket_value
     @events.collect{|e|
-      e[STANDARD_TICKET_VALUE_HISTORIC] || (e.b_tickets_sod * standard_ticket_price)
+      e[STANDARD_TICKET_VALUE_HISTORIC] || (e.b_tickets_sold * standard_ticket_price)
     }.sum
   end
 
