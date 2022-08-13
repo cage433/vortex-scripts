@@ -193,4 +193,9 @@ class ContractTable < Airrecord::Table
       FeeDetails.new(flat_fee: flat_fee, percentage_split: percentage_split, vs_fee: vs_fee, error_text: nil)
     end
   end
+
+  def performance_date
+    Date.parse(fields[PERFORMANCE_DATE])
+  end
+
 end

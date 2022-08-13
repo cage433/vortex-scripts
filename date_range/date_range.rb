@@ -5,6 +5,10 @@ class AbstractDateRange
   def to_s
     "#{self.class} #{first_date} - #{last_date}"
   end
+  def contains?(date)
+    assert_type(date, Date)
+    date >= first_date && date <= last_date
+  end
 end
 
 class Month < AbstractDateRange
@@ -79,7 +83,6 @@ class Month < AbstractDateRange
     result = []
     w = first_week
 
-    foo = last_week
     while w <= last_week do
       result << w
       w += 1
@@ -94,32 +97,34 @@ class Month < AbstractDateRange
   def hash
     17 * @year_no + @month_no
   end
+
+  def vortex_week_range
+    DateRange.new(first_week.first_date, last_week.last_date)
+  end
 end
 
 class Week < AbstractDateRange
   include Comparable
-  attr_reader :year_no, :week_number
+  attr_reader :accounting_year, :week_number
   def to_s
-    "#{self.class}, #{@year_no} #{@week_number}: #{first_date} - #{last_date}"
+    "#{self.class}, #{@accounting_year} #{@week_number}: #{first_date} - #{last_date}"
   end
 
-  def initialize(year_no, week_number)
-    @year_no = year_no
+  def initialize(accounting_year, week_number)
+    @accounting_year = accounting_year
     @week_number = week_number
-    # raise "Invalid week #{week_number} for year #{year_no}" unless \
-    #   week_number >= 1 && week_number <= Week.last_week_number_of_year(year_no: year_no)
   end
 
   def first_date
-    Week.start_of_first_week(year_no: @year_no) + (@week_number - 1) * 7
+    Week.start_of_first_week(accounting_year: @accounting_year) + (@week_number - 1) * 7
   end
 
   def last_date
     first_date + 6
   end
 
-  def self.start_of_first_week(year_no:)
-    d = Date.new(year_no, 9, 1)
+  def self.start_of_first_week(accounting_year:)
+    d = Date.new(accounting_year - 1, 9, 1)
     while d.cwday > 5 do
       d += 1
     end
@@ -133,39 +138,35 @@ class Week < AbstractDateRange
     first_date + 4
   end
 
-  def self.last_week_number_of_year(year_no:)
-    d0 = self.start_of_first_week(year_no: year_no)
-    d = Date.new(year_no + 1, 8, -1)
-    while d.cwday != 5 do
-      d -= 1
-    end
-    d -= 4
-    (d - d0) / 7 + 1
+  def self.last_week_number_of_year(accounting_year:)
+    d0 = self.start_of_first_week(accounting_year: accounting_year)
+    d1 = self .start_of_first_week(accounting_year: accounting_year + 1)
+    (d1 - d0) / 7 + 1
   end
 
   def self.containing(d)
     y = d.year
-    if Week.start_of_first_week(year_no: y) > d
+    if Week.start_of_first_week(accounting_year: y) > d
       y -= 1
     end
     monday = d - d.cwday + 1
-    week_number = ((monday - Week.start_of_first_week(year_no: y)) / 7).to_i + 1
+    week_number = ((monday - Week.start_of_first_week(accounting_year: y)) / 7).to_i + 1
 
     Week.new(y, week_number)
   end
 
   def next
-    if @week_number < Week.last_week_number_of_year(year_no: @year_no)
-      Week.new(@year_no, @week_number + 1)
+    if @week_number < Week.last_week_number_of_year(accounting_year: @accounting_year)
+      Week.new(@accounting_year, @week_number + 1)
     else
-      Week.new(@year_no + 1, 1)
+      Week.new(@accounting_year + 1, 1)
     end
   end
   def previous
     if @week_number > 1
-      Week.new(@year_no, @week_number - 1)
+      Week.new(@accounting_year, @week_number - 1)
     else
-      Week.new(@year_no - 1, Week.last_week_number_of_year(year_no: @year_no - 1))
+      Week.new(@accounting_year - 1, Week.last_week_number_of_year(accounting_year: @accounting_year - 1))
     end
   end
 
@@ -187,36 +188,17 @@ class Week < AbstractDateRange
     self + (-dec)
   end
 
-  # def ==(other)
-  #   other.is_a?(Week) && other.year_no == @year_no && other.week_number == @week_number
-  # end
-
   def <=>(other)
     assert_type(other, Week)
-    [@year_no, @week_number] <=> [other.year_no, other.week_number]
+    [@accounting_year, @week_number] <=> [other.accounting_year, other.week_number]
   end
 
-  # def <(other)
-  #   assert_type(other, Week)
-  #   (self <=> other) < 0
-  # end
-
   def self.read_weeks_data
-    path = file = File.join(
-      File.dirname(__FILE__), '..', 'data', 'VortexWeeks.csv'
-    )
-    data = CSV.readlines(path).drop(1)
     month_to_first_week = {}
-    data.each { |row|
+    self.parsed_csv_data.each { |_, week, month|
 
-      if row[0].nil? || row[0].strip == ""
-        next
-      end
-      month = Month.containing(Date.parse("1-#{row[2]}"))
-      year_no = row[3].to_i
-      week_no = row[1].to_i
       if !month_to_first_week.include?(month)
-        month_to_first_week[month] = Week.new(year_no, week_no)
+        month_to_first_week[month] = week
       end
 
     }
@@ -224,18 +206,47 @@ class Week < AbstractDateRange
     month_to_first_week
   end
 
+  def self.read_first_week_data
+    date_of_first_week = {}
+    self.parsed_csv_data.each { |date, week, _|
+      if week.week_number == 1 and !date_of_first_week.include?(week)
+        date_of_first_week[week] = date
+      end
+    }
+    date_of_first_week
+
+  end
+
+  def self.parsed_csv_data
+    path = File.join(
+      File.dirname(__FILE__), '..', 'data', 'VortexWeeks.csv'
+    )
+    data = CSV.readlines(path).drop(1)
+    parsed_data = []
+    data.each { |row|
+
+      if row[0].nil? || row[0].strip == ""
+        next
+      end
+      week = Week.new(row[3].to_i, row[1].to_i)
+      month = Month.containing(Date.parse("1-#{row[2]}"))
+      date = Date.parse(row[0])
+      parsed_data << [date, week, month]
+    }
+    parsed_data
+
+  end
+
 end
 
 MONTHS_TO_FIRST_WEEK = Week.read_weeks_data
+# START_OF_FIRST_WEEK = Week.read_first_week_data
 
 class DateRange < AbstractDateRange
   attr_reader :first_date, :last_date
-  def initialize(first_date:, last_date:)
+  def initialize(first_date, last_date)
     @first_date = first_date
     @last_date = last_date
   end
 end
 
-puts(
-  MONTHS_TO_FIRST_WEEK
-)

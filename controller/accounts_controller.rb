@@ -1,6 +1,7 @@
 require_relative '../google-sheets/accounts_tab_controller'
 require_relative '../env.rb'
 require_relative '../date_range/date_range.rb'
+require_relative '../airtable/contract_and_events'
 
 class AccountsController
   def initialize()
@@ -10,8 +11,8 @@ class AccountsController
   def month_tab_controller(month)
     tab_name = month.tab_name
     @controller.add_tab(tab_name) if !@controller.has_tab_with_name?(tab_name)
-    ac = AccountsTabController.new(month, @controller)
-    ac.draw
+    ac = AccountsTabController.new(month, @controller, MultipleContractsAndEvents.read_many(date_range: month.vortex_week_range))
+    ac.draw()
   end
 end
 

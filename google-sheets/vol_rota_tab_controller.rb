@@ -19,7 +19,7 @@ class VolunteerMonthTabController < TabController
 
   def initialize(year_no, month_no, wb_controller)
     super(wb_controller, TabController.tab_name_for_month(year_no, month_no))
-    @year_no = year_no
+    @accounting_year = year_no
     @month_no = month_no
     @width = HEADER.size
     @sheet_range = SheetRange.new(

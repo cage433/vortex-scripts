@@ -161,6 +161,36 @@ class TabController
     }
   end
 
+  def group_rows_request(i_first_row, i_last_row)
+    {
+      add_dimension_group: {
+        range: {
+          sheet_id: @sheet_id,
+          dimension: "ROWS",
+          start_index: i_first_row,
+          end_index: i_last_row + 1
+        },
+      }
+    }
+  end
+
+  #noinspection RubyDefParenthesesInspection
+  def delete_all_group_rows_requests()
+
+    @wb_controller.get_row_groups(@sheet_id).collect do |group|
+      {
+        delete_dimension_group: {
+          range: {
+            sheet_id: @sheet_id,
+            dimension: "ROWS",
+            start_index: group.range.start_index,
+            end_index: group.range.end_index
+          },
+        }
+      }
+    end
+  end
+
   def hide_column_request(i_col, i_end_col = nil)
     {
       update_dimension_properties: {

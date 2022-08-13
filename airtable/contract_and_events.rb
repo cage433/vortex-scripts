@@ -135,6 +135,12 @@ class MultipleContractsAndEvents
     @contracts_and_events.collect { |ce| ce.prs_fee }.sum / VAT_RATE
   end
 
+  def restrict_to_period(period)
+    MultipleContractsAndEvents.new(
+      contracts_and_events: @contracts_and_events.select { |ce| period.contains?(ce.contract.performance_date) }
+    )
+  end
+
   def self.read_many(date_range:)
 
     contract_ids = Contracts.ids_for_date_range(date_range: date_range)

@@ -107,4 +107,8 @@ class Contracts < Airrecord::Table
     end
   end
 
+  def performance_date
+    Date.parse(fields[PERFORMANCE_DATE])
+  end
+
 end

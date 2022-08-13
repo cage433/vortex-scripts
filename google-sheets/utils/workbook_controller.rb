@@ -15,6 +15,13 @@ class WorkbookController
     ids_by_name
   end
 
+  def get_row_groups(sheet_id)
+    workbook = @service.get_spreadsheet(@workbook_id)
+    sheet = workbook.sheets.find { |s| s.properties.sheet_id == sheet_id }
+    raise "Sheet #{sheet_id} not found" if sheet.nil?
+    sheet.row_groups || []
+  end
+
   def has_tab_with_name?(name)
     tab_ids_by_name().has_key?(name)
   end
