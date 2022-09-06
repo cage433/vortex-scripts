@@ -37,7 +37,7 @@ class VolunteerMonthTabController < TabController
     @wb_controller.apply_requests([
       set_background_color_request(header_range, @@light_green),
       set_outside_border_request(header_range),
-      set_column_width_request(DISPLAY_TITLE_COL, 200),
+      set_column_width_request(DISPLAY_TITLE_COL, 300),
       set_column_width_request(DISPLAY_DATE_COL, 50),
       set_column_width_request(DAY_COL, 50),
       set_column_width_request(MEMBER_BOOKINGS_COL, 300),

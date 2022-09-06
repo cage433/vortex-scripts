@@ -65,6 +65,11 @@ class SheetRange
     @top_left_cell.coordinates
   end
 
+  def range_reference()
+    "#{@top_left_cell.coordinates}:#{bottom_right_cell.coordinates}"
+  end
+
+
   def as_json_range()
     range = {
       start_row_index: @top_left_cell.i_row,
@@ -98,6 +103,20 @@ class SheetRange
 
   def row(row_no)
     rows(row_no)
+  end
+
+  def [](rangish1, rangish2=nil)
+    if ! rangish2.nil?
+      rows(rangish1).columns(rangish2)
+    else
+      if @num_cols == 1
+        rows(rangish1)
+      elsif @num_rows == 1
+        columns(rangish1)
+      else
+        raise "Not a row or column"
+      end
+    end
   end
 
   def _range_from_rangish(rangish, current_end)

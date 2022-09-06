@@ -39,7 +39,7 @@ class ContractAndEvents
   end
 
   def event_name
-    @contract[EVENT_TITLE]
+    @contract[EVENT_TITLE_FROM_CONTRACT]
   end
 
   def standard_ticket_price
@@ -98,6 +98,10 @@ class ContractAndEvents
       0
     end
   end
+
+  def hire_fee
+    @contract.hire_fee + @events.collect{|e| e.total_hire_fee}.sum
+  end
 end
 
 class MultipleContractsAndEvents
@@ -120,6 +124,14 @@ class MultipleContractsAndEvents
     @contracts_and_events.collect { |ce| ce.student_ticket_value }.sum
   end
 
+  def total_standard_ticket_value
+    @contracts_and_events.collect { |ce| ce.standard_ticket_value }.sum
+  end
+
+  def total_member_ticket_value
+    @contracts_and_events.collect { |ce| ce.member_ticket_value }.sum
+  end
+
   def total_bar_takings_ex_vat
     @contracts_and_events.collect { |ce| ce.bar_takings }.sum / VAT_RATE
   end
@@ -133,6 +145,14 @@ class MultipleContractsAndEvents
 
   def total_prs_fee_ex_vat
     @contracts_and_events.collect { |ce| ce.prs_fee }.sum / VAT_RATE
+  end
+
+  def total_hire_fee
+    @contracts_and_events.collect { |ce| ce.hire_fee }.sum
+  end
+
+  def total_zettle_reading
+    @contracts_and_events.collect { |ce| ce.zettle_reading }.sum
   end
 
   def restrict_to_period(period)
@@ -157,4 +177,5 @@ class MultipleContractsAndEvents
       }
     )
   end
+
 end

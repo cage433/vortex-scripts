@@ -8,6 +8,7 @@ module EventTableColumns
   TABLE = "Events"
 
   EVENT_ID = "Record ID"
+  EVENT_TITLE_FROM_CONTRACT = "Event Title (from contract)"
   SHEETS_EVENT_TITLE = "SheetsEventTitle"
   EVENT_DATE = "Event Date"
   DOORS_TIME = "Doors Time"
@@ -30,6 +31,10 @@ module EventTableColumns
   STUDENT_TICKETS_SOLD = "E - Student tickets sold"
   CASH_TICKET_VALUE = "D Cash or Live Stream tickets"
   ZETTLE_READING = "N Credit card Takings - Polling report total"
+  HIRE_FEE = "Hire Fee"
+  F1_HIRE_FEE_CASH = "F1 Hire fee cash"
+  F2_HIRE_FEE_BACS = "F2 Hire fee cheque or BACS"
+
 end
 
 class EventTable < Airrecord::Table
@@ -106,6 +111,18 @@ class EventTable < Airrecord::Table
   def zettle_reading
     fields[ZETTLE_READING] || 0
   end
+
+  def total_hire_fee
+    hire_fee = fields[HIRE_FEE] || 0
+    f1_hire_fee = fields[F1_HIRE_FEE_CASH] || 0
+    f2_hire_fee = fields[F2_HIRE_FEE_BACS] || 0
+    hire_fee + f1_hire_fee + f2_hire_fee
+  end
+
+  def event_title_from_contract
+    fields[EVENT_TITLE_FROM_CONTRACT] || ""
+  end
+
 end
 
 

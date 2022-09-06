@@ -104,6 +104,10 @@ class TabController
     set_number_format_request(range, {type: "PERCENT"})
   end
 
+  def set_decimal_format_request(range, format)
+    set_number_format_request(range, {type: "NUMBER", pattern: format})
+  end
+
   def set_border_request(range, style: "SOLID_MEDIUM", color: @@black, borders:)
     border_style = {
           style: style,

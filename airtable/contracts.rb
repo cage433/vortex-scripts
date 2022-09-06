@@ -111,4 +111,8 @@ class Contracts < Airrecord::Table
     Date.parse(fields[PERFORMANCE_DATE])
   end
 
+  def hire_fee
+    fields[HIRE_FEE] || 0
+  end
+
 end
