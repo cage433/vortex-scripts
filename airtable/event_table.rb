@@ -112,15 +112,28 @@ class EventTable < Airrecord::Table
     fields[ZETTLE_READING] || 0
   end
 
+  def hire_fee
+    fields[HIRE_FEE] || 0
+  end
+
+  def f1_hire_fee_cash
+    fields[F1_HIRE_FEE_CASH] || 0
+  end
+
+  def f2_hire_fee_bacs
+    fields[F2_HIRE_FEE_BACS] || 0
+  end
+
   def total_hire_fee
-    hire_fee = fields[HIRE_FEE] || 0
-    f1_hire_fee = fields[F1_HIRE_FEE_CASH] || 0
-    f2_hire_fee = fields[F2_HIRE_FEE_BACS] || 0
-    hire_fee + f1_hire_fee + f2_hire_fee
+    hire_fee + f1_hire_fee_cash + f2_hire_fee_bacs
   end
 
   def event_title_from_contract
     fields[EVENT_TITLE_FROM_CONTRACT] || ""
+  end
+
+  def door_time
+    fields[DOORS_TIME]
   end
 
 end

@@ -34,12 +34,21 @@ class ContractAndEvents
     @events.collect{|e| e[PROMO_TICKETS] || 0}.sum
   end
 
+  def contract_hire_fee
+    @contract.hire_fee
+  end
+
+  def total_event_hire_fee
+    @events.collect{|e| e.total_hire_fee}.sum
+
+  end
+
   def total_ticket_count
     total_ba_tickets + total_b_tickets + total_c_tickets + total_d_tickets + total_e_tickets + total_promo_tickets
   end
 
   def event_name
-    @contract[EVENT_TITLE_FROM_CONTRACT]
+    @contract[EVENT_TITLE]
   end
 
   def standard_ticket_price
@@ -102,6 +111,10 @@ class ContractAndEvents
   def hire_fee
     @contract.hire_fee + @events.collect{|e| e.total_hire_fee}.sum
   end
+
+  def performance_date
+    @contract.performance_date
+  end
 end
 
 class MultipleContractsAndEvents
@@ -112,6 +125,17 @@ class MultipleContractsAndEvents
   def initialize(contracts_and_events:)
     @contracts_and_events = contracts_and_events
   end
+
+  def length
+    @contracts_and_events.length
+  end
+
+  def filter(fn)
+    MultipleContractsAndEvents.new(
+      contracts_and_events: @contracts_and_events.select { |ce| fn.call(ce) }
+    )
+  end
+
   def total_ticket_count
     @contracts_and_events.collect { |ce| ce.total_ticket_count }.sum
   end
@@ -136,13 +160,6 @@ class MultipleContractsAndEvents
     @contracts_and_events.collect { |ce| ce.bar_takings }.sum / VAT_RATE
   end
 
-  def total_zettle_reading
-    @contracts_and_events.collect { |ce| ce.zettle_reading }.sum / VAT_RATE
-  end
-  def total_musician_fees
-    @contracts_and_events.collect { |ce| ce.live_payable }.sum
-  end
-
   def total_prs_fee_ex_vat
     @contracts_and_events.collect { |ce| ce.prs_fee }.sum / VAT_RATE
   end
@@ -161,7 +178,7 @@ class MultipleContractsAndEvents
     )
   end
 
-  def self.read_many(date_range:)
+  def self.read_many(date_range: nil)
 
     contract_ids = Contracts.ids_for_date_range(date_range: date_range)
     contract_records = Contracts.find_many(contract_ids)

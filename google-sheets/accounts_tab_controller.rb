@@ -59,17 +59,12 @@ class AccountsTabController < TabController
     @wb_controller.set_data(@vat_cell, @vat_rate)
 
 
-    @wb_controller.set_data(
-      @sheet_range[WEEK_HEADINGS_ROW_1, 1],
-      "Week"
-    )
+    @wb_controller.set_data(@sheet_range[WEEK_HEADINGS_ROW_1, 1], "Week")
     @wb_controller.set_data(
       @sheet_range[WEEK_HEADINGS_ROW_2, 1..@num_weeks],
       @month.weeks.collect { |w| w.week_number })
-    @wb_controller.set_data(
-      @sheet_range[WEEK_HEADINGS_ROW_2, (1 + @num_weeks)..(2 + @num_weeks)],
-      ["MTD", "VAT estimate"]
-    )
+    @wb_controller.set_data(@sheet_range[WEEK_HEADINGS_ROW_2, (1 + @num_weeks)], "MTD")
+    @wb_controller.set_data(@sheet_range[WEEK_HEADINGS_ROW_2, (2 + @num_weeks)], "VAT estimate")
 
     def set_mtd_value(i_row)
       range = @sheet_range[i_row, 1..@num_weeks]
@@ -90,12 +85,14 @@ class AccountsTabController < TabController
     set_week_values(ADVANCE_SALES_ROW, :total_standard_ticket_value)
     set_week_values(CREDIT_CARD_SALES_ROW, :total_member_ticket_value)
     set_week_values(CASH_SALES_ROW, :total_student_ticket_value)
+
     (1..@num_weeks).each do |i|
       @wb_controller.set_data(
         @sheet_range[TOTAL_SALES_ROW, i],
         "=SUM(#{@sheet_range[ADVANCE_SALES_ROW..CASH_SALES_ROW, i].range_reference})"
       )
     end
+
     set_mtd_value(TOTAL_SALES_ROW)
     def set_vat_value(i_row)
       mtd_cell = @sheet_range[i_row, 1 + @num_weeks]
@@ -104,6 +101,9 @@ class AccountsTabController < TabController
     end
     set_vat_value(TOTAL_SALES_ROW)
 
+    set_week_values(TOTAL_HIRE_FEES_ROW, :total_hire_fee)
+    set_vat_value(TOTAL_HIRE_FEES_ROW)
+    set_week_values(ZETTLE_READING_ROW, :total_zettle_reading)
     # @wb_controller.set_data(@sheet_range.row(17),
     #                         ["Total Hire Fees"] +
     #                           week_cs_and_es.collect {|w| w.total_hire_fee } +

@@ -250,3 +250,13 @@ class DateRange < AbstractDateRange
   end
 end
 
+class Year < AbstractDateRange
+  attr_reader :year_no, :first_date, :last_date
+
+  def initialize(year_no)
+    @year_no = year_no
+    @first_date = Date.new(year_no, 1, 1)
+    @last_date = Date.new(year_no, 12, 31)
+  end
+end
+
