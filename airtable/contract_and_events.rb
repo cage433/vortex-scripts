@@ -10,41 +10,33 @@ class ContractAndEvents
     @events = events
   end
 
-  def total_ba_tickets
-    @events.collect{|e| e[BA_TICKETS] || 0}.sum
+  def full_price_tickets
+    @events.collect{|e| e.full_price_tickets}.sum
   end
 
-  def total_b_tickets
-    @events.collect{|e| e[B_TICKETS] || 0}.sum
+  def member_tickets
+    @events.collect{|e| e.member_tickets}.sum
   end
 
-  def total_c_tickets
-    @events.collect{|e| e[C_TICKETS] || 0}.sum
+  def student_tickets
+    @events.collect{|e| e.student_tickets}.sum
   end
 
-  def total_d_tickets
-    @events.collect{|e| e[D_TICKETS] || 0}.sum
+  def other_tickets
+    @events.collect{|e| e.other_tickets}.sum
   end
 
-  def total_e_tickets
-    @events.collect{|e| e[E_TICKETS] || 0}.sum
+  def promo_tickets
+    @events.collect{|e| e.promo_tickets}.sum
   end
 
-  def total_promo_tickets
-    @events.collect{|e| e[PROMO_TICKETS] || 0}.sum
-  end
-
-  def contract_hire_fee
+  def hire_fee
     @contract.hire_fee
   end
 
-  def total_event_hire_fee
-    @events.collect{|e| e.total_hire_fee}.sum
-
-  end
 
   def total_ticket_count
-    total_ba_tickets + total_b_tickets + total_c_tickets + total_d_tickets + total_e_tickets + total_promo_tickets
+    full_price_tickets + member_tickets + student_tickets + other_tickets + promo_tickets
   end
 
   def event_name
@@ -52,47 +44,45 @@ class ContractAndEvents
   end
 
   def standard_ticket_price
-    @contract[STANDARD_TICKET_PRICE] || 0
+    @contract[FULL_TICKET_PRICE] || 0
   end
 
-  def standard_ticket_value
-    @events.collect{|e|
-      e[STANDARD_TICKET_VALUE_HISTORIC] || (e.b_tickets_sold * standard_ticket_price)
-    }.sum
+  def full_price_sales
+    @events.collect{|e| e.full_price_sales}.sum
   end
 
-  def member_ticket_value
-    @events.collect{|e| e.member_ticket_value(standard_ticket_price)}.sum
+  def member_sales
+    @events.collect{|e| e.member_sales}.sum
   end
 
-  def student_ticket_value
-    @events.collect{|e| e.student_ticket_value}.sum
+  def student_sales
+    @events.collect{|e| e.student_sales}.sum
 
   end
 
-  def cash_ticket_value
-    @events.collect{|e| e.cash_ticket_value}.sum
+  def other_ticket_sales
+    @events.collect{|e| e.other_ticket_sales}.sum
   end
 
-  def total_ticket_value
-    standard_ticket_value + member_ticket_value + student_ticket_value + cash_ticket_value
+  def total_ticket_sales
+    full_price_sales + member_sales + student_sales + other_ticket_sales
   end
 
-  def zettle_reading
-    @events.collect{|e| e.zettle_reading}.sum
+  def credit_card_takings
+    @events.collect{|e| e.credit_card_takings}.sum
   end
 
 
   def bar_takings
     # Note the incorrect subtraction of student_ticket_value - for now mirroring the daily takings data spreadsheet
-    zettle_reading - cash_ticket_value - student_ticket_value - member_ticket_value
+    credit_card_takings - other_ticket_sales - student_sales - member_sales
   end
 
   def live_payable
     if @contract.is_vs_fee?
-      max(@contract.flat_fee_to_artist, @contract.percentage_split_to_artist * total_ticket_value)
+      max(@contract.flat_fee_to_artist, @contract.percentage_split_to_artist * total_ticket_sales)
     else
-      @contract.flat_fee_to_artist + @contract.percentage_split_to_artist * total_ticket_value
+      @contract.flat_fee_to_artist + @contract.percentage_split_to_artist * total_ticket_sales
     end
   end
 
@@ -101,15 +91,11 @@ class ContractAndEvents
       if @contract.is_streaming?
         Contracts::STREAMING_PRS_FEE
       else
-        total_ticket_value * Contracts::PRS_RATE
+        total_ticket_sales * Contracts::PRS_RATE
       end
     else
       0
     end
-  end
-
-  def hire_fee
-    @contract.hire_fee + @events.collect{|e| e.total_hire_fee}.sum
   end
 
   def performance_date
@@ -140,20 +126,24 @@ class MultipleContractsAndEvents
     @contracts_and_events.collect { |ce| ce.total_ticket_count }.sum
   end
 
-  def total_ticket_value
-    @contracts_and_events.collect { |ce| ce.total_ticket_value }.sum
+  def total_ticket_sales
+    @contracts_and_events.collect { |ce| ce.total_ticket_sales }.sum
   end
 
-  def total_student_ticket_value
-    @contracts_and_events.collect { |ce| ce.student_ticket_value }.sum
+  def total_student_sales
+    @contracts_and_events.collect { |ce| ce.student_sales }.sum
   end
 
-  def total_standard_ticket_value
-    @contracts_and_events.collect { |ce| ce.standard_ticket_value }.sum
+  def total_full_price_sales
+    @contracts_and_events.collect { |ce| ce.full_price_sales }.sum
   end
 
-  def total_member_ticket_value
-    @contracts_and_events.collect { |ce| ce.member_ticket_value }.sum
+  def total_member_sales
+    @contracts_and_events.collect { |ce| ce.member_sales }.sum
+  end
+
+  def total_other_ticket_sales
+    @contracts_and_events.collect { |ce| ce.other_ticket_sales }.sum
   end
 
   def total_bar_takings_ex_vat
@@ -169,7 +159,7 @@ class MultipleContractsAndEvents
   end
 
   def total_zettle_reading
-    @contracts_and_events.collect { |ce| ce.zettle_reading }.sum
+    @contracts_and_events.collect { |ce| ce.credit_card_takings }.sum
   end
 
   def restrict_to_period(period)

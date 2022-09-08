@@ -8,7 +8,6 @@ module EventTableColumns
   TABLE = "Events"
 
   EVENT_ID = "Record ID"
-  EVENT_TITLE_FROM_CONTRACT = "Event Title (from contract)"
   SHEETS_EVENT_TITLE = "SheetsEventTitle"
   EVENT_DATE = "Event Date"
   DOORS_TIME = "Doors Time"
@@ -19,22 +18,22 @@ module EventTableColumns
   STATUS = "Status"
   MEMBER_BOOKINGS = "Member Bookings"
   NM_NOTES = "NM Notes"
-  BA_TICKETS = "Ba Tickets sold - card advance"
-  B_TICKETS = "B Tickets sold - Advance Online & credit card"
-  C_TICKETS = "C Tickets sold - card door"
-  D_TICKETS = "D Tickets sold - cash"
-  E_TICKETS = "E - Student tickets sold"
+  FULL_PRICE_TICKETS_ONLINE = "Full price tickets (online)"
+  FULL_PRICE_TICKETS_WALK_IN = "Full price tickets (walk-in)"
+  FULL_PRICE_SALES = "Full price sales"
+  MEMBER_TICKETS_ONLINE = "Member tickets (online)"
+  MEMBER_TICKETS_WALK_IN = "Member tickets (walk-in)"
+  STUDENT_TICKETS_ONLINE = "Student tickets (online)"
+  STUDENT_TICKETS_WALK_IN = "Student tickets (walk-in)"
+  STUDENT_SALES = "Student sales"
   PROMO_TICKETS = "Promo tickets (free)"
-  STANDARD_TICKET_VALUE_HISTORIC = "B Advance Online&credit card tickets (historic)"
-  MEMBER_PRICE = "Ca ticket price (if different)"
-  STUDENT_PRICE = "E - Student ticket price"
-  STUDENT_TICKETS_SOLD = "E - Student tickets sold"
-  CASH_TICKET_VALUE = "D Cash or Live Stream tickets"
-  ZETTLE_READING = "N Credit card Takings - Polling report total"
-  HIRE_FEE = "Hire Fee"
-  F1_HIRE_FEE_CASH = "F1 Hire fee cash"
-  F2_HIRE_FEE_BACS = "F2 Hire fee cheque or BACS"
-
+  MEMBER_PRICE = "Member ticket price"
+  MEMBER_SALES = "Member sales"
+  STUDENT_PRICE = "Student ticket price"
+  TOTAL_TICKET_SALES = "Total ticket sales"
+  OTHER_TICKETS_WALK_IN = "Other tickets (walk-in)"
+  OTHER_TICKET_SALES = "Other ticket sales"
+  CREDIT_CARD_TAKINGS = "Credit card takings"
 end
 
 class EventTable < Airrecord::Table
@@ -74,62 +73,49 @@ class EventTable < Airrecord::Table
     recs.collect { |rec| rec[SHEETS_EVENT_TITLE] }.flatten.uniq
   end
 
-  def b_tickets_sold
-    fields[B_TICKETS] || 0
+  def full_price_tickets
+    (fields[FULL_PRICE_TICKETS_ONLINE] || 0) + (fields[FULL_PRICE_TICKETS_WALK_IN] || 0)
   end
 
-  def member_tickets_sold
-    fields[C_TICKETS] || 0
+  def member_tickets
+    (fields[MEMBER_TICKETS_ONLINE] || 0) + (fields[MEMBER_TICKETS_WALK_IN] || 0)
   end
 
-  def member_ticket_price_or_nil
-    fields[MEMBER_PRICE]
+  def student_tickets
+    (fields[STUDENT_TICKETS_ONLINE] || 0) + (fields[STUDENT_TICKETS_WALK_IN] || 0)
   end
 
-  def member_ticket_value(standard_ticket_price)
-    member_ticket_price = fields[MEMBER_PRICE] || standard_ticket_price
-    member_tickets_sold * member_ticket_price
+  def other_tickets
+    fields[OTHER_TICKETS_WALK_IN] || 0
   end
 
-  def student_tickets_sold
-    fields[STUDENT_TICKETS_SOLD] || 0
-
+  def promo_tickets
+    fields[PROMO_TICKETS] || 0
   end
 
-  def student_ticket_price
-    fields[STUDENT_PRICE] || 0
+  def other_ticket_sales
+    fields[OTHER_TICKET_SALES] || 0
   end
 
-  def student_ticket_value
-    student_tickets_sold * student_ticket_price
+  def full_price_sales
+    fields[FULL_PRICE_SALES] || 0
   end
 
-  def cash_ticket_value
-    fields[CASH_TICKET_VALUE] || 0
+  def member_sales
+    fields[MEMBER_SALES] || 0
   end
 
-  def zettle_reading
-    fields[ZETTLE_READING] || 0
+  def student_sales
+    fields[STUDENT_SALES] || 0
   end
 
-  def hire_fee
-    fields[HIRE_FEE] || 0
+  def total_ticket_sales
+    fields[TOTAL_TICKET_SALES] || 0
   end
 
-  def f1_hire_fee_cash
-    fields[F1_HIRE_FEE_CASH] || 0
-  end
 
-  def f2_hire_fee_bacs
-    fields[F2_HIRE_FEE_BACS] || 0
-  end
-
-  def total_hire_fee
-    hire_fee + f1_hire_fee_cash + f2_hire_fee_bacs
-  end
-
-  def event_title_from_contract
-    fields[EVENT_TITLE_FROM_CONTRACT] || ""
+  def credit_card_takings
+    fields[CREDIT_CARD_TAKINGS] || 0
   end
 
   def door_time

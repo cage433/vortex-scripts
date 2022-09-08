@@ -11,12 +11,13 @@ class AccountsTabController < TabController
   WEEK_HEADINGS_ROW_1 = 6
   WEEK_HEADINGS_ROW_2 = 7
   AUDIENCE_NUMBER_ROW = 8
-  ADVANCE_SALES_ROW =10
-  CREDIT_CARD_SALES_ROW = 11
-  CASH_SALES_ROW = 12
-  TOTAL_SALES_ROW = 13
-  TOTAL_HIRE_FEES_ROW = 15
-  ZETTLE_READING_ROW = 17
+  TOTAL_SALES_ROW = 10
+  FULL_PRICE_SALES_ROW =11
+  MEMBER_SALES_ROW = 12
+  STUDENT_SALES_ROW = 13
+  OTHER_SALES_ROW = 14
+  TOTAL_HIRE_FEES_ROW = 16
+  CREDIT_CARD_TAKINGS_ROW = 18
 
 
   def initialize(month, wb_controller, contracts_and_events, vat_rate)
@@ -46,12 +47,13 @@ class AccountsTabController < TabController
     set_title(START_DATE_ROW, "Start Date")
     set_title(VAT_ROW, "VAT Rate")
     set_title(AUDIENCE_NUMBER_ROW, "Audience Number")
-    set_title(ADVANCE_SALES_ROW, "Advance Sales")
-    set_title(CREDIT_CARD_SALES_ROW, "Credit Card Sales")
-    set_title(CASH_SALES_ROW, "Cash Sales")
-    set_title(TOTAL_SALES_ROW, "Total Sales")
-    set_title(TOTAL_HIRE_FEES_ROW, "Total Hire Fees")
-    set_title(ZETTLE_READING_ROW, "Zettle Reading")
+    set_title(TOTAL_SALES_ROW, "Ticket Sales")
+    set_title(FULL_PRICE_SALES_ROW, "Full Price")
+    set_title(MEMBER_SALES_ROW, "Members")
+    set_title(STUDENT_SALES_ROW, "Students")
+    set_title(OTHER_SALES_ROW, "Other")
+    set_title(TOTAL_HIRE_FEES_ROW, "Hire Fees")
+    set_title(CREDIT_CARD_TAKINGS_ROW, "Credit card takings")
 
     @wb_controller.set_data(@sheet_range[MONTH_ROW, 1], @month.first_date)
     @wb_controller.set_data(@sheet_range[START_DATE_ROW, 1], @month.first_week.first_date)
@@ -82,16 +84,11 @@ class AccountsTabController < TabController
       set_mtd_value(i_row)
     end
     set_week_values(AUDIENCE_NUMBER_ROW, :total_ticket_count)
-    set_week_values(ADVANCE_SALES_ROW, :total_standard_ticket_value)
-    set_week_values(CREDIT_CARD_SALES_ROW, :total_member_ticket_value)
-    set_week_values(CASH_SALES_ROW, :total_student_ticket_value)
-
-    (1..@num_weeks).each do |i|
-      @wb_controller.set_data(
-        @sheet_range[TOTAL_SALES_ROW, i],
-        "=SUM(#{@sheet_range[ADVANCE_SALES_ROW..CASH_SALES_ROW, i].range_reference})"
-      )
-    end
+    set_week_values(TOTAL_SALES_ROW, :total_ticket_sales)
+    set_week_values(FULL_PRICE_SALES_ROW, :total_full_price_sales)
+    set_week_values(MEMBER_SALES_ROW, :total_member_sales)
+    set_week_values(STUDENT_SALES_ROW, :total_student_sales)
+    set_week_values(OTHER_SALES_ROW, :total_other_ticket_sales)
 
     set_mtd_value(TOTAL_SALES_ROW)
     def set_vat_value(i_row)
@@ -103,16 +100,8 @@ class AccountsTabController < TabController
 
     set_week_values(TOTAL_HIRE_FEES_ROW, :total_hire_fee)
     set_vat_value(TOTAL_HIRE_FEES_ROW)
-    set_week_values(ZETTLE_READING_ROW, :total_zettle_reading)
-    # @wb_controller.set_data(@sheet_range.row(17),
-    #                         ["Total Hire Fees"] +
-    #                           week_cs_and_es.collect {|w| w.total_hire_fee } +
-    #                           [@month_contracts_and_events.total_hire_fee,""])
-    #
-    # @wb_controller.set_data(@sheet_range.row(19),
-    #                         ["Zettle Reading"] +
-    #                           week_cs_and_es.collect {|w| w.total_zettle_reading } +
-    #                           [@month_contracts_and_events.total_zettle_reading,""])
+    set_week_values(CREDIT_CARD_TAKINGS_ROW, :total_zettle_reading)
+    set_vat_value(CREDIT_CARD_TAKINGS_ROW)
 
     requests = delete_all_group_rows_requests()
     requests += [
@@ -123,11 +112,19 @@ class AccountsTabController < TabController
       set_date_format_request(@sheet_range[START_DATE_ROW, 1], "d Mmm yy"),
       set_percentage_format_request(@vat_cell),
       center_text_request(@sheet_range[WEEK_HEADINGS_ROW_1..WEEK_HEADINGS_ROW_2, 1..@num_weeks]),
-      group_rows_request(12, 14),
+      group_rows_request(FULL_PRICE_SALES_ROW, OTHER_SALES_ROW),
       set_decimal_format_request(
-        @sheet_range[ADVANCE_SALES_ROW..TOTAL_SALES_ROW, 1..(@num_weeks + 2)],
-        "#,###.00"
-      )
+        @sheet_range[TOTAL_SALES_ROW..OTHER_SALES_ROW, 1..(@num_weeks + 2)],
+        "#,##0.00"
+      ),
+      set_decimal_format_request(
+        @sheet_range[TOTAL_HIRE_FEES_ROW, 1..(@num_weeks + 2)],
+        "#,##0.00"
+      ),
+      set_decimal_format_request(
+        @sheet_range[CREDIT_CARD_TAKINGS_ROW, 1..(@num_weeks + 2)],
+        "#,##0.00"
+      ),
     ]
 
     @wb_controller.apply_requests(requests)

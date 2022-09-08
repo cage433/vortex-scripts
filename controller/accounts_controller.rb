@@ -18,4 +18,4 @@ class AccountsController
 end
 
 ac = AccountsController.new()
-mtc = ac.month_tab_controller(Month.new(2022, 6))
+mtc = ac.month_tab_controller(Month.new(2022, 5))

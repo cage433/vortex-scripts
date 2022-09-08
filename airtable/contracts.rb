@@ -27,7 +27,6 @@ module ContractsColumns
   COS_REQUIRED = "COS required"
   TOTAL_TICKET_SALES_CALC = "Total Ticket Sales £ calc"
   PERFORMANCE_DATE = "Performance date"
-  BA_TICKETS = "Ba tickets"
 
   B_ONLINE = "B - Online"
   C_CARD = "C - Card"
@@ -46,7 +45,9 @@ module ContractsColumns
   NIGHT_MANAGER = "Night Manager"
   GRANTS = "Grants"
 
-  STANDARD_TICKET_PRICE = "Ticket price"
+  FULL_TICKET_PRICE = "Full ticket price"
+  MEMBER_TICKET_PRICE = "Member ticket price"
+  STUDENT_TICKET_PRICE = "Student ticket price"
   IS_VS_FEE = "VS fee?"
 end
 
@@ -113,6 +114,18 @@ class Contracts < Airrecord::Table
 
   def hire_fee
     fields[HIRE_FEE] || 0
+  end
+
+  def full_ticket_price
+    fields[FULL_TICKET_PRICE]
+  end
+
+  def member_ticket_price
+    fields[MEMBER_TICKET_PRICE]
+  end
+
+  def student_ticket_price
+    fields[STUDENT_TICKET_PRICE]
   end
 
 end
