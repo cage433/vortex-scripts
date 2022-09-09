@@ -8,23 +8,25 @@ class AccountsTabController < TabController
   VAT_ROW = 3
 
 
-  AUDIENCE_HEADING_ROW = 6
+  AUDIENCE_HEADING_ROW = 5
   AUDIENCE_WEEK_ROW, AUDIENCE_ROW, FULL_PRICE_ROW, MEMBER_ROW, STUDENTS_ROW, OTHERS_ROW, GUESTS_ROW = ((AUDIENCE_HEADING_ROW + 2)..(AUDIENCE_HEADING_ROW + 8)).to_a
 
 
-  INCOMING_HEADING_ROW = 18
+  INCOMING_HEADING_ROW = 15
   INCOMING_WEEKS_ROW,
     TICKET_SALES_ROW,
     FULL_PRICE_SALES_ROW, MEMBER_SALES_ROW, STUDENT_SALES_ROW,
     OTHER_SALES_ROW,
     TOTAL_HIRE_FEES_ROW, CREDIT_CARD_TAKINGS_ROW, TOTAL_INCOME_ROW = ((INCOMING_HEADING_ROW + 2)..(INCOMING_HEADING_ROW + 10)).to_a
 
-  OUTGOINGS_HEADING_ROW = 30
+  OUTGOINGS_HEADING_ROW = 27
 
   OUTGOING_WEEK_ROW, TOTAL_MUSICIAN_COSTS_ROW, MUSICIANS_FEE_ROW,
     ACCOMMODATION_ROW, TRAVEL_EXPENSES_ROW, CATERING_EXPENSES_ROW,
     PRS_ROW, EVENING_PURCHASES_ROW, TOTAL_OUTGOINGS_ROW = ((OUTGOINGS_HEADING_ROW + 2)..(OUTGOINGS_HEADING_ROW + 10)).to_a
 
+  NET_HEADING_ROW = 39
+  NET_WEEK_ROW, NET_TOTAL_ROW = ((NET_HEADING_ROW + 2)..(NET_HEADING_ROW + 3)).to_a
 
   def initialize(month, wb_controller, contracts_and_events, vat_rate)
     super(wb_controller, month.tab_name)
@@ -86,6 +88,7 @@ class AccountsTabController < TabController
       )
       set_week_values_and_mtd(values.transpose, AUDIENCE_ROW..GUESTS_ROW)
     end
+
     def set_incomes()
       @wb_controller.set_data(@sheet_range.cell(INCOMING_HEADING_ROW, 0), "Incomings")
       @wb_controller.set_data(@sheet_range[INCOMING_WEEKS_ROW, 0..(@num_weeks + 2)], ["Week"] + @month.weeks.collect { |w| w.week_number } + ["MTD", "VAT estimate"])
@@ -139,36 +142,37 @@ class AccountsTabController < TabController
       set_week_values_and_mtd(values.transpose, TOTAL_MUSICIAN_COSTS_ROW..EVENING_PURCHASES_ROW)
     end
 
-    # def set_prs()
-    #   values = @month.weeks.collect { |w|
-    #     @month_contracts_and_events.restrict_to_period(w).total_prs_fee
-    #   }.unshift(
-    #     "PRS"
-    #   )
-    #   set_week_values_and_mtd([values], PRS_ROW..PRS_ROW)
-    # end
-    #
-    # def set_evening_purchases()
-    #   values = @month.weeks.collect { |w|
-    #     @month_contracts_and_events.restrict_to_period(w).total_evening_purchases
-    #   }.unshift(
-    #     "Evening Purchases"
-    #   )
-    #   set_week_values_and_mtd([values], EVENING_PURCHASES_ROW..EVENING_PURCHASES_ROW)
-    # end
-
 
     def set_total_outgoings()
-      values = (1..(@num_weeks + 1)).collect { |i|
+      values = (1..(@num_weeks + 2)).collect { |i|
         musician_costs_cell = @sheet_range[TOTAL_MUSICIAN_COSTS_ROW, i]
         prs_cell = @sheet_range[PRS_ROW, i]
         evening_purchases_cell = @sheet_range[EVENING_PURCHASES_ROW, i]
         "=SUM(#{musician_costs_cell.cell_reference}, #{prs_cell.cell_reference}, #{evening_purchases_cell.cell_reference})"
       }
       values.unshift("Total")
-      @wb_controller.set_data(@sheet_range[TOTAL_OUTGOINGS_ROW, 0..(@num_weeks + 1)], values)
-
+      @wb_controller.set_data(@sheet_range[TOTAL_OUTGOINGS_ROW, 0..(@num_weeks + 2)], values)
     end
+
+    def set_net_values()
+      @wb_controller.set_data(@sheet_range.cell(NET_HEADING_ROW, 0), "Net P&L")
+      @wb_controller.set_data(@sheet_range[NET_WEEK_ROW, 0..(@num_weeks + 2)], ["Week"] + @month.weeks.collect { |w| w.week_number } + ["MTD", "VAT estimate"])
+      values = (1..(@num_weeks + 1)).collect { |i|
+        total_incomes_cell = @sheet_range[TOTAL_INCOME_ROW, i]
+        total_outgoings_cell = @sheet_range[TOTAL_OUTGOINGS_ROW, i]
+        "=#{total_incomes_cell.cell_reference} - #{total_outgoings_cell.cell_reference}"
+      }
+      values.unshift("Net")
+      @wb_controller.set_data(@sheet_range[NET_TOTAL_ROW, 0..(@num_weeks + 1)], values)
+    end
+
+    def set_net_vat()
+      net_incoming_vat_cell = @sheet_range[TOTAL_INCOME_ROW, @num_weeks + 2]
+      net_outgoing_vat_cell = @sheet_range[TOTAL_OUTGOINGS_ROW, @num_weeks + 2]
+      value = "=#{net_incoming_vat_cell.cell_reference}  - #{net_outgoing_vat_cell.cell_reference}"
+      @wb_controller.set_data(@sheet_range[NET_TOTAL_ROW, @num_weeks + 2], value)
+    end
+
     def set_vat_value(i_row)
       mtd_cell = @sheet_range[i_row, 1 + @num_weeks]
       vat_value_cell = @sheet_range[i_row, 2 + @num_weeks]
@@ -186,9 +190,8 @@ class AccountsTabController < TabController
     set_outgoings()
     set_total_outgoings()
     set_vat_value(PRS_ROW)
-
-
-
+    set_net_values()
+    set_net_vat()
 
 
 
@@ -233,10 +236,6 @@ class AccountsTabController < TabController
         @sheet_range[TICKET_SALES_ROW..TOTAL_INCOME_ROW, 1..(@num_weeks + 2)],
         "#,##0.00"
       ),
-      # set_decimal_format_request(
-      #   @sheet_range[ACCOMMODATION_ROW, 1..(@num_weeks + 2)],
-      #   "#,##0.00"
-      # ),
 
 
 
@@ -254,6 +253,20 @@ class AccountsTabController < TabController
       group_rows_request(MUSICIANS_FEE_ROW, CATERING_EXPENSES_ROW),
       set_decimal_format_request(
         @sheet_range[TOTAL_MUSICIAN_COSTS_ROW..TOTAL_OUTGOINGS_ROW, 1..(@num_weeks + 2)],
+        "#,##0.00"
+      ),
+
+
+      merge_columns_request(@sheet_range[NET_HEADING_ROW, 0..(2 + @num_weeks)]),
+      center_text_request(@sheet_range[NET_HEADING_ROW, 0..(2 + @num_weeks)]),
+      set_outside_border_request(@sheet_range[NET_HEADING_ROW..NET_TOTAL_ROW, 0..(@num_weeks + 2)]),
+      right_align_text_request(@sheet_range[NET_WEEK_ROW, (1 + @num_weeks)..(2 + @num_weeks)]),
+      set_bottom_border_request(@sheet_range[NET_WEEK_ROW, 0..(@num_weeks + 2)]),
+      set_right_border_request(@sheet_range[NET_WEEK_ROW..NET_TOTAL_ROW, 0]),
+      set_left_right_border_request(@sheet_range[NET_WEEK_ROW..NET_TOTAL_ROW, 1 + @num_weeks]),
+      bold_text_request(@sheet_range[NET_HEADING_ROW..NET_TOTAL_ROW, 0..(@num_weeks + 2)]),
+      set_decimal_format_request(
+        @sheet_range[NET_TOTAL_ROW, 1..(@num_weeks + 2)],
         "#,##0.00"
       ),
     ]

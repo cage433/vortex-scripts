@@ -18,5 +18,7 @@ class AccountsController
 end
 
 ac = AccountsController.new()
-mtc = ac.month_tab_controller(Month.new(2022, 6))
+(5..8).each do |month_no|
+  ac.month_tab_controller(Month.new(2022, month_no))
+end
 # mtc = ac.month_tab_controller(Month.new(2021, 11))
