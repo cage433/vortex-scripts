@@ -305,7 +305,7 @@ class TabController
       [
         update_all_cells_request("userEnteredValue"),
         update_all_cells_request("userEnteredFormat"),
-        unmerge_all_request()
+        unmerge_all_request(),
       ]
     )
   end

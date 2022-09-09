@@ -15,11 +15,6 @@ module ContractsColumns
   ORGANISERS = "Organisers"
   TYPE = "Type"
   STATUS = "Status"
-  AGREEMENT_TEXT_FORMLA = "Agreement text formula"
-  PERCENTAGE_SPLIT_TO_ARTIST = "Percentage split to Artist"
-  FLAT_FEE_TO_ARTIST = "Flat Fee to Artist"
-  VS_FEE = "VS fee?"
-  IS_PERCENTAGE_GTR_THAN_FEE = "Is % Greater than Fee?"
   LIVE_PAYABLE = "Live Payable"
   VORTEX_PROFIT = "Vortex Profit"
   HIRE_FEE = "Hire fee"
@@ -48,7 +43,8 @@ module ContractsColumns
   FULL_TICKET_PRICE = "Full ticket price"
   MEMBER_TICKET_PRICE = "Member ticket price"
   STUDENT_TICKET_PRICE = "Student ticket price"
-  IS_VS_FEE = "VS fee?"
+  MUSICIANS_FEE = "Musicians fee"
+
 end
 
 class Contracts < Airrecord::Table
@@ -77,18 +73,6 @@ class Contracts < Airrecord::Table
       first_date: date_range.first_date,
       last_date: date_range.last_date
     ).collect { |rec| rec[RECORD_ID] }
-  end
-
-  def is_vs_fee?
-    fields[IS_VS_FEE] || false
-  end
-
-  def flat_fee_to_artist
-    fields[FLAT_FEE_TO_ARTIST] || 0
-  end
-
-  def percentage_split_to_artist
-    fields[PERCENTAGE_SPLIT_TO_ARTIST] || 0
   end
 
   def gig_type
@@ -126,6 +110,22 @@ class Contracts < Airrecord::Table
 
   def student_ticket_price
     fields[STUDENT_TICKET_PRICE]
+  end
+
+  def musicians_fee
+    fields[MUSICIANS_FEE] || 0
+  end
+
+  def accommodation_costs
+    fields[HOTELS_COST] || 0
+  end
+
+  def travel_expenses
+    fields[TRANSPORT_COST] || 0
+  end
+
+  def food_budget
+    fields[FOOD_BUDGET] || 0
   end
 
 end

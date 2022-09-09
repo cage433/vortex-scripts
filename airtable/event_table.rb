@@ -34,6 +34,7 @@ module EventTableColumns
   OTHER_TICKETS_WALK_IN = "Other tickets (walk-in)"
   OTHER_TICKET_SALES = "Other ticket sales"
   CREDIT_CARD_TAKINGS = "Credit card takings"
+  EVENING_PURCHASES = "Evening purchases"
 end
 
 class EventTable < Airrecord::Table
@@ -121,6 +122,11 @@ class EventTable < Airrecord::Table
   def door_time
     fields[DOORS_TIME]
   end
+
+  def evening_purchases
+    fields[EVENING_PURCHASES] || 0
+  end
+
 
 end
 

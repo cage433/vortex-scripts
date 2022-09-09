@@ -72,18 +72,24 @@ class ContractAndEvents
     @events.collect{|e| e.credit_card_takings}.sum
   end
 
-
-  def bar_takings
-    # Note the incorrect subtraction of student_ticket_value - for now mirroring the daily takings data spreadsheet
-    credit_card_takings - other_ticket_sales - student_sales - member_sales
+  def musicians_fee
+    @contract.musicians_fee
   end
 
-  def live_payable
-    if @contract.is_vs_fee?
-      max(@contract.flat_fee_to_artist, @contract.percentage_split_to_artist * total_ticket_sales)
-    else
-      @contract.flat_fee_to_artist + @contract.percentage_split_to_artist * total_ticket_sales
-    end
+  def accommodation_costs
+    @contract.accommodation_costs
+  end
+
+  def travel_expenses
+    @contract.travel_expenses
+  end
+
+  def food_budget
+    @contract.food_budget
+  end
+
+  def evening_purchases
+    @events.collect{|e| e.evening_purchases}.sum
   end
 
   def prs_fee
@@ -126,6 +132,26 @@ class MultipleContractsAndEvents
     @contracts_and_events.collect { |ce| ce.total_ticket_count }.sum
   end
 
+  def total_full_price_tickets
+    @contracts_and_events.collect { |ce| ce.full_price_tickets }.sum
+  end
+
+  def total_member_tickets
+    @contracts_and_events.collect { |ce| ce.member_tickets }.sum
+  end
+
+  def total_student_tickets
+    @contracts_and_events.collect { |ce| ce.student_tickets }.sum
+  end
+
+  def total_other_tickets
+    @contracts_and_events.collect { |ce| ce.other_tickets }.sum
+  end
+
+  def total_guest_tickets
+    @contracts_and_events.collect { |ce| ce.promo_tickets }.sum
+  end
+
   def total_ticket_sales
     @contracts_and_events.collect { |ce| ce.total_ticket_sales }.sum
   end
@@ -146,10 +172,6 @@ class MultipleContractsAndEvents
     @contracts_and_events.collect { |ce| ce.other_ticket_sales }.sum
   end
 
-  def total_bar_takings_ex_vat
-    @contracts_and_events.collect { |ce| ce.bar_takings }.sum / VAT_RATE
-  end
-
   def total_prs_fee_ex_vat
     @contracts_and_events.collect { |ce| ce.prs_fee }.sum / VAT_RATE
   end
@@ -160,6 +182,34 @@ class MultipleContractsAndEvents
 
   def total_zettle_reading
     @contracts_and_events.collect { |ce| ce.credit_card_takings }.sum
+  end
+
+  def total_musicians_fees
+    @contracts_and_events.collect { |ce| ce.musicians_fee }.sum
+  end
+
+  def total_accommodation_costs
+    @contracts_and_events.collect { |ce| ce.accommodation_costs }.sum
+  end
+
+  def total_travel_expenses
+    @contracts_and_events.collect { |ce| ce.travel_expenses }.sum
+  end
+
+  def total_food_budget
+    @contracts_and_events.collect { |ce| ce.food_budget }.sum
+  end
+
+  def total_musician_costs
+    total_musicians_fees + total_accommodation_costs + total_travel_expenses + total_food_budget
+  end
+
+  def total_prs_fee
+    @contracts_and_events.collect { |ce| ce.prs_fee }.sum
+  end
+
+  def total_evening_purchases
+    @contracts_and_events.collect { |ce| ce.evening_purchases }.sum
   end
 
   def restrict_to_period(period)
