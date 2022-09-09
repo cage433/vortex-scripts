@@ -123,6 +123,13 @@ class TabController
     set_border_request(range, style: style, color: color, borders: [:top, :bottom])
   end
 
+  def set_top_border_request(range, style: "SOLID", color: @@black)
+    set_border_request(range, style: style, color: color, borders: [:top])
+  end
+  def set_bottom_border_request(range, style: "SOLID", color: @@black)
+    set_border_request(range, style: style, color: color, borders: [:bottom])
+  end
+
   def set_outside_border_request(range, style: "SOLID_MEDIUM", color: @@black)
     set_border_request(range, style: style, color: color, borders: [:left, :right, :top, :bottom])
   end
@@ -131,6 +138,13 @@ class TabController
     set_border_request(range, style: style, color: color, borders: [:left, :right])
   end
 
+  def set_left_border_request(range, style: "SOLID", color: @@black)
+    set_border_request(range, style: style, color: color, borders: [:left])
+  end
+
+  def set_right_border_request(range, style: "SOLID", color: @@black)
+    set_border_request(range, style: style, color: color, borders: [:right])
+  end
   def set_column_width_request(i_col, width)
     {
       update_dimension_properties: {
@@ -236,6 +250,15 @@ class TabController
       {
         horizontal_alignment: "CENTER", 
         text_format: {bold: true}
+      }
+    )
+  end
+
+  def underline_text_request(range)
+    user_entered_format_request(
+      range,
+      {
+        text_format: {underline: true}
       }
     )
   end
