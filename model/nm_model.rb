@@ -83,7 +83,7 @@ class NMFormTicketSales
 end
 
 class NMForm_ExpensesData
-  attr_reader :note, :amount
+  attr_reader :note, :debit
 
   def initialize(note:, amount:)
     @note = note

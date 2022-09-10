@@ -97,7 +97,7 @@ class NMFormController
     datas.each { |d|
       record = NMForm_ExpensesTable.new(PERFORMANCE_DATE => date)
       record[NOTE] = d.note
-      record[AMOUNT] = d.amount
+      record[AMOUNT] = d.debit
       record.save
     }
   end
@@ -108,7 +108,7 @@ class NMFormController
     records.collect do |record|
       NMForm_ExpensesData.new(
         note: record[NOTE],
-        amount: record[AMOUNT]
+        debit: record[AMOUNT]
       )
     end 
   end

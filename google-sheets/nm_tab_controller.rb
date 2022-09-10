@@ -43,7 +43,7 @@ class ExpensesRange < TabController
       note = data_row[0]
       amount = data_row[-1]
       if !note.nil? && note.strip != ""
-        expenses.push(NMForm_ExpensesData.new(note: note, amount: amount))
+        expenses.push(NMForm_ExpensesData.new(note: note, debit: amount))
       end
     }
     expenses
@@ -53,7 +53,7 @@ class ExpensesRange < TabController
     assert_collection_type(expenses_data, NMForm_ExpensesData)
     clear_values(@expenses_list_range)
     notes = expenses_data.collect{ |e| e.note}
-    amounts = expenses_data.collect{ |e| e.amount}
+    amounts = expenses_data.collect{ |e| e.debit}
     if notes.size > 0
       @wb_controller.set_data(
         @expenses_list_range.column(0).rows(...(notes.length)),

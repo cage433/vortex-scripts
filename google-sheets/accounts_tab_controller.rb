@@ -90,7 +90,7 @@ class AccountsTabController < TabController
     end
 
     def set_incomes()
-      @wb_controller.set_data(@sheet_range.cell(INCOMING_HEADING_ROW, 0), "Incomings")
+      @wb_controller.set_data(@sheet_range.cell(INCOMING_HEADING_ROW, 0), "Incoming")
       @wb_controller.set_data(@sheet_range[INCOMING_WEEKS_ROW, 0..(@num_weeks + 2)], ["Week"] + @month.weeks.collect { |w| w.week_number } + ["MTD", "VAT estimate"])
       values = @month.weeks.collect { |w|
         c_and_e = @month_contracts_and_events.restrict_to_period(w)
@@ -123,7 +123,7 @@ class AccountsTabController < TabController
     end
 
     def set_outgoings()
-      @wb_controller.set_data(@sheet_range.cell(OUTGOINGS_HEADING_ROW, 0), "Outgoings")
+      @wb_controller.set_data(@sheet_range.cell(OUTGOINGS_HEADING_ROW, 0), "Outgoing")
       @wb_controller.set_data(@sheet_range[OUTGOING_WEEK_ROW, 0..(@num_weeks + 2)], ["Week"] + @month.weeks.collect { |w| w.week_number } + ["MTD", "VAT estimate"])
       values = @month.weeks.collect { |w|
         c_and_e = @month_contracts_and_events.restrict_to_period(w)
@@ -230,7 +230,6 @@ class AccountsTabController < TabController
       right_align_text_request(@sheet_range[FULL_PRICE_ROW..GUESTS_ROW, 0]),
 
       right_align_text_request(@sheet_range[FULL_PRICE_SALES_ROW..OTHER_SALES_ROW, 0]),
-      # right_align_text_request(@sheet_range[INCOMING_WEEKS_ROW, (1 + @num_weeks)..(2 + @num_weeks)]),
       set_bottom_border_request(@sheet_range[INCOMING_WEEKS_ROW, 0..(@num_weeks + 2)]),
       set_bottom_border_request(@sheet_range[CREDIT_CARD_TAKINGS_ROW, 0..(@num_weeks + 2)]),
       set_left_right_border_request(@sheet_range[INCOMING_WEEKS_ROW..TOTAL_INCOME_ROW, 1 + @num_weeks]),
@@ -244,10 +243,7 @@ class AccountsTabController < TabController
         "#,##0.00"
       ),
 
-
-
       right_align_text_request(@sheet_range[MUSICIANS_FEE_ROW..CATERING_EXPENSES_ROW, 0]),
-      # right_align_text_request(@sheet_range[OUTGOING_WEEK_ROW, (1 + @num_weeks)..(2 + @num_weeks)]),
       set_bottom_border_request(@sheet_range[OUTGOING_WEEK_ROW, 0..(@num_weeks + 2)]),
       set_bottom_border_request(@sheet_range[EVENING_PURCHASES_ROW, 0..(@num_weeks + 2)]),
       set_right_border_request(@sheet_range[OUTGOING_WEEK_ROW..TOTAL_OUTGOINGS_ROW, 0]),
@@ -261,8 +257,6 @@ class AccountsTabController < TabController
         "#,##0.00"
       ),
 
-
-      # right_align_text_request(@sheet_range[NET_WEEK_ROW, (1 + @num_weeks)..(2 + @num_weeks)]),
       set_bottom_border_request(@sheet_range[NET_WEEK_ROW, 0..(@num_weeks + 2)]),
       set_left_right_border_request(@sheet_range[NET_WEEK_ROW..NET_TOTAL_ROW, 1 + @num_weeks]),
       bold_text_request(@sheet_range[NET_HEADING_ROW..NET_TOTAL_ROW, 0..(@num_weeks + 2)]),
@@ -273,8 +267,6 @@ class AccountsTabController < TabController
     ]
 
     @wb_controller.apply_requests(requests)
-
-
 
 
   end

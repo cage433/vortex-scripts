@@ -26,7 +26,7 @@ def airtable_spike()
   expenses_data = [["Beer", 10.0], ["Gin", 111.0]].collect do |note, amt|
     NMForm_ExpensesData.new(
       note: note,
-      amount: amt
+      debit: amt
     )
   end
   event_date =  DateTime.new(2021, 12, 22)
