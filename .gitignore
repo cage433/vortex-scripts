@@ -6,3 +6,4 @@ tags
 logs
 .idea
 *.lock
+*.db

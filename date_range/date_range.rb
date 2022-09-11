@@ -13,7 +13,7 @@ end
 
 class Month < AbstractDateRange
   include Comparable
-  attr_reader :year_no, :month_no
+  attr_reader :accounting_year, :month_no
 
   def initialize(year_no, month_no)
     @year_no = year_no
@@ -58,25 +58,109 @@ class Month < AbstractDateRange
 
   def <=>(other)
     assert_type(other, Month)
-    [@year_no, @month_no] <=> [other.year_no, other.month_no]
+    [@year_no, @month_no] <=> [other.accounting_year, other.month_no]
   end
 
   alias :eql? :==
 
   def tab_name
-    return Date.new(@year_no, @month_no, 1).strftime("%B %y")
+    Date.new(@year_no, @month_no, 1).strftime("%B %y")
+  end
+
+  def hash
+    17 * @year_no + @month_no
+  end
+
+end
+
+class AccountingYear < AbstractDateRange
+  attr_reader :accounting_year, :first_date, :last_date
+
+  def initialize(year_no)
+    @year_no = year_no
+    @first_date = Month.new(year_no - 1, 9).first_week.first_date
+    @last_date = Month.new(year_no, 8).last_week.last_date
+  end
+
+  def vortex_week_range
+    DateRange.new(@first_date, @last_date)
+  end
+
+  def tab_name
+    @year_no.to_s
+  end
+end
+
+class AccountingMonth < AbstractDateRange
+  include Comparable
+  attr_reader :accounting_year, :month_no
+
+  def initialize(accounting_year, month_no)
+    @accounting_year = accounting_year
+    @month_no = month_no
+    raise "Invalid month #{accounting_year}/#{month_no}" if @month_no < 1 || @month_no > 12
+    raise "Invalid month #{accounting_year}/#{month_no}" if @accounting_year < 2010 || @accounting_year > 2030
   end
 
   def first_week
     if MONTHS_TO_FIRST_WEEK.include?(self )
       MONTHS_TO_FIRST_WEEK[self]
     else
-      d = first_date
+      d = Month(@accounting_year, @month_no, 1)
       while d.cwday != 5 do
         d += 1
       end
       Week.containing(d)
     end
+  end
+
+  def self.containing(date)
+    m = AccountingMonth.new(date.year, date.month) - 1
+    while !m.contains?(date) do
+      m += 1
+    end
+
+  end
+
+  def to_s
+    "#AccMth-{@year_no}/#{@month_no}"
+  end
+
+  def first_date
+    first_week.first_date
+  end
+
+  def last_date
+    last_week.last_date
+  end
+
+  def +(inc)
+    y = @accounting_year
+    m = @month_no + inc
+    while m > 12 do
+      y += 1
+      m -= 12
+    end
+    while m < 1 do
+      y -= 1
+      m += 12
+    end
+    AccountingMonth.new(y, m)
+  end
+
+  def -(dec)
+    self + (-dec)
+  end
+
+  def <=>(other)
+    assert_type(other, AccountingMonth)
+    [@accounting_year, @month_no] <=> [other.accounting_year, other.month_no]
+  end
+
+  alias :eql? :==
+
+  def tab_name
+    Date.new(@accounting_year, @month_no, 1).strftime("%B %y")
   end
 
   def weeks
@@ -95,12 +179,16 @@ class Month < AbstractDateRange
   end
 
   def hash
-    17 * @year_no + @month_no
+    19 * @accounting_year + @month_no
   end
 
-  def vortex_week_range
-    DateRange.new(first_week.first_date, last_week.last_date)
+  def self.parse(text)
+    mth_name = text[0..2]
+    mth_no = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].index(mth_name) + 1
+    year_no = 2000 + text[4..5].to_i
+    AccountingMonth.new(year_no, mth_no)
   end
+
 end
 
 class Week < AbstractDateRange
@@ -193,54 +281,31 @@ class Week < AbstractDateRange
     [@accounting_year, @week_number] <=> [other.accounting_year, other.week_number]
   end
 
-  def self.read_weeks_data
-    month_to_first_week = {}
-    self.parsed_csv_data.each { |_, week, month|
-
-      if !month_to_first_week.include?(month)
-        month_to_first_week[month] = week
-      end
-
-    }
-
-    month_to_first_week
-  end
-
-  def self.read_first_week_data
-    date_of_first_week = {}
-    self.parsed_csv_data.each { |date, week, _|
-      if week.week_number == 1 and !date_of_first_week.include?(week)
-        date_of_first_week[week] = date
-      end
-    }
-    date_of_first_week
-
-  end
-
-  def self.parsed_csv_data
-    path = File.join(
-      File.dirname(__FILE__), '..', 'data', 'VortexWeeks.csv'
-    )
-    data = CSV.readlines(path).drop(1)
-    parsed_data = []
-    data.each { |row|
-
-      if row[0].nil? || row[0].strip == ""
-        next
-      end
-      week = Week.new(row[3].to_i, row[1].to_i)
-      month = Month.containing(Date.parse("1-#{row[2]}"))
-      date = Date.parse(row[0])
-      parsed_data << [date, week, month]
-    }
-    parsed_data
-
-  end
 
 end
 
-MONTHS_TO_FIRST_WEEK = Week.read_weeks_data
-# START_OF_FIRST_WEEK = Week.read_first_week_data
+def read_months_to_first_week
+  path = File.join(
+    File.dirname(__FILE__), '..', 'data', 'VortexWeeks.csv'
+  )
+  data = CSV.readlines(path).drop(1)
+  month_to_first_week = {}
+  data.each { |row|
+
+    if row[0].nil? || row[0].strip == ""
+      next
+    end
+    week_number = row[1].to_i
+    month = AccountingMonth.parse(row[2])
+    week = Week.new(month.accounting_year, week_number)
+    if month_to_first_week[month].nil?
+      month_to_first_week[month] = week
+    end
+  }
+  month_to_first_week
+end
+
+MONTHS_TO_FIRST_WEEK = read_months_to_first_week
 
 class DateRange < AbstractDateRange
   attr_reader :first_date, :last_date
@@ -251,12 +316,17 @@ class DateRange < AbstractDateRange
 end
 
 class Year < AbstractDateRange
-  attr_reader :year_no, :first_date, :last_date
+  attr_reader :accounting_year, :first_date, :last_date
 
   def initialize(year_no)
     @year_no = year_no
     @first_date = Date.new(year_no, 1, 1)
     @last_date = Date.new(year_no, 12, 31)
   end
+
+  def tab_name
+    @year_no.to_s
+  end
 end
+
 

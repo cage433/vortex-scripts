@@ -20,9 +20,6 @@ class TestDateRange < Minitest::Test
       assert_equal(w.last_date, (w + 1).first_date - 1)
       d = w.first_date
       while d <= w.last_date do
-        if w != Week.containing(d) then
-          foo = Week.containing(d)
-        end
         assert_equal(w, Week.containing(d))
         d += 1
       end
