@@ -13,7 +13,15 @@ end
 
 class Month < AbstractDateRange
   include Comparable
-  attr_reader :accounting_year, :month_no
+  attr_reader :year_no, :month_no
+
+  def accounting_month
+    if month_no >= 9
+      AccountingMonth.new(year_no + 1, month_no)
+    else
+      AccountingMonth.new(year_no, month_no)
+    end
+  end
 
   def initialize(year_no, month_no)
     @year_no = year_no
@@ -58,7 +66,7 @@ class Month < AbstractDateRange
 
   def <=>(other)
     assert_type(other, Month)
-    [@year_no, @month_no] <=> [other.accounting_year, other.month_no]
+    [@year_no, @month_no] <=> [other.year_no, other.month_no]
   end
 
   alias :eql? :==
@@ -74,20 +82,49 @@ class Month < AbstractDateRange
 end
 
 class AccountingYear < AbstractDateRange
-  attr_reader :accounting_year, :first_date, :last_date
+  include Comparable
+  attr_reader :year_no
 
   def initialize(year_no)
     @year_no = year_no
-    @first_date = Month.new(year_no - 1, 9).first_week.first_date
-    @last_date = Month.new(year_no, 8).last_week.last_date
   end
 
-  def vortex_week_range
-    DateRange.new(@first_date, @last_date)
+  def first_date
+    if ACC_YEARS_TO_FIRST_DATE.has_key?(self )
+      ACC_YEARS_TO_FIRST_DATE[self]
+    else
+      d = Date.new(@year_no - 1, 9, 1)
+      while d.cwday > 5 do
+        d += 1
+      end
+      while d.cwday != 1 do
+        d -= 1
+      end
+      d
+    end
+  end
+
+  def last_date
+    (self + 1).first_date - 1
   end
 
   def tab_name
     @year_no.to_s
+  end
+
+  def +(inc)
+    AccountingYear.new(@year_no + inc)
+  end
+
+  def <=>(other)
+    assert_type(other, AccountingYear)
+    @year_no <=> other.year_no
+  end
+
+  alias :eql? :==
+
+  def hash
+    @year_no
   end
 end
 
@@ -106,7 +143,7 @@ class AccountingMonth < AbstractDateRange
     if MONTHS_TO_FIRST_WEEK.include?(self )
       MONTHS_TO_FIRST_WEEK[self]
     else
-      d = Month(@accounting_year, @month_no, 1)
+      d = calendar_month.first_date
       while d.cwday != 5 do
         d += 1
       end
@@ -123,7 +160,7 @@ class AccountingMonth < AbstractDateRange
   end
 
   def to_s
-    "#AccMth-{@year_no}/#{@month_no}"
+    "AccMth-#{@accounting_year}/#{@month_no}"
   end
 
   def first_date
@@ -131,21 +168,19 @@ class AccountingMonth < AbstractDateRange
   end
 
   def last_date
-    last_week.last_date
+    (self + 1).first_date - 1
+  end
+
+  def calendar_month
+    if @month_no >= 9
+      Month.new(@accounting_year - 1, @month_no)
+    else
+      Month.new(@accounting_year, @month_no)
+    end
   end
 
   def +(inc)
-    y = @accounting_year
-    m = @month_no + inc
-    while m > 12 do
-      y += 1
-      m -= 12
-    end
-    while m < 1 do
-      y -= 1
-      m += 12
-    end
-    AccountingMonth.new(y, m)
+    (calendar_month + inc).accounting_month
   end
 
   def -(dec)
@@ -160,7 +195,7 @@ class AccountingMonth < AbstractDateRange
   alias :eql? :==
 
   def tab_name
-    Date.new(@accounting_year, @month_no, 1).strftime("%B %y")
+    calendar_month.tab_name
   end
 
   def weeks
@@ -195,12 +230,13 @@ class Week < AbstractDateRange
   include Comparable
   attr_reader :accounting_year, :week_number
   def to_s
-    "#{self.class}, #{@accounting_year} #{@week_number}: #{first_date} - #{last_date}"
+    "#{self.class.name}, #{@accounting_year} #{@week_number}: #{first_date} - #{last_date}"
   end
 
   def initialize(accounting_year, week_number)
     @accounting_year = accounting_year
     @week_number = week_number
+    raise "Invalid week #{accounting_year}/#{week_number}" if @week_number < 1 || @week_number > 53
   end
 
   def first_date
@@ -229,13 +265,13 @@ class Week < AbstractDateRange
   def self.last_week_number_of_year(accounting_year:)
     d0 = self.start_of_first_week(accounting_year: accounting_year)
     d1 = self .start_of_first_week(accounting_year: accounting_year + 1)
-    (d1 - d0) / 7 + 1
+    (d1 - d0) / 7
   end
 
   def self.containing(d)
     y = d.year
-    if Week.start_of_first_week(accounting_year: y) > d
-      y -= 1
+    if Week.start_of_first_week(accounting_year: y + 1) <= d
+      y += 1
     end
     monday = d - d.cwday + 1
     week_number = ((monday - Week.start_of_first_week(accounting_year: y)) / 7).to_i + 1
@@ -250,6 +286,7 @@ class Week < AbstractDateRange
       Week.new(@accounting_year + 1, 1)
     end
   end
+
   def previous
     if @week_number > 1
       Week.new(@accounting_year, @week_number - 1)
@@ -286,26 +323,39 @@ end
 
 def read_months_to_first_week
   path = File.join(
-    File.dirname(__FILE__), '..', 'data', 'VortexWeeks.csv'
+    File.dirname(__FILE__), '..', 'data', 'accounting_months.csv'
   )
   data = CSV.readlines(path).drop(1)
   month_to_first_week = {}
+  years_to_first_date = {}
   data.each { |row|
 
     if row[0].nil? || row[0].strip == ""
       next
     end
     week_number = row[1].to_i
-    month = AccountingMonth.parse(row[2])
-    week = Week.new(month.accounting_year, week_number)
-    if month_to_first_week[month].nil?
-      month_to_first_week[month] = week
+    mth_name = row[2][0..2]
+    mth_no = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].index(mth_name) + 1
+    d = Date.parse(row[0])
+    y = 2000 + row[2][4..5].to_i
+    if mth_no >= 9
+      y += 1
+    end
+    acc_year = AccountingYear.new(y)
+    if mth_no == 9 && years_to_first_date[acc_year].nil?
+      years_to_first_date[acc_year] = d
+    end
+    acc_month = AccountingMonth.new(y, mth_no)
+    week = Week.new(y, week_number)
+    if month_to_first_week[acc_month].nil?
+      month_to_first_week[acc_month] = week
     end
   }
-  month_to_first_week
+  [month_to_first_week, years_to_first_date]
 end
 
-MONTHS_TO_FIRST_WEEK = read_months_to_first_week
+MONTHS_TO_FIRST_WEEK, ACC_YEARS_TO_FIRST_DATE = read_months_to_first_week
+puts "Loaded #{MONTHS_TO_FIRST_WEEK.size} months to first week"
 
 class DateRange < AbstractDateRange
   attr_reader :first_date, :last_date
