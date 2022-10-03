@@ -99,7 +99,7 @@ class TestDateRange < Minitest::Test
       assert_equal(ay.last_date, AccountingMonth.new(y, 8).last_date)
     end
   end
-  
+
   def test_acc_years_consistent_with_weeks
     for y in 2013..2028 do
       ay = AccountingYear.new(y)

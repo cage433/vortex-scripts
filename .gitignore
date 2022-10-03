@@ -7,3 +7,5 @@ logs
 .idea
 *.lock
 *.db
+data/ledger-dumps
+.DS_Store

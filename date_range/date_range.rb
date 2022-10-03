@@ -355,7 +355,6 @@ def read_months_to_first_week
 end
 
 MONTHS_TO_FIRST_WEEK, ACC_YEARS_TO_FIRST_DATE = read_months_to_first_week
-puts "Loaded #{MONTHS_TO_FIRST_WEEK.size} months to first week"
 
 class DateRange < AbstractDateRange
   attr_reader :first_date, :last_date

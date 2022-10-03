@@ -1,12 +1,12 @@
 require_relative 'utils/tab_controller'
 require_relative 'utils/workbook_controller'
+require_relative '../ledger/ledger'
 
 #noinspection RubyDefParenthesesInspection
 class AccountsTabController < TabController
   MONTH_ROW = 1
   START_DATE_ROW = 2
   VAT_ROW = 3
-
 
   AUDIENCE_HEADING_ROW = 5
   AUDIENCE_WEEK_ROW, AUDIENCE_ROW, FULL_PRICE_ROW, MEMBER_ROW, STUDENTS_ROW, OTHERS_ROW, GUESTS_ROW = ((AUDIENCE_HEADING_ROW + 2)..(AUDIENCE_HEADING_ROW + 8)).to_a
@@ -23,9 +23,10 @@ class AccountsTabController < TabController
 
   OUTGOING_WEEK_ROW, TOTAL_MUSICIAN_COSTS_ROW, MUSICIANS_FEE_ROW,
     ACCOMMODATION_ROW, TRAVEL_EXPENSES_ROW, CATERING_EXPENSES_ROW,
-    PRS_ROW, EVENING_PURCHASES_ROW, TOTAL_OUTGOINGS_ROW = ((OUTGOINGS_HEADING_ROW + 2)..(OUTGOINGS_HEADING_ROW + 10)).to_a
+    SOUND_ENGINEERING_ROW,
+    PRS_ROW, EVENING_PURCHASES_ROW, TOTAL_OUTGOINGS_ROW = ((OUTGOINGS_HEADING_ROW + 2)..(OUTGOINGS_HEADING_ROW + 11)).to_a
 
-  NET_HEADING_ROW = 39
+  NET_HEADING_ROW = 40
   NET_WEEK_ROW, NET_TOTAL_ROW = ((NET_HEADING_ROW + 2)..(NET_HEADING_ROW + 3)).to_a
 
   def initialize(month, wb_controller, contracts_and_events, vat_rate)
@@ -123,6 +124,7 @@ class AccountsTabController < TabController
     end
 
     def set_outgoings()
+      ledger = Ledger.from_latest_dump
       @wb_controller.set_data(@sheet_range.cell(OUTGOINGS_HEADING_ROW, 0), "Outgoing")
       @wb_controller.set_data(@sheet_range[OUTGOING_WEEK_ROW, 0..(@num_weeks + 2)], ["Week"] + @month.weeks.collect { |w| w.week_number } + ["MTD", "VAT estimate"])
       values = @month.weeks.collect { |w|
@@ -133,12 +135,13 @@ class AccountsTabController < TabController
           c_and_e.total_accommodation_costs,
           c_and_e.total_travel_expenses,
           c_and_e.total_food_budget,
+          ledger.sound_engineering_payments(w),
           c_and_e.total_prs_fee,
           c_and_e.total_evening_purchases,
         ]
       }
       values.unshift(
-        ["Musician Costs", "Fees", "Accommodation", "Travel", "Catering", "PRS", "Evening Purchases"]
+        ["Musician Costs", "Fees", "Accommodation", "Travel", "Catering", "Sound Engineers", "PRS", "Evening Purchases"]
       )
       set_week_values_and_mtd(values.transpose, TOTAL_MUSICIAN_COSTS_ROW..EVENING_PURCHASES_ROW)
     end
@@ -146,10 +149,11 @@ class AccountsTabController < TabController
 
     def set_total_outgoings()
       values = (1..(@num_weeks + 2)).collect { |i|
-        musician_costs_cell = @sheet_range[TOTAL_MUSICIAN_COSTS_ROW, i]
-        prs_cell = @sheet_range[PRS_ROW, i]
-        evening_purchases_cell = @sheet_range[EVENING_PURCHASES_ROW, i]
-        "=SUM(#{musician_costs_cell.cell_reference}, #{prs_cell.cell_reference}, #{evening_purchases_cell.cell_reference})"
+        cell_references = [TOTAL_MUSICIAN_COSTS_ROW, SOUND_ENGINEERING_ROW, PRS_ROW, EVENING_PURCHASES_ROW].collect { |row|
+          @sheet_range[row, i].cell_reference
+        }
+        text = cell_references.join(", ")
+        "=SUM(#{text})"
       }
       values.unshift("Total")
       @wb_controller.set_data(@sheet_range[TOTAL_OUTGOINGS_ROW, 0..(@num_weeks + 2)], values)
@@ -170,7 +174,7 @@ class AccountsTabController < TabController
     def set_net_vat()
       net_incoming_vat_cell = @sheet_range[TOTAL_INCOME_ROW, @num_weeks + 2]
       net_outgoing_vat_cell = @sheet_range[TOTAL_OUTGOINGS_ROW, @num_weeks + 2]
-      value = "=#{net_incoming_vat_cell.cell_reference}  - #{net_outgoing_vat_cell.cell_reference}"
+      value = "=#{net_incoming_vat_cell.cell_reference} - #{net_outgoing_vat_cell.cell_reference}"
       @wb_controller.set_data(@sheet_range[NET_TOTAL_ROW, @num_weeks + 2], value)
     end
 
@@ -249,7 +253,7 @@ class AccountsTabController < TabController
       set_right_border_request(@sheet_range[OUTGOING_WEEK_ROW..TOTAL_OUTGOINGS_ROW, 0]),
       set_left_right_border_request(@sheet_range[OUTGOING_WEEK_ROW..TOTAL_OUTGOINGS_ROW, 1 + @num_weeks]),
       bold_text_request(@sheet_range[TOTAL_MUSICIAN_COSTS_ROW, 0]),
-      bold_text_request(@sheet_range[PRS_ROW..EVENING_PURCHASES_ROW, 0]),
+      bold_text_request(@sheet_range[SOUND_ENGINEERING_ROW..EVENING_PURCHASES_ROW, 0]),
       bold_text_request(@sheet_range[TOTAL_OUTGOINGS_ROW, 0..(@num_weeks + 2)]),
       group_rows_request(MUSICIANS_FEE_ROW, CATERING_EXPENSES_ROW),
       set_decimal_format_request(

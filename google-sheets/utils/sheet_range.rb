@@ -61,7 +61,7 @@ class SheetRange
   end
 
   def cell_reference()
-    raise "Not a cell" if !is_cell?
+    raise "Not a cell" unless is_cell?
     @top_left_cell.coordinates
   end
 
@@ -76,10 +76,10 @@ class SheetRange
       start_column_index: @top_left_cell.i_col,
       sheet_id: @sheet_id
     }
-    if !num_rows.nil?
+    unless num_rows.nil?
       range[:end_row_index] = @top_left_cell.i_row + num_rows
     end
-    if !num_cols.nil?
+    unless num_cols.nil?
       range[:end_column_index] = @top_left_cell.i_col + num_cols
     end
     range

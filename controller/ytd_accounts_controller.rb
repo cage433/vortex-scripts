@@ -11,7 +11,7 @@ class YTDAccountsController
   def year_tab_controller(year)
     tab_name = year.tab_name
     @controller.add_tab(tab_name) if !@controller.has_tab_with_name?(tab_name)
-    ac = YTDAccountsTabController.new(year, @controller, MultipleContractsAndEvents.read_many(date_range: year.vortex_week_range))
+    ac = YTDAccountsTabController.new(year, @controller, MultipleContractsAndEvents.read_many(date_range: year))
     ac.draw()
   end
 end

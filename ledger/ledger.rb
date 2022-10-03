@@ -2,8 +2,14 @@ require 'csv'
 
 FS = 28.chr
 
+module LedgerCodes
+  SOUND_ENGINEERING = 8871
+end
+
 class LedgerItem
   attr_reader :code, :type, :date, :reference, :narrative, :debit, :credit
+  include LedgerCodes
+
   def initialize(code:, type:, date:, reference:, narrative:, debit:, credit:)
     @code = code
     @type = type
@@ -61,14 +67,21 @@ class LedgerItem
   def to_s
     "#{@code}:#{type} - #{date}, #{@reference}, #{@debit} - #{@credit}"
   end
+
 end
 
 class Ledger
   include Enumerable
   attr_reader :ledger_items
 
+  include LedgerCodes
   def initialize(ledger_items)
     @ledger_items = ledger_items
+  end
+
+  def sound_engineering_payments(period)
+    filtered_items = @ledger_items.select { |li| li.code == SOUND_ENGINEERING && period.contains?(li.date) }
+    filtered_items.collect { |li| li.debit - li.credit }.reduce(0, :+)
   end
 
   def length
@@ -114,7 +127,21 @@ class Ledger
       end
     end
   end
+
+  def self.from_latest_dump
+    dump_dir = File.absolute_path(File.join(File.dirname(__FILE__), "..", "data", "ledger-dumps"))
+    dump_files = Dir.glob(File.join(dump_dir, "*.csv")).sort
+    raise "No dump files found in #{dump_dir}" if dump_files.length == 0
+    latest = dump_files.last
+    ledger = self.read_from_csv(latest)
+    fixed_ledger_path = File.join(dump_dir, "fixed", "#{File.basename(latest)}-fixed.csv")
+    unless File.exists?(fixed_ledger_path)
+      ledger.write_csv_file(fixed_ledger_path)
+    end
+    ledger
+  end
 end
 
-# ledger = Ledger.read_from_csv(File.join(Dir.home, 'Downloads', 'NominalLedgerReport.csv'))
-# ledger.write_csv_file(File.join(Dir.home, 'Downloads', 'NominalLedgerReportFixed.csv'))
+ledger = Ledger.from_latest_dump
+puts(ledger.length)
+ledger.write_csv_file(File.join(Dir.home, 'Downloads', 'NominalLedgerReportFixed.csv'))
