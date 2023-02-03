@@ -9,12 +9,12 @@ module VolunteerRotaColumns
   EVENT_ID_COL, DATE_COL, TITLE_COL, DOORS_OPEN_COL, 
     DISPLAY_TITLE_COL, DISPLAY_DATE_COL, DAY_COL, 
     DISPLAY_DOORS_OPEN_COL, NIGHT_MANAGER_COL, 
-    VOL_1_COL, VOL_2_COL, SOUND_ENGINEER_COL, 
-    MEMBER_BOOKINGS_COL, NM_NOTES_COL = [*0..14]
+    VOL_1_COL, VOL_2_COL, VOL_3_COL, SOUND_ENGINEER_COL,
+    MEMBER_BOOKINGS_COL, NM_NOTES_COL = [*0..15]
 end
 
 class VolunteerMonthTabController < TabController
-  HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Sound", "Members Bookings", "NM Notes"]
+  HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Vol 3", "Sound", "Members Bookings", "NM Notes"]
   include VolunteerRotaColumns
 
   def initialize(year_no, month_no, wb_controller)
@@ -57,6 +57,7 @@ class VolunteerMonthTabController < TabController
       set_row_height_request(0, num_events, 30),
       bold_and_center_request(@sheet_range.row(0)),
       set_border_request(events_range.column(VOL_1_COL), style: "DOTTED", borders: [:right]),
+      set_border_request(events_range.column(VOL_2_COL), style: "DOTTED", borders: [:right]),
       set_border_request(events_range.column(MEMBER_BOOKINGS_COL), style: "DOTTED", color: @@black, borders: [:right]),
       bold_text_request(events_range.sub_range(relative_col_range: DISPLAY_TITLE_COL..DISPLAY_DOORS_OPEN_COL)),
     ]
@@ -86,6 +87,7 @@ class VolunteerMonthTabController < TabController
         personnel.night_manager,
         personnel.vol1,
         personnel.vol2,
+        personnel.vol3,
         personnel.sound_engineer,
         personnel.member_bookings,
         personnel.nm_notes
@@ -132,7 +134,6 @@ class VolunteerMonthTabController < TabController
 
 
   def read_events_personnel()
-
     rows = @wb_controller.get_spreadsheet_values(@sheet_range.rows(1..))
     if rows.nil?
       EventsPersonnel.new(events_personnel: [])
@@ -147,6 +148,7 @@ class VolunteerMonthTabController < TabController
             doors_open: doors_open,
             vol1: row[VOL_1_COL],
             vol2: row[VOL_2_COL],
+            vol3: row[VOL_3_COL],
             night_manager: row[NIGHT_MANAGER_COL],
             sound_engineer: row[SOUND_ENGINEER_COL],
             member_bookings: row[MEMBER_BOOKINGS_COL],

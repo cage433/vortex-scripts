@@ -1,13 +1,14 @@
 require_relative '../utils/utils'
 
 class EventPersonnel 
-  attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :night_manager, :sound_engineer, :member_bookings, :nm_notes
+  attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :vol3, :night_manager, :sound_engineer, :member_bookings, :nm_notes
 
   def initialize(
     airtable_id:, 
     title:, date:, 
     doors_open:, 
-    vol1:, vol2:, night_manager:, sound_engineer:, 
+    vol1:, vol2:, vol3:,
+    night_manager:, sound_engineer:,
     member_bookings:, nm_notes:
   )
     assert_type(doors_open, Time, allow_null: true)
@@ -17,6 +18,7 @@ class EventPersonnel
     @doors_open = doors_open
     @vol1 = vol1
     @vol2 = vol2
+    @vol3 = vol3
     @night_manager = night_manager
     @sound_engineer = sound_engineer
     @member_bookings = member_bookings
@@ -30,6 +32,7 @@ class EventPersonnel
       "Doors:           #{@doors_open}",
       "Vol1:            #{@vol1}",
       "Vol2:            #{@vol2}",
+      "Vol3:            #{@vol3}",
       "NM:              #{@night_manager}",
       "SE:              #{@sound_engineer}",
       "Mem Books:       #{@member_bookings}",
@@ -59,7 +62,7 @@ class EventPersonnel
   end
 
   def personnel_state
-    [@vol1, @vol2, @night_manager, @nm_notes, @member_bookings]
+    [@vol1, @vol2, @vol3, @night_manager, @nm_notes, @member_bookings]
   end
 
   def metadata_state
@@ -74,6 +77,7 @@ class EventPersonnel
       doors_open:     rhs.doors_open,
       vol1:           @vol1,
       vol2:           @vol2,
+      vol3:           @vol3,
       night_manager:  @night_manager,
       sound_engineer: rhs.sound_engineer,
       member_bookings: rhs.member_bookings,

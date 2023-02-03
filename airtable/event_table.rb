@@ -15,6 +15,7 @@ module EventTableColumns
   NIGHT_MANAGER_NAME = "Night Manager Name"
   VOL_1 = "Vol 1 Name"
   VOL_2 = "Vol 2 Name"
+  VOL_3 = "Vol 3 Name"
   STATUS = "Status"
   MEMBER_BOOKINGS = "Member Bookings"
   NM_NOTES = "NM Notes"

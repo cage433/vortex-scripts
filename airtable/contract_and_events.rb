@@ -1,5 +1,6 @@
 require_relative 'contracts'
 require_relative 'event_table'
+require_relative '../date_range/date_range'
 include ContractsColumns
 include EventTableColumns
 
@@ -236,3 +237,15 @@ class MultipleContractsAndEvents
   end
 
 end
+
+names = []
+month = Month.new(2022, 1)
+while month < Month.new(2023, 2)
+  puts("Processing #{month}")
+  contracts = MultipleContractsAndEvents.read_many(date_range: month)
+  month += 1
+  month_names = contracts.contracts_and_events.collect {|ce| ce.event_name}.sort
+  names += month_names
+end
+
+names.sort.uniq.each {|n| puts n}

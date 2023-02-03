@@ -89,6 +89,7 @@ class VolunteerAirtableController
         doors_open: self.door_time(rec),
         vol1: rec[VOL_1],
         vol2: rec[VOL_2],
+        vol3: rec[VOL_3],
         night_manager: rec[NIGHT_MANAGER_NAME],
         sound_engineer: sound_engineer,
         member_bookings: rec[MEMBER_BOOKINGS],
@@ -109,6 +110,7 @@ class VolunteerAirtableController
       airtable_record[NIGHT_MANAGER_NAME] = ep.night_manager
       airtable_record[VOL_1] = ep.vol1
       airtable_record[VOL_2] = ep.vol2
+      airtable_record[VOL_3] = ep.vol3
       airtable_record[MEMBER_BOOKINGS] = ep.member_bookings
       airtable_record[NM_NOTES] = ep.nm_notes
       airtable_record.save()
