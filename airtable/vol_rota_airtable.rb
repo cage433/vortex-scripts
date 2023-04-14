@@ -82,20 +82,24 @@ class VolunteerAirtableController
                          contacts[rec[SOUND_ENGINEER][0]]
                        end
 
-      EventPersonnel.new(
-        airtable_id: rec[EVENT_ID],
-        title: self._event_title(rec),
-        date: Date.parse(rec[EVENT_DATE]),
-        doors_open: self.door_time(rec),
-        vol1: rec[VOL_1],
-        vol2: rec[VOL_2],
-        vol3: rec[VOL_3],
-        night_manager: rec[NIGHT_MANAGER_NAME],
-        sound_engineer: sound_engineer,
-        member_bookings: rec[MEMBER_BOOKINGS],
-        nm_notes: rec[NM_NOTES]
-      )
-    }
+      if rec[EXCLUDE_FROM_VOL_ROTA]
+        nil
+      else
+        EventPersonnel.new(
+          airtable_id: rec[EVENT_ID],
+          title: self._event_title(rec),
+          date: Date.parse(rec[EVENT_DATE]),
+          doors_open: self.door_time(rec),
+          vol1: rec[VOL_1],
+          vol2: rec[VOL_2],
+          vol3: rec[VOL_3],
+          night_manager: rec[NIGHT_MANAGER_NAME],
+          sound_engineer: sound_engineer,
+          member_bookings: rec[MEMBER_BOOKINGS],
+          nm_notes: rec[NM_NOTES]
+        )
+      end
+    }.compact
     EventsPersonnel.new(events_personnel: events_personnel)
 
   end

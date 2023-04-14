@@ -42,3 +42,42 @@ def compare_with_nils(l, r)
       l <=> r
     end
 end
+
+def format_float(f)
+  if f.nil?
+    ""
+  else
+    sprintf("%.2f", f)
+  end
+end
+def tabulated(data, headers=nil)
+  if headers
+    data = [headers] + data
+  end
+  width = data[0].length
+  max_widths = Array.new(width, 0)
+  data.each do |row|
+    row.each_with_index do |cell, i|
+      if cell.is_a?(Float)
+        s = format_float(cell)
+      else
+        s = cell.to_s
+      end
+      max_widths[i] = [max_widths[i], s.length].max
+    end
+  end
+
+  result = ""
+  data.each do |row|
+    row.each_with_index do |cell, i|
+      if cell.is_a?(Float)
+        s = format_float(cell).rjust(max_widths[i] + 2)
+      else
+        s = cell.to_s.ljust(max_widths[i] + 2)
+      end
+      result += s
+    end
+    result += "\n"
+  end
+  result
+end

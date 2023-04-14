@@ -36,6 +36,7 @@ module EventTableColumns
   OTHER_TICKET_SALES = "Other ticket sales"
   CREDIT_CARD_TAKINGS = "Credit card takings"
   EVENING_PURCHASES = "Evening purchases"
+  EXCLUDE_FROM_VOL_ROTA = "Exclude from vol rota"
 end
 
 class EventTable < Airrecord::Table
