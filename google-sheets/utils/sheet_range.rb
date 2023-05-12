@@ -49,7 +49,16 @@ class SheetRange
   end
 
   def as_value_range()
-    "#{@sheet_name}!#{@top_left_cell.coordinates}:#{bottom_right_cell.coordinates}"
+    if @num_rows.nil?
+      top_right_cell = @top_left_cell.offset(0, @num_cols - 1)
+      columns = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      col1 = columns[@top_left_cell.i_col]
+      col2 = columns[top_right_cell.i_col]
+      foo = "#{@sheet_name}!#{col1}:#{col2}"
+      foo
+    else
+      "#{@sheet_name}!#{@top_left_cell.coordinates}:#{bottom_right_cell.coordinates}"
+    end
   end
 
   def to_s

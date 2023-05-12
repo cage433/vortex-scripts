@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 require 'csv'
 require 'date'
+require 'ofx_reader'
+require 'ofx'
 
 class Category
   attr_reader :category_type
@@ -484,13 +486,23 @@ class StatementItem
       ).categorise
     end
   end
+
+  def self.from_ofx_file(file_path)
+    ofx = OFXReader.(file_path)
+    puts("here")
+
+  end
+
 end
 
-path = File.absolute_path(File.join("/Users", "alex", "vortex", "bank statements", "RT_20230124_61414372.csv"))
-items = StatementItem.from_csv_file(path)
-items.select { |item| item.category == DALSTON_LOCAL}.sort_by { |item| item.date }.each do |item|
-  puts "#{item.date} #{item.description} #{item.amount}"
-end
+path = File.absolute_path(File.join("/Users", "alex", "vortex", "bank statements", "20230412_61414372.csv"))
+StatementItem.from_ofx_file(path)
+# path = File.absolute_path(File.join("/Users", "alex", "vortex", "bank statements", "RT_20230124_61414372.csv"))
+# path = File.absolute_path(File.join("/Users", "alex", "vortex", "bank statements", "20230112_61414372.csv"))
+# items = StatementItem.from_csv_file(path)
+# items.select { |item| item.category == DALSTON_LOCAL}.sort_by { |item| item.date }.each do |item|
+#   puts "#{item.date} #{item.description} #{item.amount}"
+# end
 
 # by_category = items.group_by { |item| item.category }
 # keys = by_category.keys.sort_by { |k| k.to_s }
