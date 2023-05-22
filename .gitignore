@@ -9,3 +9,4 @@ logs
 *.db
 data/ledger-dumps
 .DS_Store
+spikes
