@@ -2,7 +2,6 @@ require_relative '../airtable/vol_rota_airtable'
 require_relative '../google-sheets/vol_rota_tab_controller'
 require_relative '../logging.rb'
 
-
 class VolRotaController
 
   def initialize()
@@ -34,7 +33,7 @@ class VolRotaController
     )
     events_personnel = events_personnel.add_missing(airtable_events_personnel)
     if !events_personnel.matches(sheet_events_personnel) || force
-      VOL_ROTA_LOGGER.info("Updating vol sheet")
+      LOG.info("Updating vol sheet")
       tab_controller.replace_events(events_personnel)
     end
   end

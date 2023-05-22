@@ -6,14 +6,11 @@ require_relative '../logging'
 require_relative '../utils/utils'
 require_relative '../model/event_personnel'
 
-
-
 ######################
 #     Airtable
 #######################
 
-Airrecord.api_key = AIRTABLE_API_KEY 
-
+Airrecord.api_key = AIRTABLE_API_KEY
 
 module ContactsTableMeta
   ID = "Record ID"
@@ -29,21 +26,20 @@ class ContactsTable < Airrecord::Table
 
 end
 
-
 class Contacts
   include ContactsTableMeta
+
   def initialize()
     recs = ContactsTable.all(
-      fields:[ID, FULL_NAME]
+      fields: [ID, FULL_NAME]
     )
-    @names_by_id = Hash[ *recs.collect { |rec| [rec[ID], rec[FULL_NAME]]}.flatten ]
+    @names_by_id = Hash[*recs.collect { |rec| [rec[ID], rec[FULL_NAME]] }.flatten]
   end
 
   def [](id)
     @names_by_id[id]
   end
 end
-
 
 class VolunteerAirtableController
   include EventTableColumns
@@ -82,7 +78,8 @@ class VolunteerAirtableController
                          contacts[rec[SOUND_ENGINEER][0]]
                        end
 
-      if rec[EXCLUDE_FROM_VOL_ROTA]
+      contract_types = rec[CONTRACT_TYPE] || []
+      if contract_types.include?("Rehearsal")
         nil
       else
         EventPersonnel.new(
@@ -104,11 +101,10 @@ class VolunteerAirtableController
 
   end
 
-
   def self.update_events_personnel(events_personnel)
     assert_type(events_personnel, EventsPersonnel)
-    events_personnel.events_personnel.each do |ep| 
-      VOL_ROTA_LOGGER.info("Updating record for #{ep.date}, #{ep.title}, #{ep.airtable_id}")
+    events_personnel.events_personnel.each do |ep|
+      LOG.info("Updating record for #{ep.date}, #{ep.title}, #{ep.airtable_id}")
       airtable_record = EventTable.find(ep.airtable_id)
 
       airtable_record[NIGHT_MANAGER_NAME] = ep.night_manager

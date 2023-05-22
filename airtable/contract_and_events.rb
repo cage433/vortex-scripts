@@ -238,14 +238,14 @@ class MultipleContractsAndEvents
 
 end
 
-names = []
-month = Month.new(2022, 1)
-while month < Month.new(2023, 2)
-  puts("Processing #{month}")
-  contracts = MultipleContractsAndEvents.read_many(date_range: month)
-  month += 1
-  month_names = contracts.contracts_and_events.collect {|ce| ce.event_name}.sort
-  names += month_names
-end
-
-names.sort.uniq.each {|n| puts n}
+# names = []
+# month = Month.new(2022, 1)
+# while month < Month.new(2023, 2)
+#   puts("Processing #{month}")
+#   contracts = MultipleContractsAndEvents.read_many(date_range: month)
+#   month += 1
+#   month_names = contracts.contracts_and_events.collect {|ce| ce.event_name}.sort
+#   names += month_names
+# end
+#
+# names.sort.uniq.each {|n| puts n}

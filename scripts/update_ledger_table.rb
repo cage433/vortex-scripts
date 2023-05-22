@@ -24,7 +24,7 @@ def update_ledger_table(csv_file)
       raise "ERROR: Latest airtable date is #{latest_airtable_date}, earliest CSV date is #{earliest_csv_date}"
     end
     csv_extra.each do |item|
-      VOL_ROTA_LOGGER.info("Adding #{item}")
+      LOG.info("Adding #{item}")
       NominalLedgerTable.create(
         CODE => item.code,
         TYPE => item.type,
@@ -39,5 +39,6 @@ def update_ledger_table(csv_file)
     puts "No extra items in CSV"
   end
 end
+
 csv_file = File.join(Dir.home, 'Downloads', 'NominalLedgerReport.csv')
 # update_ledger_table(csv_file)

@@ -2,7 +2,7 @@ require_relative '../env'
 require_relative '../utils/utils'
 require_relative 'vortex_table'
 require 'airrecord'
-Airrecord.api_key = AIRTABLE_API_KEY 
+Airrecord.api_key = AIRTABLE_API_KEY
 
 module EventTableColumns
   TABLE = "Events"
@@ -34,15 +34,15 @@ module EventTableColumns
   TOTAL_TICKET_SALES = "Total ticket sales"
   OTHER_TICKETS_WALK_IN = "Other tickets (walk-in)"
   OTHER_TICKET_SALES = "Other ticket sales"
-  CREDIT_CARD_TAKINGS = "Credit card takings"
+  CREDIT_CARD_TAKINGS = "Bar takings"
   EVENING_PURCHASES = "Evening purchases"
-  EXCLUDE_FROM_VOL_ROTA = "Exclude from vol rota"
+  CONTRACT_TYPE = "Contract Type"
 end
 
 class EventTable < Airrecord::Table
 
   include EventTableColumns
-   
+
   self.base_key = VORTEX_DATABASE_ID
   self.table_name = TABLE
 
@@ -64,7 +64,6 @@ class EventTable < Airrecord::Table
       last_date: Date.new(year, month_no, -1)
     ).collect { |rec| rec[EVENT_ID] }
   end
-
 
   def self.event_titles_for_date(date)
     # Could be more than 1, e.g. late night Saturday gigs
@@ -116,7 +115,6 @@ class EventTable < Airrecord::Table
     fields[TOTAL_TICKET_SALES] || 0
   end
 
-
   def credit_card_takings
     fields[CREDIT_CARD_TAKINGS] || 0
   end
@@ -128,7 +126,6 @@ class EventTable < Airrecord::Table
   def evening_purchases
     fields[EVENING_PURCHASES] || 0
   end
-
 
 end
 
