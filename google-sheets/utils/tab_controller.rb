@@ -3,30 +3,32 @@ require_relative 'sheet_range'
 
 class TabController
   @@light_green = {
-      red: 0.9,
-      green: 1.0,
-      blue: 0.9,
+    red: 0.9,
+    green: 1.0,
+    blue: 0.9,
   }
   @@black = {
-      red: 0.0,
-      green: 0.0,
-      blue: 0.0,
+    red: 0.0,
+    green: 0.0,
+    blue: 0.0,
   }
   @@light_yellow = {
-      red: 1.0,
-      green: 1.0,
-      blue: 0.9,
+    red: 1.0,
+    green: 1.0,
+    blue: 0.9,
   }
   @@yellow = {
-      red: 1.0,
-      green: 1.0,
-      blue: 0.8,
+    red: 1.0,
+    green: 1.0,
+    blue: 0.8,
   }
   @@almond = {
-      red: 1.0,
-      green: 0.9,
-      blue: 0.8,
+    red: 1.0,
+    green: 0.9,
+    blue: 0.8,
   }
+
+  attr_reader :sheet_id, :tab_name
 
   def initialize(wb_controller, tab_name)
     @wb_controller = wb_controller
@@ -50,15 +52,24 @@ class TabController
       @sheet_id, @tab_name)
   end
 
+  def sheet_range(top_left:, num_rows:, num_cols:)
+    SheetRange.new(
+      top_left,
+      num_rows,
+      num_cols,
+      @sheet_id, @tab_name
+    )
+
+  end
 
   def sheet_range_from_coordinates(coordinates)
     top_left, bottom_right = coordinates.upcase.split(":")
     i_first_row = top_left[1..].to_i - 1
     i_first_col = top_left[0].ord - "A".ord
     i_last_row = bottom_right[1..].to_i - 1
-    i_last_col = bottom_right[0].ord - "A".ord 
+    i_last_col = bottom_right[0].ord - "A".ord
     SheetRange.new(
-      SheetCell.from_coordinates(top_left), 
+      SheetCell.from_coordinates(top_left),
       i_last_row - i_first_row + 1,
       i_last_col - i_first_col + 1,
       @sheet_id,
@@ -95,27 +106,29 @@ class TabController
   end
 
   def set_date_format_request(range, format)
-    set_number_format_request(range, {type: "DATE", pattern: format})
+    set_number_format_request(range, { type: "DATE", pattern: format })
   end
+
   def set_currency_format_request(range)
-    set_number_format_request(range, {type: "CURRENCY"})
+    set_number_format_request(range, { type: "CURRENCY" })
   end
+
   def set_percentage_format_request(range)
-    set_number_format_request(range, {type: "PERCENT"})
+    set_number_format_request(range, { type: "PERCENT" })
   end
 
   def set_decimal_format_request(range, format)
-    set_number_format_request(range, {type: "NUMBER", pattern: format})
+    set_number_format_request(range, { type: "NUMBER", pattern: format })
   end
 
   def set_border_request(range, style: "SOLID_MEDIUM", color: @@black, borders:)
     border_style = {
-          style: style,
-          color: color
+      style: style,
+      color: color
     }
 
     {
-      update_borders: {range: range.as_json_range()}.merge(Hash[borders.collect{ |b| [b, border_style]}])
+      update_borders: { range: range.as_json_range() }.merge(Hash[borders.collect { |b| [b, border_style] }])
     }
   end
 
@@ -126,6 +139,7 @@ class TabController
   def set_top_border_request(range, style: "SOLID", color: @@black)
     set_border_request(range, style: style, color: color, borders: [:top])
   end
+
   def set_bottom_border_request(range, style: "SOLID", color: @@black)
     set_border_request(range, style: style, color: color, borders: [:bottom])
   end
@@ -145,6 +159,7 @@ class TabController
   def set_right_border_request(range, style: "SOLID", color: @@black)
     set_border_request(range, style: style, color: color, borders: [:right])
   end
+
   def set_column_width_request(i_col, width)
     {
       update_dimension_properties: {
@@ -192,7 +207,7 @@ class TabController
     }
   end
 
-  #noinspection RubyDefParenthesesInspection
+  # noinspection RubyDefParenthesesInspection
   def delete_all_group_rows_requests()
 
     @wb_controller.get_row_groups(@sheet_id).collect do |group|
@@ -227,29 +242,28 @@ class TabController
   end
 
   def user_entered_format_request(range, format)
-    fields = format.keys.collect { |key| "user_entered_format.#{key}"}.join(",")
-      {
-        repeat_cell: {
-          range: range.as_json_range(),
-          cell: {
-            user_entered_format: format
-          },
-          fields: fields
-        }
+    fields = format.keys.collect { |key| "user_entered_format.#{key}" }.join(",")
+    {
+      repeat_cell: {
+        range: range.as_json_range(),
+        cell: {
+          user_entered_format: format
+        },
+        fields: fields
       }
+    }
   end
 
   def horizontal_alignment_request(range, align)
-    user_entered_format_request(range, {horizontal_alignment: "#{align}"})
+    user_entered_format_request(range, { horizontal_alignment: "#{align}" })
   end
-
 
   def bold_and_center_request(range)
     user_entered_format_request(
       range,
       {
-        horizontal_alignment: "CENTER", 
-        text_format: {bold: true}
+        horizontal_alignment: "CENTER",
+        text_format: { bold: true }
       }
     )
   end
@@ -258,7 +272,7 @@ class TabController
     user_entered_format_request(
       range,
       {
-        text_format: {underline: true}
+        text_format: { underline: true }
       }
     )
   end
@@ -272,27 +286,28 @@ class TabController
   end
 
   def text_format_request(range, format)
-    user_entered_format_request(range, {text_format: format})
+    user_entered_format_request(range, { text_format: format })
   end
 
   def bold_text_request(range)
-    text_format_request(range, {bold: true})
+    text_format_request(range, { bold: true })
   end
 
   def create_checkbox_request(range)
-      {
-        repeat_cell: {
-          range: range.as_json_range(),
-          cell: {
-            data_validation: {
-              condition: {type: "BOOLEAN"},
-              show_custom_ui: true
-            }
-          },
-          fields: "data_validation"
-        }
+    {
+      repeat_cell: {
+        range: range.as_json_range(),
+        cell: {
+          data_validation: {
+            condition: { type: "BOOLEAN" },
+            show_custom_ui: true
+          }
+        },
+        fields: "data_validation"
       }
+    }
   end
+
   def unmerge_all_request()
     {
       unmerge_cells: {

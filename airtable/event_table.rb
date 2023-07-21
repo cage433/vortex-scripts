@@ -12,6 +12,7 @@ module EventTableColumns
   EVENT_DATE = "Event Date"
   DOORS_TIME = "Doors Time"
   SOUND_ENGINEER = "Sound Engineer"
+  VOL_ROTA_SOUND_ENGINEER = "Vol Rota Sound Engineer"
   NIGHT_MANAGER_NAME = "Night Manager Name"
   VOL_1 = "Vol 1 Name"
   VOL_2 = "Vol 2 Name"

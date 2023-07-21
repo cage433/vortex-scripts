@@ -1,12 +1,12 @@
 require_relative '../utils/utils'
 
-class EventPersonnel 
+class EventPersonnel
   attr_reader :airtable_id, :title, :date, :doors_open, :vol1, :vol2, :vol3, :night_manager, :sound_engineer, :member_bookings, :nm_notes
 
   def initialize(
-    airtable_id:, 
-    title:, date:, 
-    doors_open:, 
+    airtable_id:,
+    title:, date:,
+    doors_open:,
     vol1:, vol2:, vol3:,
     night_manager:, sound_engineer:,
     member_bookings:, nm_notes:
@@ -44,44 +44,37 @@ class EventPersonnel
     to_s_table("").join("\n")
   end
 
-  def personnel_match(rhs)
+  def vol_rota_data_matches(rhs)
     raise "Mismatching ids" unless airtable_id == rhs.airtable_id
-    EventPersonnel.states_match(personnel_state, rhs.personnel_state)
+    EventPersonnel.states_match(data_from_vol_rota, rhs.data_from_vol_rota)
   end
 
-  def metadata_match(rhs)
-    EventPersonnel.states_match(metadata_state, rhs.metadata_state)
+  def airtable_data_matches(rhs)
+    raise "Mismatching ids" unless airtable_id == rhs.airtable_id
+    EventPersonnel.states_match(data_from_airtable, rhs.data_from_airtable)
   end
 
-  def state
-    [@title, @date, @doors_open, @vol1, @vol2, @night_manager, @sound_engineer, @sound_engineer]
+  def data_from_vol_rota
+    [@vol1, @vol2, @vol3, @night_manager, @sound_engineer, @nm_notes, @member_bookings]
   end
 
-  def matches(rhs)
-    EventPersonnel.states_match(state, rhs.state)
+  def data_from_airtable
+    [@title, @date, @doors_open]
   end
 
-  def personnel_state
-    [@vol1, @vol2, @vol3, @night_manager, @nm_notes, @member_bookings]
-  end
-
-  def metadata_state
-    [@title, @date, @doors_open, @sound_engineer]
-  end
-
-  def with_metadata_from(rhs)
+  def updated_from_airtable(rhs)
     EventPersonnel.new(
-      airtable_id:    @airtable_id,
-      title:          rhs.title,
-      date:           rhs.date, 
-      doors_open:     rhs.doors_open,
-      vol1:           @vol1,
-      vol2:           @vol2,
-      vol3:           @vol3,
-      night_manager:  @night_manager,
-      sound_engineer: rhs.sound_engineer,
-      member_bookings: rhs.member_bookings,
-      nm_notes:       rhs.nm_notes
+      airtable_id: @airtable_id,
+      title: rhs.title,
+      date: rhs.date,
+      doors_open: rhs.doors_open,
+      vol1: @vol1,
+      vol2: @vol2,
+      vol3: @vol3,
+      night_manager: @night_manager,
+      sound_engineer: @sound_engineer,
+      member_bookings: @member_bookings,
+      nm_notes: @nm_notes
     )
   end
 
@@ -93,18 +86,18 @@ class EventPersonnel
   end
 end
 
-
-# A collection of EventPersonnel - exists to compare airtable and google sheets 
+# A collection of EventPersonnel - exists to compare airtable and google sheets
 # view of the world
 class EventsPersonnel
   attr_reader :events_personnel, :airtable_ids
+
   def initialize(events_personnel:)
     assert_collection_type(events_personnel, EventPersonnel)
     @events_personnel = events_personnel
-    @events_personnel_by_id = Hash[ *events_personnel.collect { |e| [e.airtable_id, e ] }.flatten ]
-    @airtable_ids = events_personnel.collect{ |p| p.airtable_id }.sort
+    @events_personnel_by_id = Hash[*events_personnel.collect { |e| [e.airtable_id, e] }.flatten]
+    @airtable_ids = events_personnel.collect { |p| p.airtable_id }.sort
   end
-  
+
   def [](id)
     @events_personnel_by_id[id]
   end
@@ -127,19 +120,28 @@ class EventsPersonnel
     @events_personnel.size
   end
 
-  def changed_personnel(rhs)
+  def changed_vol_rota_data(rhs)
     assert_type(rhs, EventsPersonnel)
     EventsPersonnel.new(
-      events_personnel: @events_personnel.filter { |ep| !ep.personnel_match(rhs[ep.airtable_id]) }
+      events_personnel: @events_personnel.filter { |ep| !ep.vol_rota_data_matches(rhs[ep.airtable_id]) }
     )
   end
 
-  def matches(rhs)
+  def airtable_data_matches(rhs)
     assert_type(rhs, EventsPersonnel)
     if @airtable_ids != rhs.airtable_ids
       false
-    else 
-      @airtable_ids.all? { |id| @events_personnel_by_id[id].matches(rhs[id])}
+    else
+      @airtable_ids.all? { |id| @events_personnel_by_id[id].airtable_data_matches(rhs[id]) }
+    end
+  end
+
+  def vol_rota_data_matches(rhs)
+    assert_type(rhs, EventsPersonnel)
+    if @airtable_ids != rhs.airtable_ids
+      false
+    else
+      @airtable_ids.all? { |id| @events_personnel_by_id[id].vol_rota_data_matches(rhs[id]) }
     end
   end
 end

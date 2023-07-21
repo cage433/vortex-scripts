@@ -72,12 +72,6 @@ class VolunteerAirtableController
     event_records = EventTable.find_many(event_ids)
     contacts = Contacts.new()
     events_personnel = event_records.collect { |rec|
-      sound_engineer = if is_nil_or_blank?(rec[SOUND_ENGINEER]) then
-                         nil
-                       else
-                         contacts[rec[SOUND_ENGINEER][0]]
-                       end
-
       contract_types = rec[CONTRACT_TYPE] || []
       if contract_types.include?("Rehearsal")
         nil
@@ -91,7 +85,7 @@ class VolunteerAirtableController
           vol2: rec[VOL_2],
           vol3: rec[VOL_3],
           night_manager: rec[NIGHT_MANAGER_NAME],
-          sound_engineer: sound_engineer,
+          sound_engineer: rec[VOL_ROTA_SOUND_ENGINEER],
           member_bookings: rec[MEMBER_BOOKINGS],
           nm_notes: rec[NM_NOTES]
         )
@@ -113,6 +107,7 @@ class VolunteerAirtableController
       airtable_record[VOL_3] = ep.vol3
       airtable_record[MEMBER_BOOKINGS] = ep.member_bookings
       airtable_record[NM_NOTES] = ep.nm_notes
+      airtable_record[VOL_ROTA_SOUND_ENGINEER] = ep.sound_engineer
       airtable_record.save()
     end
   end

@@ -13,6 +13,10 @@ class Invoices
     @invoices = invoices
   end
 
+  def length
+    @invoices.length
+  end
+
   def add(invoice)
     assert_type(invoice, Invoice)
     @invoices << invoice
@@ -32,7 +36,6 @@ class Invoices
     if file_path.nil?
       # Use the most recent file in ~/Downloads
       downloads = File.expand_path('~/Downloads/')
-      puts(downloads)
       if Dir.exist?(downloads)
         files = Dir.glob(File.join(downloads, "activty*.csv")) # Note Kashflow's misspelling
         files = files.sort_by { |file| File.mtime(file) }.reverse
@@ -45,14 +48,14 @@ class Invoices
       end
     else
       invoices = Invoices.new([])
-      File.readlines(file_path).each do |line|
+      File.readlines(file_path).each_with_index do |line, i|
         terms = line.split(',').collect do |term|
           term.gsub('"', '').strip
         end
         begin
           invoices.add(Invoice.from_kashflow_activity_csv_terms(terms))
         rescue => _
-          LOG.warn("Ignoring line #{terms}")
+          LOG.warn("Ignoring line #{i}, #{terms}")
         end
       end
       invoices
@@ -61,17 +64,27 @@ class Invoices
 end
 
 class Invoice
-  attr_reader :issue_date, :paid_date, :reference, :ex_ref, :party, :money, :vat, :type
+  attr_reader :issue_date, :paid_date, :reference, :party, :net, :vat, :type, :note
 
-  def initialize(issue_date, paid_date, reference, ex_ref, party, money, vat, type)
-    @issue_date = issue_date
-    @paid_date = paid_date
-    @reference = reference
-    @ex_ref = ex_ref
-    @party = party
-    @money = money
-    @vat = vat
-    @type = type
+  def initialize(
+    issue_date:,
+    paid_date:,
+    reference:,
+    party:,
+    net:,
+    vat:,
+    type:,
+    note:
+  )
+
+    @issue_date = assert_type(issue_date, Date)
+    @paid_date = assert_type(paid_date, Date, allow_null: true)
+    @reference = assert_type(reference, String)
+    @party = assert_type(party, String)
+    @net = assert_type(net, Numeric)
+    @vat = assert_type(vat, Numeric)
+    @type = assert_type(type, String)
+    @note = assert_type(note, String)
   end
 
   def self.from_kashflow_activity_csv_terms(terms)
@@ -93,9 +106,23 @@ class Invoice
       vat = -terms[7].to_f
     end
     type = terms[9]
-    Invoice.new(issue_date, paid_date, reference, ex_ref, party, money, vat, type)
+    if terms.size > 10
+      note = terms[10]
+    else
+      note = ""
+    end
+    Invoice.new(
+      issue_date: issue_date,
+      paid_date: paid_date,
+      reference: reference,
+      party: party,
+      net: money,
+      vat: vat,
+      type: type,
+      note: note
+    )
   end
 end
 
-invoices = Invoices.from_kashflow_activity_csv()
-puts(invoices.size)
+# invoices = Invoices.from_kashflow_activity_csv()
+# puts(invoices.size)

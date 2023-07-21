@@ -21,19 +21,19 @@ class Controller
     airtable_events_personnel = VolunteerAirtableController.read_events_personnel(year, month)
     sheet_events_personnel = tab_controller.read_events_personnel()
     events_personnel = EventsPersonnel.new(
-      events_personnel: sheet_events_personnel.events_personnel.select{ |ep|
+      events_personnel: sheet_events_personnel.events_personnel.select { |ep|
         airtable_events_personnel.include?(ep.airtable_id)
       }.collect { |ep|
         ap = airtable_events_personnel[ep.airtable_id]
-        if ep.metadata_match(ap)
+        if ep.airtable_data_matches(ap)
           ep
         else
-          ep.with_metadata_from(ap)
+          ep.updated_from_airtable(ap)
         end
       }
     )
     events_personnel = events_personnel.add_missing(airtable_events_personnel)
-    if !events_personnel.matches(sheet_events_personnel) || force
+    if !events_personnel.airtable_data_matches(sheet_events_personnel) || force
       puts("Updating vol sheet")
       tab_controller.replace_events(events_personnel)
     end
@@ -45,13 +45,12 @@ class Controller
       VolunteerAirtableController.update_events_personnel(sheet_events)
     else
       airtable_events = VolunteerAirtableController.read_events_personnel(year, month)
-      modified_events = sheet_events.changed_personnel(airtable_events)
+      modified_events = sheet_events.changed_vol_rota_data(airtable_events)
       VolunteerAirtableController.update_events_personnel(modified_events)
     end
 
   end
 end
-
 
 def sync_personnel_data(year, month, force = false)
   controller = Controller.new()
@@ -59,6 +58,5 @@ def sync_personnel_data(year, month, force = false)
   controller.update_airtable_from_vol_sheet(year, month, force)
 end
 
-
-sync_personnel_data(2022, 4, force=true)
+sync_personnel_data(2022, 4, force = true)
 
