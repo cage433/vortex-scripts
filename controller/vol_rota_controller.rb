@@ -32,7 +32,7 @@ class VolRotaController
       }
     )
     events_personnel = events_personnel.add_missing(airtable_events_personnel)
-    if !events_personnel.vol_rota_data_matches(sheet_events_personnel) || force
+    if !events_personnel.airtable_data_matches(sheet_events_personnel) || force
       LOG.info("Updating vol sheet")
       tab_controller.replace_events(events_personnel)
     end
