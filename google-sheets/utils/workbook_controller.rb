@@ -30,8 +30,8 @@ class WorkbookController
     request_with_retries(
       lambda {
         @service.batch_update_spreadsheet(
-          @workbook_id, 
-          {requests: [request]},
+          @workbook_id,
+          { requests: [request] },
           fields: nil, quota_user: nil, options: nil
         )
       }
@@ -39,11 +39,11 @@ class WorkbookController
   end
 
   def apply_requests(requests)
-		request_with_retries(
-		  lambda {
+    request_with_retries(
+      lambda {
         @service.batch_update_spreadsheet(
-          @workbook_id, 
-          {requests: requests},
+          @workbook_id,
+          { requests: requests },
           fields: nil,
           quota_user: nil,
           options: nil
@@ -84,7 +84,7 @@ class WorkbookController
       add_sheet: {
         properties: {
           title: name,
-          grid_properties: {hide_gridlines: true}
+          grid_properties: { hide_gridlines: true }
         }
       }
     }
@@ -96,7 +96,7 @@ class WorkbookController
     if range.num_rows == 1 && range.num_cols == 1 && data.class != Array
       data = [[data]]
     elsif range.num_cols == 1 and data[0].class != Array
-      data = data.collect{ |d| [d] }
+      data = data.collect { |d| [d] }
     elsif range.num_rows == 1 and data[0].class != Array
       data = [data]
     end
@@ -119,12 +119,10 @@ class WorkbookController
     request_with_retries(
       lambda {
         @service.get_spreadsheet_values(
-          @workbook_id, 
+          @workbook_id,
           range.as_value_range(),
-          {
-            value_render_option: "UNFORMATTED_VALUE",
-            date_time_render_option: "FORMATTED_STRING"
-          }
+          value_render_option: "UNFORMATTED_VALUE",
+          date_time_render_option: "FORMATTED_STRING"
         ).values
       }
     )
