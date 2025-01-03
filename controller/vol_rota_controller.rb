@@ -17,7 +17,9 @@ class VolRotaController
 
   def update_vol_sheet_from_airtable(year, month, force)
     tab_controller = vol_tab_controller(year, month)
+    LOG.info("Reading from airtable")
     airtable_events_personnel = VolunteerAirtableController.read_events_personnel(year, month)
+    LOG.info("Finished reading from airtable")
     sheet_events_personnel = tab_controller.read_events_personnel()
     events_personnel = EventsPersonnel.new(
       events_personnel: sheet_events_personnel.events_personnel.select { |ep|
