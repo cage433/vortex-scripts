@@ -106,7 +106,7 @@ class VolunteerAirtableController
       airtable_record[VOL_2] = ep.vol2
       airtable_record[VOL_3] = ep.vol3
       airtable_record[MEMBER_BOOKINGS] = ep.member_bookings
-      airtable_record[NM_NOTES] = ep.nm_notes
+      airtable_record[NM_NOTES] = "#{ep.nm_notes}"
       airtable_record[VOL_ROTA_SOUND_ENGINEER] = ep.sound_engineer
       airtable_record.save()
     end
