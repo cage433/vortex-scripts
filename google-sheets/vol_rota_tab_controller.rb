@@ -13,6 +13,27 @@ module VolunteerRotaColumns
     MEMBER_BOOKINGS_COL, NM_NOTES_COL = [*0..15]
 end
 
+class SystemTabController < TabController
+
+  def initialize(wb_controller)
+    super(wb_controller, "System")
+    @system_range = SheetRange.new(
+      SheetCell.from_coordinates("B2"),
+      2,
+      2,
+      @sheet_id,
+      @tab_name
+    )
+  end
+
+  def log_status(update_time, message)
+    @wb_controller.set_data(@system_range, [
+      ["Last Update", "Message"],
+      [update_time, message]
+    ])
+  end
+end
+
 class VolunteerMonthTabController < TabController
   HEADER = ["Event ID", "Date", "Title", "Doors Open", "Title", "Date", "Day", "Doors Open", "Night Manager", "Vol 1", "Vol 2", "Vol 3", "Sound", "Members Bookings", "NM Notes"]
   include VolunteerRotaColumns

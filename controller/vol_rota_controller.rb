@@ -11,8 +11,12 @@ class VolRotaController
 
   def vol_tab_controller(year, month)
     tab_name = TabController.tab_name_for_month(year, month)
-    @vol_rota_controller.add_tab(tab_name) if !@vol_rota_controller.has_tab_with_name?(tab_name)
+    @vol_rota_controller.add_tab(tab_name) unless @vol_rota_controller.has_tab_with_name?(tab_name)
     VolunteerMonthTabController.new(year, month, @vol_rota_controller)
+  end
+
+  def system_tab_controller
+    SystemTabController.new(@vol_rota_controller)
   end
 
   def update_vol_sheet_from_airtable(year, month, force)
@@ -49,7 +53,7 @@ class VolRotaController
       modified_events = sheet_events.changed_vol_rota_data(airtable_events)
       VolunteerAirtableController.update_events_personnel(modified_events)
     end
-
   end
+
 end
 
